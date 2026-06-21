@@ -9,6 +9,7 @@ use App\Models\PropertyPhoto;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -82,7 +83,7 @@ class AttachPropertyImageUploadsAction
                     'source_mime_type' => $featuredUpload->mime_type,
                     'mime_type' => $featuredUpload->mime_type,
                     'optimized' => false,
-                    'processing_status' => 'queued',
+                    'processing_status' => 'uploaded',
                 ]);
 
                 $this->dispatchProcessJob($featuredPhoto, $featuredUpload);
@@ -104,7 +105,7 @@ class AttachPropertyImageUploadsAction
                     'source_mime_type' => $upload->mime_type,
                     'mime_type' => $upload->mime_type,
                     'optimized' => false,
-                    'processing_status' => 'queued',
+                    'processing_status' => 'uploaded',
                 ]);
 
                 $this->dispatchProcessJob($photo, $upload);
@@ -135,7 +136,7 @@ class AttachPropertyImageUploadsAction
         return PropertyImageUpload::query()
             ->whereIn('token', $tokens->all())
             ->where('user_id', $userId)
-            ->whereIn('status', ['stored', 'failed'])
+            ->whereIn('status', ['uploaded', 'failed'])
             ->get()
             ->keyBy('token');
     }
@@ -145,12 +146,36 @@ class AttachPropertyImageUploadsAction
         $upload->update([
             'property_id' => $photo->property_id,
             'property_photo_id' => $photo->id,
-            'status' => 'attached',
+            'status' => 'uploaded',
             'attached_at' => now(),
             'validation_error' => null,
         ]);
 
-        ProcessPropertyImageJob::dispatch($photo->id, $upload->id);
+        if (env('TRAE_DEBUG_PROPERTY_IMAGE_REBUILD')) {
+            // #region debug-point B:attach-dispatch-job
+            rescue(function () use ($photo, $upload): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'property-image-rebuild',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'B',
+                    'location' => 'app/Actions/Properties/AttachPropertyImageUploadsAction.php:dispatchProcessJob',
+                    'msg' => '[DEBUG] Dispatching process image job',
+                    'data' => [
+                        'property_id' => $photo->property_id,
+                        'photo_id' => $photo->id,
+                        'upload_id' => $upload->id,
+                        'upload_status' => $upload->status,
+                        'photo_status' => $photo->processing_status,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
+        if (!in_array($photo->processing_status, ['processing', 'ready'], true)) {
+            ProcessPropertyImageJob::dispatch($photo->id, $upload->id);
+        }
     }
 
     private function stagedPreview(PropertyImageUpload $upload): array

@@ -74,7 +74,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         <p class="text-gray-700 font-medium">Arraste várias imagens ou clique para enviar</p>
-        <p class="text-xs text-gray-500 mt-2">Uploads paralelos com Uppy. Até {{ maxFilesLabel }} por imóvel, com processamento em fila, conversão para WEBP e geração automática das versões 1920px, 1200px e 600px.</p>
+        <p class="text-xs text-gray-500 mt-2">Uploads paralelos com Uppy. Até {{ maxFilesLabel }} por imóvel, com processamento em fila, conversão para WEBP e geração automática das versões 1920px, 1600px e 400px.</p>
       </div>
 
       <div v-if="uploadError" class="text-sm text-red-600 mt-2">{{ uploadError }}</div>
@@ -213,9 +213,9 @@ const csrfToken = typeof window.getCsrfToken === 'function' ? window.getCsrfToke
 const xsrfToken = typeof window.getCookieValue === 'function' ? window.getCookieValue('XSRF-TOKEN') : '';
 
 const TRACKED_PENDING_STATUSES = ['queued', 'uploading'];
-const TRACKED_SUCCESS_STATUSES = ['stored', 'attached', 'processing', 'optimizing', 'completed'];
+const TRACKED_SUCCESS_STATUSES = ['uploaded', 'processing', 'ready'];
 const TRACKED_ERROR_STATUSES = ['error', 'failed'];
-const TRACKED_PROCESSING_STATUSES = ['queued', 'processing', 'optimizing'];
+const TRACKED_PROCESSING_STATUSES = ['processing'];
 
 const maxSizeLabel = computed(() => `${Math.round(props.maxFileSizeBytes / 1024 / 1024)}MB`);
 const maxFilesLabel = computed(() => `${Math.max(1, Number(props.maxFiles || 200))} imagens`);
@@ -257,18 +257,14 @@ function normalizeExistingItem(photo) {
   const failed = photo?.processing_status === 'failed';
   const status = failed
     ? 'failed'
-    : photo?.processing_status === 'optimizing'
-      ? 'optimizing'
+    : photo?.processing_status === 'ready'
+      ? 'ready'
     : photo?.processing_status === 'processing'
       ? 'processing'
-    : ['pending', 'queued'].includes(photo?.processing_status)
-        ? 'queued'
-        : photo?.processing_status === 'completed'
-          ? 'completed'
-          : 'stored';
+      : 'uploaded';
   const rawUrl = typeof photo?.url === 'string' ? photo.url : '';
   const usesTemporaryPreview = rawUrl.includes('/storage/tmp/property-images/') || rawUrl.includes('tmp/property-images/');
-  const stablePreviewUrl = photo?.thumb_small_url || photo?.medium_url || photo?.original_url || '';
+  const stablePreviewUrl = photo?.thumb_small_url || photo?.medium_url || photo?.original_url || rawUrl || '';
 
   return {
     id: `existing-${photo.id}`,
@@ -279,7 +275,7 @@ function normalizeExistingItem(photo) {
     previewUrl: stablePreviewUrl || (!usesTemporaryPreview && rawUrl ? rawUrl : '') || placeholderImage,
     name: photo.principal ? 'Imagem de destaque' : `Imagem ${photo.id}`,
     status,
-    progress: ['processing', 'optimizing', 'completed'].includes(status) ? 100 : 0,
+    progress: ['uploaded', 'processing', 'ready'].includes(status) ? 100 : 0,
     error: photo.processing_error || '',
     isExisting: true,
     principal: !!photo?.principal,
@@ -408,7 +404,7 @@ async function removeItemToken(item) {
   try {
     await axios.delete(`${props.deleteUploadBaseUrl}/${item.token}`);
   } catch {
-    // Best effort cleanup. The temp upload also expires server-side.
+    // Best effort cleanup. O original sem vinculo tambem pode ser removido no backend.
   }
 }
 
@@ -443,7 +439,8 @@ async function reprocessItem(item) {
     return;
   }
 
-  item.status = 'queued';
+  item.status = 'processing';
+  item.progress = 100;
   item.error = '';
 
   try {
@@ -509,11 +506,9 @@ function statusLabel(item) {
   return {
     queued: 'Na fila',
     uploading: `Enviando ${item.progress}%`,
-    stored: 'Arquivo salvo com seguranca',
-    attached: 'Imagem vinculada ao imovel',
-    processing: 'Gerando versoes otimizadas',
-    optimizing: 'Otimizando e convertendo para WEBP',
-    completed: 'Imagem otimizada',
+    uploaded: 'Original salvo e pronto para uso imediato',
+    processing: 'Otimizando em background',
+    ready: 'Imagem otimizada',
     failed: 'Falhou no processamento',
     error: 'Falha no envio',
   }[item.status] || 'Pendente';
@@ -618,7 +613,7 @@ function createUppy(kind) {
     const item = findItemByUppyId(file.id);
     if (!item) return;
     item.token = response?.body?.token || null;
-    item.status = response?.body?.status || 'stored';
+    item.status = response?.body?.status || 'uploaded';
     item.progress = 100;
     item.error = '';
   });
@@ -627,6 +622,7 @@ function createUppy(kind) {
     const item = findItemByUppyId(file.id);
     if (!item) return;
     item.status = 'error';
+    item.progress = 0;
     item.error = formatUploadError(error, response);
   });
 

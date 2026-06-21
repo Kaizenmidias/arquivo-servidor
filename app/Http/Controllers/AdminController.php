@@ -954,7 +954,10 @@ class AdminController extends Controller
             'mime_type' => $upload->mime_type,
             'size' => $upload->size,
             'status' => $upload->status,
-            'stored' => true,
+            'preview_url' => in_array($upload->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)
+                ? Storage::disk($upload->disk)->url($upload->temp_path)
+                : null,
+            'uploaded' => true,
         ]);
     }
 
@@ -968,16 +971,15 @@ class AdminController extends Controller
 
         $counts = [
             'total' => $photos->count(),
-            'queued' => $photos->filter(fn (PropertyPhoto $photo) => in_array($photo->processing_status, ['pending', 'queued'], true))->count(),
+            'uploaded' => $photos->where('processing_status', 'uploaded')->count(),
             'processing' => $photos->where('processing_status', 'processing')->count(),
-            'optimizing' => $photos->where('processing_status', 'optimizing')->count(),
-            'completed' => $photos->where('processing_status', 'completed')->count(),
+            'ready' => $photos->where('processing_status', 'ready')->count(),
             'failed' => $photos->where('processing_status', 'failed')->count(),
         ];
 
         return response()->json([
             'counts' => $counts,
-            'is_processing' => ($counts['queued'] + $counts['processing'] + $counts['optimizing']) > 0,
+            'is_processing' => ($counts['uploaded'] + $counts['processing']) > 0,
             'metrics' => [
                 'images' => $photos->count(),
                 'source_size' => (int) $photos->sum(fn (PropertyPhoto $photo) => (int) ($photo->source_size ?? 0)),
@@ -1027,14 +1029,15 @@ class AdminController extends Controller
             ->firstOrFail();
 
         $photo->update([
-            'processing_status' => 'queued',
+            'processing_status' => 'uploaded',
             'processing_error' => null,
         ]);
 
         $upload->update([
-            'status' => 'attached',
+            'status' => 'uploaded',
             'validation_error' => null,
             'attached_at' => now(),
+            'processed_at' => null,
         ]);
 
         ProcessPropertyImageJob::dispatch($photo->id, $upload->id);
@@ -1047,7 +1050,7 @@ class AdminController extends Controller
         ]);
 
         return response()->json([
-            'queued' => true,
+            'requeued' => true,
             'photo_id' => $photo->id,
             'upload_id' => $upload->id,
         ]);
@@ -1381,12 +1384,23 @@ class AdminController extends Controller
 
     private function deletePropertyPhotoAndUpload(PropertyPhoto $photo): void
     {
-        Storage::disk('public')->delete(array_filter([
-            $photo->original_path,
+        $uploads = PropertyImageUpload::query()
+            ->where('property_photo_id', $photo->id)
+            ->get();
+
+        Storage::disk((string) config('image_uploads.final_disk', 'public'))->delete(array_filter([
             $photo->arquivo,
             $photo->thumb_small_path,
             $photo->thumb_medium_path,
         ]));
+
+        foreach ($uploads as $upload) {
+            Storage::disk((string) $upload->disk)->delete($upload->temp_path);
+        }
+
+        if ($uploads->isEmpty() && !empty($photo->original_path)) {
+            Storage::disk((string) config('image_uploads.original_disk', 'public'))->delete($photo->original_path);
+        }
 
         PropertyImageUpload::query()
             ->where('property_photo_id', $photo->id)
@@ -1398,6 +1412,8 @@ class AdminController extends Controller
     public function duplicateProperty(Property $property)
     {
         $property->load(['photos', 'specialCategories', 'features']);
+        $finalDisk = Storage::disk((string) config('image_uploads.final_disk', 'public'));
+        $originalDisk = Storage::disk((string) config('image_uploads.original_disk', 'public'));
 
         $newTitle = trim($property->titulo . ' (Cópia)');
         $new = $property->replicate();
@@ -1419,34 +1435,34 @@ class AdminController extends Controller
             $thumbSmallDest = null;
             $thumbMediumDest = null;
 
-            if (!empty($source) && Storage::disk('public')->exists($source)) {
+            if (!empty($source) && $finalDisk->exists($source)) {
                 $ext = pathinfo($source, PATHINFO_EXTENSION);
                 $filename = Str::random(20) . ($ext ? ('.' . $ext) : '');
-                $dest = "properties/{$new->id}/{$filename}";
-                Storage::disk('public')->copy($source, $dest);
+                $dest = trim((string) config('image_uploads.webp_directory', 'properties/webp'), '/') . "/{$new->id}/{$filename}";
+                $finalDisk->copy($source, $dest);
             }
 
-            if (!empty($photo->thumb_small_path) && Storage::disk('public')->exists($photo->thumb_small_path)) {
-                $thumbSmallDest = "properties/{$new->id}/thumb-small-" . Str::random(20) . '.webp';
-                Storage::disk('public')->copy($photo->thumb_small_path, $thumbSmallDest);
+            if (!empty($photo->thumb_small_path) && $finalDisk->exists($photo->thumb_small_path)) {
+                $thumbSmallDest = trim((string) config('image_uploads.thumb_directory', 'properties/thumb'), '/') . "/{$new->id}/thumb-small-" . Str::random(20) . '.webp';
+                $finalDisk->copy($photo->thumb_small_path, $thumbSmallDest);
             }
 
-            if (!empty($photo->original_path) && Storage::disk('public')->exists($photo->original_path)) {
+            if (!empty($photo->original_path) && $originalDisk->exists($photo->original_path)) {
                 $ext = pathinfo($photo->original_path, PATHINFO_EXTENSION);
-                $originalDest = "properties/{$new->id}/original-" . Str::random(20) . ($ext ? ('.' . $ext) : '');
-                Storage::disk('public')->copy($photo->original_path, $originalDest);
+                $originalDest = trim((string) config('image_uploads.original_directory', 'properties/original'), '/') . "/{$new->id}/original-" . Str::random(20) . ($ext ? ('.' . $ext) : '');
+                $originalDisk->copy($photo->original_path, $originalDest);
             }
 
-            if (!empty($photo->thumb_medium_path) && Storage::disk('public')->exists($photo->thumb_medium_path)) {
-                $thumbMediumDest = "properties/{$new->id}/thumb-medium-" . Str::random(20) . '.webp';
-                Storage::disk('public')->copy($photo->thumb_medium_path, $thumbMediumDest);
+            if (!empty($photo->thumb_medium_path) && $finalDisk->exists($photo->thumb_medium_path)) {
+                $thumbMediumDest = trim((string) config('image_uploads.webp_directory', 'properties/webp'), '/') . "/{$new->id}/thumb-medium-" . Str::random(20) . '.webp';
+                $finalDisk->copy($photo->thumb_medium_path, $thumbMediumDest);
             }
 
             $path = $dest ?: $source;
             $newPhoto = PropertyPhoto::create([
                 'property_id' => $new->id,
                 'arquivo' => $path,
-                'url' => $path ? Storage::disk('public')->url($path) : '',
+                'url' => $path ? $finalDisk->url($path) : '',
                 'original_path' => $originalDest,
                 'width' => $photo->width,
                 'height' => $photo->height,
@@ -1478,7 +1494,7 @@ class AdminController extends Controller
                     'mime_type' => $photo->source_mime_type ?: $photo->mime_type ?: 'image/jpeg',
                     'size' => (int) ($photo->source_size ?: $photo->size ?: 0),
                     'sha256' => hash('sha256', $originalDest . '|' . $newPhoto->id),
-                    'status' => $photo->processing_status === 'failed' ? 'failed' : 'completed',
+                    'status' => $photo->processing_status === 'failed' ? 'failed' : 'ready',
                     'processed_at' => $photo->processed_at,
                     'attached_at' => now(),
                 ]);

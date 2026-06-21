@@ -35,15 +35,19 @@ class PropertyImageProcessor
 
         $disk = Storage::disk((string) config('image_uploads.final_disk', 'public'));
         $sourcePath = Storage::disk($upload->disk)->path($upload->temp_path);
+        if (!is_file($sourcePath)) {
+            throw new RuntimeException('O arquivo original da imagem nao foi encontrado no storage definitivo.');
+        }
+
         $quality = (int) config('image_uploads.processing.webp_quality', 85);
 
         $hero = $this->buildWebpVersion($sourcePath, (int) config('image_uploads.processing.hero_max_width', 1920), $quality);
         $gallery = $this->buildWebpVersion($sourcePath, (int) config('image_uploads.processing.gallery_max_width', 1600), $quality);
         $thumb = $this->buildWebpVersion($sourcePath, (int) config('image_uploads.processing.thumb_max_width', 400), $quality);
 
-        $fullPath = $this->versionOutputPath($photo, 'hero');
-        $mediumPath = $this->versionOutputPath($photo, 'gallery');
-        $thumbPath = $this->versionOutputPath($photo, 'thumb');
+        $fullPath = $this->webpOutputPath($photo, 'hero');
+        $mediumPath = $this->webpOutputPath($photo, 'gallery');
+        $thumbPath = $this->thumbOutputPath($photo);
 
         $this->saveBinary($disk, $fullPath, $hero['binary']);
         $this->saveBinary($disk, $mediumPath, $gallery['binary']);
@@ -70,7 +74,6 @@ class PropertyImageProcessor
     {
         $disk = Storage::disk((string) config('image_uploads.final_disk', 'public'));
         $disk->delete(array_filter([
-            $photo->original_path,
             $photo->arquivo,
             $photo->thumb_small_path,
             $photo->thumb_medium_path,
@@ -137,14 +140,24 @@ class PropertyImageProcessor
         $disk->put($path, $binary);
     }
 
-    private function versionOutputPath(PropertyPhoto $photo, string $version): string
+    private function webpOutputPath(PropertyPhoto $photo, string $version): string
     {
         return sprintf(
             '%s/%d/%d-%s.webp',
-            trim((string) config('image_uploads.final_directory', 'properties'), '/'),
+            trim((string) config('image_uploads.webp_directory', 'properties/webp'), '/'),
             $photo->property_id,
             $photo->id,
             $version
+        );
+    }
+
+    private function thumbOutputPath(PropertyPhoto $photo): string
+    {
+        return sprintf(
+            '%s/%d/%d-thumb.webp',
+            trim((string) config('image_uploads.thumb_directory', 'properties/thumb'), '/'),
+            $photo->property_id,
+            $photo->id
         );
     }
 

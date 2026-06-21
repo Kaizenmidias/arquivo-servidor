@@ -14,7 +14,7 @@
           </div>
         </div>
         <div class="whitespace-nowrap text-sm font-semibold">
-          {{ processingCounts.completed }}/{{ processingCounts.total }} concluídas
+          {{ processingCounts.ready }}/{{ processingCounts.total }} prontas
         </div>
       </div>
       <div class="mt-3 h-2 overflow-hidden rounded-full bg-blue-100">
@@ -479,10 +479,9 @@ const uploadFormError = ref('');
 const propertyPhotos = ref(Array.isArray(props.property?.photos) ? props.property.photos : []);
 const processingCounts = ref({
   total: propertyPhotos.value.length,
-  queued: propertyPhotos.value.filter((photo) => photo?.processing_status === 'queued').length,
+  uploaded: propertyPhotos.value.filter((photo) => photo?.processing_status === 'uploaded').length,
   processing: propertyPhotos.value.filter((photo) => photo?.processing_status === 'processing').length,
-  optimizing: propertyPhotos.value.filter((photo) => photo?.processing_status === 'optimizing').length,
-  completed: propertyPhotos.value.filter((photo) => photo?.processing_status === 'completed').length,
+  ready: propertyPhotos.value.filter((photo) => photo?.processing_status === 'ready').length,
   failed: propertyPhotos.value.filter((photo) => photo?.processing_status === 'failed').length,
 });
 const processingMetrics = ref({
@@ -539,19 +538,19 @@ const businessTypeLabel = (name) => {
   return name;
 };
 
-const showProcessingBanner = computed(() => isEdit.value && processingCounts.value.total > 0 && (processingCounts.value.queued > 0 || processingCounts.value.processing > 0 || processingCounts.value.optimizing > 0 || processingCounts.value.failed > 0));
+const showProcessingBanner = computed(() => isEdit.value && processingCounts.value.total > 0 && (processingCounts.value.uploaded > 0 || processingCounts.value.processing > 0 || processingCounts.value.failed > 0));
 const processingProgress = computed(() => {
   const total = Number(processingCounts.value.total || 0);
   if (!total) return 0;
-  return Math.max(0, Math.min(100, Math.round((Number(processingCounts.value.completed || 0) / total) * 100)));
+  return Math.max(0, Math.min(100, Math.round((Number(processingCounts.value.ready || 0) / total) * 100)));
 });
 const processingSummaryText = computed(() => {
-  const { queued, processing, optimizing, failed } = processingCounts.value;
+  const { uploaded, processing, ready, failed } = processingCounts.value;
   if (failed > 0) {
-    return `${processingCounts.value.completed} concluídas, ${failed} com falha e ${queued + processing + optimizing} ainda em andamento.`;
+    return `${ready} prontas, ${failed} com falha e ${uploaded + processing} ainda em andamento.`;
   }
 
-  return `${queued} na fila, ${processing} processando e ${optimizing} otimizando.`;
+  return `${uploaded} aguardando worker e ${processing} processando em background.`;
 });
 
 const onSalePriceInput = () => {
@@ -578,10 +577,9 @@ async function refreshProcessingStatus() {
     const counts = response.data?.counts || {};
     processingCounts.value = {
       total: Number(counts.total || 0),
-      queued: Number(counts.queued || 0),
+      uploaded: Number(counts.uploaded || 0),
       processing: Number(counts.processing || 0),
-      optimizing: Number(counts.optimizing || 0),
-      completed: Number(counts.completed || 0),
+      ready: Number(counts.ready || 0),
       failed: Number(counts.failed || 0),
     };
     processingMetrics.value = {
@@ -595,7 +593,7 @@ async function refreshProcessingStatus() {
       propertyPhotos.value = response.data.photos;
     }
 
-    if ((processingCounts.value.queued + processingCounts.value.processing + processingCounts.value.optimizing) === 0 && processingTimer) {
+    if ((processingCounts.value.uploaded + processingCounts.value.processing) === 0 && processingTimer) {
       clearInterval(processingTimer);
       processingTimer = null;
     }
@@ -639,7 +637,7 @@ const submit = () => {
 onMounted(() => {
   if (!isEdit.value || !props.property?.id) return;
 
-  if ((processingCounts.value.queued + processingCounts.value.processing + processingCounts.value.optimizing + processingCounts.value.failed) > 0) {
+  if ((processingCounts.value.uploaded + processingCounts.value.processing + processingCounts.value.failed) > 0) {
     refreshProcessingStatus();
   }
 
