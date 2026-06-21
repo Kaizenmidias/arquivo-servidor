@@ -2763,6 +2763,7 @@ class AdminController extends Controller
     public function updateInstagram(Request $request)
     {
         $validated = $request->validate([
+            'instagram_enabled' => ['nullable', 'boolean'],
             'instagram_username' => ['nullable', 'string', 'max:100'],
             'instagram_user_id' => ['nullable', 'string', 'max:100'],
             'instagram_access_token' => ['nullable', 'string', 'max:500'],
@@ -2771,7 +2772,7 @@ class AdminController extends Controller
         foreach ($validated as $key => $value) {
             Setting::updateOrCreate(
                 ['chave' => $key],
-                ['valor' => (string) ($value ?? '')]
+                ['valor' => $key === 'instagram_enabled' ? ((bool) $value ? '1' : '0') : (string) ($value ?? '')]
             );
         }
 

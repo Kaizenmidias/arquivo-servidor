@@ -68,8 +68,10 @@ class HomeController extends Controller
 
         $settings = Setting::query()->pluck('valor', 'chave');
         $instagramFeed = [];
+        $instagramEnabled = !array_key_exists('instagram_enabled', $settings->all())
+            || filter_var($settings['instagram_enabled'], FILTER_VALIDATE_BOOLEAN);
 
-        if (!empty($settings['instagram_feed_json'])) {
+        if ($instagramEnabled && !empty($settings['instagram_feed_json'])) {
             $decoded = json_decode($settings['instagram_feed_json'], true);
             if (is_array($decoded)) {
                 $instagramFeed = $decoded;
@@ -115,6 +117,7 @@ class HomeController extends Controller
             'maisProcurados' => $maisProcurados,
             'vistoRecentemente' => $vistoRecentemente,
             'instagramFeed' => $instagramFeed,
+            'instagramEnabled' => $instagramEnabled,
             'instagramUsername' => $settings['instagram_username'] ?? null,
             'instagramUrl' => $settings['instagram_url'] ?? null,
             'businessTypes' => $businessTypes,

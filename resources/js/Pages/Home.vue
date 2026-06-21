@@ -217,7 +217,7 @@
     </section>
 
     <!-- Instagram Section -->
-    <section class="py-16 bg-gray-50">
+    <section v-if="showInstagramSection" class="py-16 bg-gray-50">
       <div class="max-w-[1400px] mx-auto px-4">
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-3">
@@ -333,6 +333,10 @@ const props = defineProps({
   instagramFeed: {
     type: Array,
     default: () => [],
+  },
+  instagramEnabled: {
+    type: Boolean,
+    default: true,
   },
   instagramUsername: {
     type: String,
@@ -472,6 +476,7 @@ const vistoRecentemente = computed(() => props.vistoRecentemente || []);
 
 const instagramProfileUrl = computed(() => props.instagramUrl || (props.instagramUsername ? `https://instagram.com/${props.instagramUsername}` : ''));
 const instagramHandle = computed(() => props.instagramUsername || 'instagram');
+const showInstagramSection = computed(() => !!props.instagramEnabled);
 
 const instagramItems = computed(() => {
   if (Array.isArray(props.instagramFeed) && props.instagramFeed.length > 0) {

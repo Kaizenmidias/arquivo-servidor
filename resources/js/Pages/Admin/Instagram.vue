@@ -7,9 +7,27 @@
         <h3 class="text-xl font-semibold text-gray-800 mb-6">Conectar</h3>
 
         <div class="space-y-6">
+          <div class="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+            <div>
+              <div class="text-sm font-semibold text-gray-800">Exibir seção na home</div>
+              <div class="text-xs text-gray-500 mt-1">Quando desativado, o bloco do Instagram não aparece na página inicial.</div>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-7 w-12 items-center rounded-full transition"
+              :class="form.instagram_enabled ? 'bg-emerald-600' : 'bg-gray-300'"
+              @click="form.instagram_enabled = !form.instagram_enabled"
+            >
+              <span
+                class="inline-block h-5 w-5 transform rounded-full bg-white transition"
+                :class="form.instagram_enabled ? 'translate-x-6' : 'translate-x-1'"
+              />
+            </button>
+          </div>
+
           <div>
             <label class="block text-gray-700 mb-2 text-sm font-medium">Usuário (opcional)</label>
-            <input v-model="form.instagram_username" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="conectaimovel">
+            <input v-model="form.instagram_username" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="meteorikahimob">
             <div v-if="form.errors.instagram_username" class="text-sm text-red-600 mt-1">{{ form.errors.instagram_username }}</div>
           </div>
 
@@ -74,6 +92,7 @@ const props = defineProps({
 });
 
 const form = useForm({
+  instagram_enabled: String(props.settings?.instagram_enabled ?? '1') !== '0',
   instagram_username: props.settings?.instagram_username || '',
   instagram_user_id: props.settings?.instagram_user_id || '',
   instagram_access_token: props.settings?.instagram_access_token || '',
