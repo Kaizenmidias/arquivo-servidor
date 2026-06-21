@@ -33,7 +33,13 @@ class ProcessPropertyImageJob implements ShouldQueue
 
         try {
             $upload->update(['status' => 'processing']);
-            $photo->update(['processing_status' => 'processing', 'processing_error' => null]);
+            $photo->update([
+                'original_path' => $upload->temp_path,
+                'source_size' => $upload->size,
+                'source_mime_type' => $upload->mime_type,
+                'processing_status' => 'processing',
+                'processing_error' => null,
+            ]);
 
             Log::info('Processamento de imagem iniciado.', [
                 'photo_id' => $photo->id,
@@ -55,6 +61,8 @@ class ProcessPropertyImageJob implements ShouldQueue
                 'width' => $result['width'],
                 'height' => $result['height'],
                 'size' => $result['size'],
+                'source_size' => $result['source_size'],
+                'source_mime_type' => $result['source_mime_type'],
                 'mime_type' => $result['mime_type'],
                 'optimized' => true,
                 'processed_at' => now(),
@@ -62,11 +70,10 @@ class ProcessPropertyImageJob implements ShouldQueue
                 'processing_error' => null,
             ]);
 
-            Storage::disk($upload->disk)->delete($upload->temp_path);
-
             $upload->update([
                 'status' => 'completed',
                 'processed_at' => now(),
+                'expires_at' => null,
                 'validation_error' => null,
             ]);
 
@@ -79,11 +86,15 @@ class ProcessPropertyImageJob implements ShouldQueue
             ]);
         } catch (Throwable $e) {
             $photo->update([
+                'original_path' => $upload->temp_path,
+                'source_size' => $upload->size,
+                'source_mime_type' => $upload->mime_type,
                 'processing_status' => 'failed',
                 'processing_error' => $e->getMessage(),
             ]);
             $upload->update([
                 'status' => 'failed',
+                'expires_at' => null,
                 'validation_error' => $e->getMessage(),
             ]);
 

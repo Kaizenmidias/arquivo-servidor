@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $thumb_small_path
  * @property string|null $thumb_medium_path
  * @property string|null $original_path
+ * @property int|null $source_size
+ * @property string|null $source_mime_type
  */
 class PropertyPhoto extends Model
 {
@@ -23,6 +25,8 @@ class PropertyPhoto extends Model
         'width',
         'height',
         'size',
+        'source_size',
+        'source_mime_type',
         'mime_type',
         'thumb_small_path',
         'thumb_medium_path',

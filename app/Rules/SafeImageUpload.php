@@ -35,7 +35,10 @@ class SafeImageUpload implements ValidationRule
             finfo_close($finfo);
         }
         $allowedMimes = config('image_uploads.allowed_mime_types', []);
-        if (!in_array($realMime, $allowedMimes, true)) {
+        $mimeIsAllowed = in_array($realMime, $allowedMimes, true)
+            || ($realMime === 'application/octet-stream' && in_array($extension, ['heic', 'heif'], true));
+
+        if (!$mimeIsAllowed) {
             $fail('Mime type de imagem invalido.');
             return;
         }
@@ -77,6 +80,12 @@ class SafeImageUpload implements ValidationRule
             'jpg', 'jpeg' => str_starts_with($header, "\xFF\xD8\xFF"),
             'png' => str_starts_with($header, "\x89PNG\x0D\x0A\x1A\x0A"),
             'webp' => str_starts_with($header, 'RIFF') && substr($header, 8, 4) === 'WEBP',
+            'heic', 'heif' => str_contains($header, 'ftypheic')
+                || str_contains($header, 'ftypheix')
+                || str_contains($header, 'ftyphevc')
+                || str_contains($header, 'ftyphevx')
+                || str_contains($header, 'ftypmif1')
+                || str_contains($header, 'ftypmsf1'),
             default => false,
         };
     }

@@ -21,7 +21,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         <p class="text-gray-700 font-medium">Arraste ou clique para enviar a imagem de destaque</p>
-        <p class="text-xs text-gray-500 mt-2">Upload assíncrono com Uppy. Formatos: JPG, JPEG, PNG e WEBP. Máximo {{ maxSizeLabel }} por arquivo.</p>
+        <p class="text-xs text-gray-500 mt-2">Upload assíncrono com Uppy. Formatos: JPG, JPEG, PNG, WEBP, HEIC e HEIF. Máximo {{ maxSizeLabel }} por arquivo.</p>
       </div>
 
       <div v-if="featuredItem" class="mt-4 border border-gray-200 rounded-xl overflow-hidden bg-white">
@@ -38,6 +38,9 @@
           <div class="flex gap-2 shrink-0">
             <button v-if="featuredItem.status === 'error'" type="button" class="text-xs font-semibold text-blue-700 hover:text-blue-900" @click.stop="retryItem(featuredItem)">
               Reenviar
+            </button>
+            <button v-if="featuredItem.isExisting && featuredItem.status === 'failed'" type="button" class="text-xs font-semibold text-amber-700 hover:text-amber-900" @click.stop="reprocessItem(featuredItem)">
+              Reprocessar
             </button>
             <button v-if="featuredItem.status === 'uploading'" type="button" class="text-xs font-semibold text-amber-700 hover:text-amber-900" @click.stop="cancelItem(featuredItem)">
               Cancelar
@@ -133,6 +136,9 @@
             <button v-if="item.status === 'error'" type="button" class="bg-white/95 hover:bg-white text-blue-700 px-2 py-1 rounded text-[11px] font-semibold" @click.stop="retryItem(item)">
               Retry
             </button>
+            <button v-if="item.isExisting && item.status === 'failed'" type="button" class="bg-white/95 hover:bg-white text-amber-700 px-2 py-1 rounded text-[11px] font-semibold" @click.stop="reprocessItem(item)">
+              Reprocessar
+            </button>
             <button v-if="item.status === 'uploading'" type="button" class="bg-white/95 hover:bg-white text-amber-700 px-2 py-1 rounded text-[11px] font-semibold" @click.stop="cancelItem(item)">
               Cancelar
             </button>
@@ -177,9 +183,13 @@ const props = defineProps({
     type: Number,
     default: 6,
   },
+  reprocessImageBaseUrl: {
+    type: String,
+    default: '',
+  },
 });
 
-const acceptAttr = '.jpg,.jpeg,.png,.webp';
+const acceptAttr = '.jpg,.jpeg,.png,.webp,.heic,.heif';
 const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
     <rect width="800" height="600" fill="#0f172a"/>
@@ -203,9 +213,9 @@ const csrfToken = typeof window.getCsrfToken === 'function' ? window.getCsrfToke
 const xsrfToken = typeof window.getCookieValue === 'function' ? window.getCookieValue('XSRF-TOKEN') : '';
 
 const TRACKED_PENDING_STATUSES = ['queued', 'uploading'];
-const TRACKED_SUCCESS_STATUSES = ['uploaded', 'processing', 'optimizing', 'completed'];
+const TRACKED_SUCCESS_STATUSES = ['stored', 'attached', 'processing', 'optimizing', 'completed'];
 const TRACKED_ERROR_STATUSES = ['error', 'failed'];
-const TRACKED_PROCESSING_STATUSES = ['pending', 'processing', 'optimizing'];
+const TRACKED_PROCESSING_STATUSES = ['queued', 'processing', 'optimizing'];
 
 const maxSizeLabel = computed(() => `${Math.round(props.maxFileSizeBytes / 1024 / 1024)}MB`);
 const maxFilesLabel = computed(() => `${Math.max(1, Number(props.maxFiles || 200))} imagens`);
@@ -251,11 +261,11 @@ function normalizeExistingItem(photo) {
       ? 'optimizing'
     : photo?.processing_status === 'processing'
       ? 'processing'
-      : photo?.processing_status === 'pending'
-        ? 'pending'
+    : ['pending', 'queued'].includes(photo?.processing_status)
+        ? 'queued'
         : photo?.processing_status === 'completed'
           ? 'completed'
-          : 'uploaded';
+          : 'stored';
   const rawUrl = typeof photo?.url === 'string' ? photo.url : '';
   const usesTemporaryPreview = rawUrl.includes('/storage/tmp/property-images/') || rawUrl.includes('tmp/property-images/');
   const stablePreviewUrl = photo?.thumb_small_url || photo?.medium_url || photo?.original_url || '';
@@ -428,6 +438,22 @@ async function retryItem(item) {
   addFilesToUppy(galleryUppy, [item.file]);
 }
 
+async function reprocessItem(item) {
+  if (!item?.isExisting || !item?.existingPhotoId || !props.reprocessImageBaseUrl) {
+    return;
+  }
+
+  item.status = 'queued';
+  item.error = '';
+
+  try {
+    await axios.post(`${props.reprocessImageBaseUrl}/${item.existingPhotoId}/reprocess`);
+  } catch (error) {
+    item.status = 'failed';
+    item.error = error?.response?.data?.message || 'Nao foi possivel reenfileirar a imagem.';
+  }
+}
+
 function cancelItem(item) {
   if (!item?.uppyFileId) return;
 
@@ -481,13 +507,13 @@ function setAsFeatured(id) {
 
 function statusLabel(item) {
   return {
-    pending: 'Na fila de processamento',
-    queued: 'Na fila para envio',
+    queued: 'Na fila',
     uploading: `Enviando ${item.progress}%`,
-    uploaded: 'Upload temporario concluido',
-    processing: 'Processando imagem',
+    stored: 'Arquivo salvo com seguranca',
+    attached: 'Imagem vinculada ao imovel',
+    processing: 'Gerando versoes otimizadas',
     optimizing: 'Otimizando e convertendo para WEBP',
-    completed: 'Processamento concluido',
+    completed: 'Imagem otimizada',
     failed: 'Falhou no processamento',
     error: 'Falha no envio',
   }[item.status] || 'Pendente';
@@ -548,7 +574,7 @@ function createUppy(kind) {
     allowMultipleUploadBatches: true,
     retryDelays: [0, 1000, 3000, 5000],
     restrictions: {
-      allowedFileTypes: ['.jpg', '.jpeg', '.png', '.webp'],
+      allowedFileTypes: ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'],
       maxFileSize: props.maxFileSizeBytes,
       maxNumberOfFiles: kind === 'featured' ? 1 : Number(props.maxFiles || 200),
     },
@@ -592,7 +618,7 @@ function createUppy(kind) {
     const item = findItemByUppyId(file.id);
     if (!item) return;
     item.token = response?.body?.token || null;
-    item.status = 'uploaded';
+    item.status = response?.body?.status || 'stored';
     item.progress = 100;
     item.error = '';
   });

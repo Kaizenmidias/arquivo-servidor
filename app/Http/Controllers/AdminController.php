@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\UpdateProfileAvatarRequest;
 use App\Http\Requests\Admin\UpdateProfileInfoRequest;
 use App\Http\Requests\Admin\UpdateProfilePasswordRequest;
 use App\Http\Requests\Admin\UpdatePropertyRequest;
+use App\Jobs\ProcessPropertyImageJob;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -930,7 +931,7 @@ class AdminController extends Controller
         StagePropertyImageUploadRequest $request,
         StagePropertyImageUploadAction $action
     ): JsonResponse {
-        Log::info('Request de upload temporario recebida.', [
+        Log::info('Request de upload definitivo de imagem recebida.', [
             'user_id' => $request->user()?->id,
             'ip' => $request->ip(),
             'has_session_cookie' => $request->cookies->has(config('session.cookie')),
@@ -941,7 +942,7 @@ class AdminController extends Controller
 
         $upload = $action->execute($request->user(), $request->file('file'));
 
-        Log::info('Upload temporario concluido com sucesso.', [
+        Log::info('Upload definitivo concluido com sucesso.', [
             'upload_id' => $upload->id,
             'user_id' => $request->user()?->id,
             'token' => $upload->token,
@@ -953,6 +954,7 @@ class AdminController extends Controller
             'mime_type' => $upload->mime_type,
             'size' => $upload->size,
             'status' => $upload->status,
+            'stored' => true,
         ]);
     }
 
@@ -966,15 +968,22 @@ class AdminController extends Controller
 
         $counts = [
             'total' => $photos->count(),
-            'pending' => $photos->where('processing_status', 'pending')->count(),
+            'queued' => $photos->filter(fn (PropertyPhoto $photo) => in_array($photo->processing_status, ['pending', 'queued'], true))->count(),
             'processing' => $photos->where('processing_status', 'processing')->count(),
+            'optimizing' => $photos->where('processing_status', 'optimizing')->count(),
             'completed' => $photos->where('processing_status', 'completed')->count(),
             'failed' => $photos->where('processing_status', 'failed')->count(),
         ];
 
         return response()->json([
             'counts' => $counts,
-            'is_processing' => ($counts['pending'] + $counts['processing']) > 0,
+            'is_processing' => ($counts['queued'] + $counts['processing'] + $counts['optimizing']) > 0,
+            'metrics' => [
+                'images' => $photos->count(),
+                'source_size' => (int) $photos->sum(fn (PropertyPhoto $photo) => (int) ($photo->source_size ?? 0)),
+                'optimized_size' => (int) $photos->sum(fn (PropertyPhoto $photo) => (int) ($photo->size ?? 0)),
+                'bytes_saved' => (int) $photos->sum(fn (PropertyPhoto $photo) => max(0, (int) ($photo->source_size ?? 0) - (int) ($photo->size ?? 0))),
+            ],
             'photos' => $photos->map(fn (PropertyPhoto $photo) => [
                 'id' => $photo->id,
                 'principal' => (bool) $photo->principal,
@@ -983,6 +992,9 @@ class AdminController extends Controller
                 'original_url' => $photo->original_url,
                 'medium_url' => $photo->medium_url,
                 'thumb_small_url' => $photo->thumb_small_url,
+                'size' => $photo->size,
+                'source_size' => $photo->source_size,
+                'source_mime_type' => $photo->source_mime_type,
                 'processing_status' => $photo->processing_status,
                 'processing_error' => $photo->processing_error,
             ])->values(),
@@ -1002,6 +1014,43 @@ class AdminController extends Controller
         $action->destroy($upload);
 
         return response()->json(['deleted' => true]);
+    }
+
+    public function reprocessPropertyImage(Property $property, PropertyPhoto $photo): JsonResponse
+    {
+        abort_unless($photo->property_id === $property->id, 404);
+
+        $upload = PropertyImageUpload::query()
+            ->where('property_photo_id', $photo->id)
+            ->where('property_id', $property->id)
+            ->latest('id')
+            ->firstOrFail();
+
+        $photo->update([
+            'processing_status' => 'queued',
+            'processing_error' => null,
+        ]);
+
+        $upload->update([
+            'status' => 'attached',
+            'validation_error' => null,
+            'attached_at' => now(),
+        ]);
+
+        ProcessPropertyImageJob::dispatch($photo->id, $upload->id);
+
+        Log::info('Reprocessamento de imagem reenfileirado.', [
+            'property_id' => $property->id,
+            'photo_id' => $photo->id,
+            'upload_id' => $upload->id,
+            'user_id' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'queued' => true,
+            'photo_id' => $photo->id,
+            'upload_id' => $upload->id,
+        ]);
     }
 
     public function storeProperty(
@@ -1027,7 +1076,7 @@ class AdminController extends Controller
                 !empty($validated['featured_upload_token'])
             );
 
-            Log::info('Iniciando cadastro de imovel com uploads temporarios.', [
+            Log::info('Iniciando cadastro de imovel com uploads definitivos.', [
                 'user_id' => $request->user()?->id,
                 'featured_upload_present' => !empty($validated['featured_upload_token']),
                 'gallery_tokens_received' => count($galleryTokens),
@@ -1150,7 +1199,7 @@ class AdminController extends Controller
             $validated['remove_photo_ids'] ?? []
         );
 
-        Log::info('Iniciando atualizacao de imovel com uploads temporarios.', [
+        Log::info('Iniciando atualizacao de imovel com uploads definitivos.', [
             'property_id' => $property->id,
             'user_id' => $request->user()?->id,
             'featured_upload_present' => !empty($validated['featured_upload_token']),
@@ -1209,13 +1258,7 @@ class AdminController extends Controller
                 ->get();
 
             foreach ($photosToRemove as $photo) {
-                Storage::disk('public')->delete(array_filter([
-                    $photo->original_path,
-                    $photo->arquivo,
-                    $photo->thumb_small_path,
-                    $photo->thumb_medium_path,
-                ]));
-                $photo->delete();
+                $this->deletePropertyPhotoAndUpload($photo);
             }
         }
 
@@ -1328,18 +1371,28 @@ class AdminController extends Controller
     private function purgeProperty(Property $property): void
     {
         foreach ($property->photos as $photo) {
-            Storage::disk('public')->delete(array_filter([
-                $photo->original_path,
-                $photo->arquivo,
-                $photo->thumb_small_path,
-                $photo->thumb_medium_path,
-            ]));
-            $photo->delete();
+            $this->deletePropertyPhotoAndUpload($photo);
         }
 
         $property->specialCategories()->detach();
         $property->features()->detach();
         $property->forceDelete();
+    }
+
+    private function deletePropertyPhotoAndUpload(PropertyPhoto $photo): void
+    {
+        Storage::disk('public')->delete(array_filter([
+            $photo->original_path,
+            $photo->arquivo,
+            $photo->thumb_small_path,
+            $photo->thumb_medium_path,
+        ]));
+
+        PropertyImageUpload::query()
+            ->where('property_photo_id', $photo->id)
+            ->delete();
+
+        $photo->delete();
     }
 
     public function duplicateProperty(Property $property)
@@ -1390,7 +1443,7 @@ class AdminController extends Controller
             }
 
             $path = $dest ?: $source;
-            PropertyPhoto::create([
+            $newPhoto = PropertyPhoto::create([
                 'property_id' => $new->id,
                 'arquivo' => $path,
                 'url' => $path ? Storage::disk('public')->url($path) : '',
@@ -1398,6 +1451,8 @@ class AdminController extends Controller
                 'width' => $photo->width,
                 'height' => $photo->height,
                 'size' => $photo->size,
+                'source_size' => $photo->source_size,
+                'source_mime_type' => $photo->source_mime_type,
                 'mime_type' => $photo->mime_type,
                 'thumb_small_path' => $thumbSmallDest,
                 'thumb_medium_path' => $thumbMediumDest,
@@ -1408,6 +1463,26 @@ class AdminController extends Controller
                 'principal' => (bool) $photo->principal,
                 'ordem' => (int) $photo->ordem,
             ]);
+
+            if (!empty($originalDest)) {
+                PropertyImageUpload::create([
+                    'user_id' => auth()->id() ?? 1,
+                    'property_id' => $new->id,
+                    'property_photo_id' => $newPhoto->id,
+                    'token' => (string) Str::uuid(),
+                    'disk' => 'public',
+                    'temp_path' => $originalDest,
+                    'original_name' => basename($originalDest),
+                    'sanitized_name' => basename($originalDest),
+                    'extension' => strtolower((string) pathinfo($originalDest, PATHINFO_EXTENSION)),
+                    'mime_type' => $photo->source_mime_type ?: $photo->mime_type ?: 'image/jpeg',
+                    'size' => (int) ($photo->source_size ?: $photo->size ?: 0),
+                    'sha256' => hash('sha256', $originalDest . '|' . $newPhoto->id),
+                    'status' => $photo->processing_status === 'failed' ? 'failed' : 'completed',
+                    'processed_at' => $photo->processed_at,
+                    'attached_at' => now(),
+                ]);
+            }
         }
 
         return Redirect::route('admin.properties.edit', ['property' => $new->id]);

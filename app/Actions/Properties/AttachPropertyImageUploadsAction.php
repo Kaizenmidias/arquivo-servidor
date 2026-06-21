@@ -74,12 +74,15 @@ class AttachPropertyImageUploadsAction
                     'property_id' => $property->id,
                     'arquivo' => $stagedPreview['path'],
                     'url' => $stagedPreview['url'],
+                    'original_path' => $featuredUpload->temp_path,
                     'principal' => true,
                     'ordem' => 0,
                     'size' => $featuredUpload->size,
+                    'source_size' => $featuredUpload->size,
+                    'source_mime_type' => $featuredUpload->mime_type,
                     'mime_type' => $featuredUpload->mime_type,
                     'optimized' => false,
-                    'processing_status' => 'pending',
+                    'processing_status' => 'queued',
                 ]);
 
                 $this->dispatchProcessJob($featuredPhoto, $featuredUpload);
@@ -93,12 +96,15 @@ class AttachPropertyImageUploadsAction
                     'property_id' => $property->id,
                     'arquivo' => $stagedPreview['path'],
                     'url' => $stagedPreview['url'],
+                    'original_path' => $upload->temp_path,
                     'principal' => false,
                     'ordem' => $currentMaxOrder + $index + 1,
                     'size' => $upload->size,
+                    'source_size' => $upload->size,
+                    'source_mime_type' => $upload->mime_type,
                     'mime_type' => $upload->mime_type,
                     'optimized' => false,
-                    'processing_status' => 'pending',
+                    'processing_status' => 'queued',
                 ]);
 
                 $this->dispatchProcessJob($photo, $upload);
@@ -129,29 +135,33 @@ class AttachPropertyImageUploadsAction
         return PropertyImageUpload::query()
             ->whereIn('token', $tokens->all())
             ->where('user_id', $userId)
-            ->where('status', 'pending')
-            ->where(function ($query): void {
-                $query->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
-            })
+            ->whereIn('status', ['stored', 'failed'])
             ->get()
             ->keyBy('token');
     }
 
     private function dispatchProcessJob(PropertyPhoto $photo, PropertyImageUpload $upload): void
     {
+        $upload->update([
+            'property_id' => $photo->property_id,
+            'property_photo_id' => $photo->id,
+            'status' => 'attached',
+            'attached_at' => now(),
+            'validation_error' => null,
+        ]);
+
         ProcessPropertyImageJob::dispatch($photo->id, $upload->id);
     }
 
     private function stagedPreview(PropertyImageUpload $upload): array
     {
-        $finalDisk = (string) config('image_uploads.final_disk', 'public');
-        $temporaryDirectory = trim((string) config('image_uploads.temporary_directory', 'tmp/property-images'), '/');
-        $path = $upload->disk === $finalDisk ? (string) $upload->temp_path : '';
-        $isTemporaryPreview = str_contains((string) $upload->temp_path, $temporaryDirectory);
+        $path = (string) $upload->temp_path;
+        $url = '';
 
         try {
-            $url = $isTemporaryPreview ? '' : Storage::disk($upload->disk)->url($upload->temp_path);
+            if ($this->isBrowserRenderableMime($upload->mime_type)) {
+                $url = Storage::disk($upload->disk)->url($path);
+            }
         } catch (Throwable) {
             $url = '';
         }
@@ -160,6 +170,15 @@ class AttachPropertyImageUploadsAction
             'path' => $path,
             'url' => $url,
         ];
+    }
+
+    private function isBrowserRenderableMime(?string $mimeType): bool
+    {
+        return in_array((string) $mimeType, [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        ], true);
     }
 
     private function safeInfo(string $message, array $context = []): void

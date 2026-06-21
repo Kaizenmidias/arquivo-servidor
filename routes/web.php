@@ -62,6 +62,7 @@ Route::prefix($adminPath)->name('admin.')->middleware(['auth', EnsureCanAccessAd
     Route::post('/properties/uploads', [AdminController::class, 'stagePropertyImageUpload'])->middleware('throttle:property-image-uploads')->name('properties.uploads.store');
     Route::delete('/properties/uploads/{token}', [AdminController::class, 'destroyStagedPropertyImage'])->middleware('throttle:property-image-uploads')->name('properties.uploads.destroy');
     Route::get('/properties/{property}/image-processing-status', [AdminController::class, 'propertyImageProcessingStatus'])->name('properties.images.status');
+    Route::post('/properties/{property}/images/{photo}/reprocess', [AdminController::class, 'reprocessPropertyImage'])->name('properties.images.reprocess');
     Route::post('/properties', [AdminController::class, 'storeProperty'])->name('properties.store');
     Route::get('/properties/{property}/edit', [AdminController::class, 'editProperty'])->name('properties.edit');
     Route::put('/properties/{property}', [AdminController::class, 'updateProperty'])->name('properties.update');

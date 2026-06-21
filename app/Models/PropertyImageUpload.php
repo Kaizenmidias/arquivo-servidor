@@ -14,6 +14,8 @@ class PropertyImageUpload extends Model
 {
     protected $fillable = [
         'user_id',
+        'property_id',
+        'property_photo_id',
         'token',
         'disk',
         'temp_path',
@@ -27,6 +29,7 @@ class PropertyImageUpload extends Model
         'validation_error',
         'expires_at',
         'processed_at',
+        'attached_at',
     ];
 
     protected function casts(): array
@@ -34,6 +37,7 @@ class PropertyImageUpload extends Model
         return [
             'expires_at' => 'datetime',
             'processed_at' => 'datetime',
+            'attached_at' => 'datetime',
         ];
     }
 

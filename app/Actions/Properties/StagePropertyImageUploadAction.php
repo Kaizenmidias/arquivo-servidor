@@ -20,11 +20,11 @@ class StagePropertyImageUploadAction
     public function execute(User $user, UploadedFile $file): PropertyImageUpload
     {
         $data = $this->securityService->inspectUploadedFile($file);
-        $diskName = (string) config('image_uploads.temporary_disk', 'local');
-        $directory = trim((string) config('image_uploads.temporary_directory', 'tmp/property-images'), '/');
+        $diskName = (string) config('image_uploads.staging_disk', config('image_uploads.final_disk', 'public'));
+        $directory = trim((string) config('image_uploads.staging_directory', 'property-uploads/originals'), '/');
         $token = (string) Str::uuid();
         $path = $file->storeAs(
-            sprintf('%s/%d/%s', $directory, $user->id, now()->format('Ymd')),
+            sprintf('%s/%d/%s/%s', $directory, $user->id, now()->format('Y/m/d'), $token),
             $token . '.' . $data->extension,
             $diskName
         );
@@ -40,21 +40,23 @@ class StagePropertyImageUploadAction
             'mime_type' => $data->mimeType,
             'size' => $data->size,
             'sha256' => $data->sha256,
-            'status' => 'pending',
-            'expires_at' => now()->addDay(),
+            'status' => 'stored',
+            'expires_at' => null,
         ]);
 
         $pendingUploadsCount = PropertyImageUpload::query()
             ->where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'processing'])
+            ->whereIn('status', ['stored', 'attached', 'processing', 'optimizing'])
             ->count();
 
-        Log::info('Upload temporario de imagem criado.', [
+        Log::info('Upload definitivo de imagem salvo.', [
             'upload_id' => $upload->id,
             'user_id' => $user->id,
             'mime_type' => $upload->mime_type,
             'size' => $upload->size,
-            'pending_uploads_for_user' => $pendingUploadsCount,
+            'storage_disk' => $upload->disk,
+            'storage_path' => $upload->temp_path,
+            'active_uploads_for_user' => $pendingUploadsCount,
         ]);
 
         return $upload;

@@ -49,7 +49,7 @@ class PropertyImageSecurityService
         $storage = Storage::disk($disk);
         $absolutePath = $storage->path($path);
         if (!is_file($absolutePath)) {
-            throw new RuntimeException('Arquivo temporario nao encontrado.');
+            throw new RuntimeException('Arquivo original nao encontrado no armazenamento.');
         }
 
         $size = filesize($absolutePath) ?: 0;
@@ -64,13 +64,17 @@ class PropertyImageSecurityService
             finfo_close($finfo);
         }
 
-        if (!in_array($mimeType, config('image_uploads.allowed_mime_types', []), true)) {
+        $allowedMimeTypes = config('image_uploads.allowed_mime_types', []);
+        $mimeIsAllowed = in_array($mimeType, $allowedMimeTypes, true)
+            || ($mimeType === 'application/octet-stream' && in_array(strtolower($extension), ['heic', 'heif'], true));
+
+        if (!$mimeIsAllowed) {
             throw new RuntimeException('Mime type real invalido para upload de imagem.');
         }
 
         $header = file_get_contents($absolutePath, false, null, 0, 512);
         if ($header === false || $header === '') {
-            throw new RuntimeException('Nao foi possivel validar o arquivo temporario.');
+            throw new RuntimeException('Nao foi possivel validar o arquivo armazenado.');
         }
 
         $snippet = strtolower($header);
@@ -99,6 +103,12 @@ class PropertyImageSecurityService
             'jpg', 'jpeg' => str_starts_with($header, "\xFF\xD8\xFF"),
             'png' => str_starts_with($header, "\x89PNG\x0D\x0A\x1A\x0A"),
             'webp' => str_starts_with($header, 'RIFF') && substr($header, 8, 4) === 'WEBP',
+            'heic', 'heif' => str_contains($header, 'ftypheic')
+                || str_contains($header, 'ftypheix')
+                || str_contains($header, 'ftyphevc')
+                || str_contains($header, 'ftyphevx')
+                || str_contains($header, 'ftypmif1')
+                || str_contains($header, 'ftypmsf1'),
             default => false,
         };
     }

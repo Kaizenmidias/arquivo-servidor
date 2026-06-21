@@ -939,12 +939,14 @@ class HomeController extends Controller
             return null;
         }
 
-        return $photo->thumb_small_url
+        $resolvedUrl = $photo->thumb_small_url
             ?: $photo->thumb_medium_url
             ?: $photo->medium_url
-            ?: $photo->original_url
             ?: $this->propertyPhotoStableUrl($photo)
+            ?: $this->propertyPhotoRenderableOriginalUrl($photo)
             ?: null;
+
+        return $resolvedUrl;
     }
 
     private function serializeResponsivePhoto(?PropertyPhoto $photo): ?array
@@ -954,9 +956,10 @@ class HomeController extends Controller
         }
 
         $stableUrl = $this->propertyPhotoStableUrl($photo);
-        $thumb = $photo->thumb_small_url ?: $photo->thumb_medium_url ?: $photo->original_url ?: $stableUrl;
-        $medium = $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $photo->original_url ?: $stableUrl;
-        $full = $photo->original_url ?: $stableUrl ?: $photo->thumb_medium_url ?: $photo->thumb_small_url;
+        $renderableOriginalUrl = $this->propertyPhotoRenderableOriginalUrl($photo);
+        $thumb = $photo->thumb_small_url ?: $photo->thumb_medium_url ?: $stableUrl ?: $renderableOriginalUrl;
+        $medium = $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $stableUrl ?: $renderableOriginalUrl;
+        $full = $stableUrl ?: $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $renderableOriginalUrl;
 
         if (!$thumb && !$medium && !$full) {
             return null;
@@ -988,5 +991,16 @@ class HomeController extends Controller
         }
 
         return $url;
+    }
+
+    private function propertyPhotoRenderableOriginalUrl(PropertyPhoto $photo): ?string
+    {
+        $mimeType = strtolower((string) ($photo->source_mime_type ?: $photo->mime_type ?: ''));
+
+        if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return null;
+        }
+
+        return $photo->original_url;
     }
 }

@@ -9,6 +9,9 @@
           <div class="mt-1 text-sm text-blue-900/80">
             {{ processingSummaryText }}
           </div>
+          <div class="mt-1 text-xs text-blue-900/70">
+            {{ processingMetrics.images }} imagens, {{ formatFileSize(processingMetrics.source_size) }} originais, {{ formatFileSize(processingMetrics.optimized_size) }} otimizados, economia de {{ formatFileSize(processingMetrics.bytes_saved) }}.
+          </div>
         </div>
         <div class="whitespace-nowrap text-sm font-semibold">
           {{ processingCounts.completed }}/{{ processingCounts.total }} concluídas
@@ -313,6 +316,7 @@
             :existing-photos="propertyPhotos"
             :upload-url="`${adminBase}/properties/uploads`"
             :delete-upload-base-url="`${adminBase}/properties/uploads`"
+            :reprocess-image-base-url="props.property?.id ? `${adminBase}/properties/${props.property.id}/images` : ''"
             :max-files="imageUploadConfig?.maxFiles ?? 200"
             :max-file-size-bytes="imageUploadConfig?.maxFileSizeBytes || (50 * 1024 * 1024)"
             :parallel-uploads="imageUploadConfig?.parallelUploads || 6"
@@ -475,10 +479,17 @@ const uploadFormError = ref('');
 const propertyPhotos = ref(Array.isArray(props.property?.photos) ? props.property.photos : []);
 const processingCounts = ref({
   total: propertyPhotos.value.length,
-  pending: propertyPhotos.value.filter((photo) => photo?.processing_status === 'pending').length,
+  queued: propertyPhotos.value.filter((photo) => photo?.processing_status === 'queued').length,
   processing: propertyPhotos.value.filter((photo) => photo?.processing_status === 'processing').length,
+  optimizing: propertyPhotos.value.filter((photo) => photo?.processing_status === 'optimizing').length,
   completed: propertyPhotos.value.filter((photo) => photo?.processing_status === 'completed').length,
   failed: propertyPhotos.value.filter((photo) => photo?.processing_status === 'failed').length,
+});
+const processingMetrics = ref({
+  images: propertyPhotos.value.length,
+  source_size: propertyPhotos.value.reduce((total, photo) => total + Number(photo?.source_size || 0), 0),
+  optimized_size: propertyPhotos.value.reduce((total, photo) => total + Number(photo?.size || 0), 0),
+  bytes_saved: propertyPhotos.value.reduce((total, photo) => total + Math.max(0, Number(photo?.source_size || 0) - Number(photo?.size || 0)), 0),
 });
 let processingTimer = null;
 
@@ -487,6 +498,13 @@ const formatCurrencyBRL = (value) => {
   if (!digits) return '';
   const number = Number(digits) / 100;
   return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+const formatFileSize = (bytes) => {
+  const value = Number(bytes || 0);
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  if (value < 1024 * 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 };
 
 function getInitialBusinessTypeIds(property, businessTypes) {
@@ -521,19 +539,19 @@ const businessTypeLabel = (name) => {
   return name;
 };
 
-const showProcessingBanner = computed(() => isEdit.value && processingCounts.value.total > 0 && (processingCounts.value.pending > 0 || processingCounts.value.processing > 0 || processingCounts.value.failed > 0));
+const showProcessingBanner = computed(() => isEdit.value && processingCounts.value.total > 0 && (processingCounts.value.queued > 0 || processingCounts.value.processing > 0 || processingCounts.value.optimizing > 0 || processingCounts.value.failed > 0));
 const processingProgress = computed(() => {
   const total = Number(processingCounts.value.total || 0);
   if (!total) return 0;
   return Math.max(0, Math.min(100, Math.round((Number(processingCounts.value.completed || 0) / total) * 100)));
 });
 const processingSummaryText = computed(() => {
-  const { pending, processing, failed } = processingCounts.value;
+  const { queued, processing, optimizing, failed } = processingCounts.value;
   if (failed > 0) {
-    return `${processingCounts.value.completed} concluídas, ${failed} com falha e ${pending + processing} ainda em processamento.`;
+    return `${processingCounts.value.completed} concluídas, ${failed} com falha e ${queued + processing + optimizing} ainda em andamento.`;
   }
 
-  return `${pending} pendentes e ${processing} em processamento na fila.`;
+  return `${queued} na fila, ${processing} processando e ${optimizing} otimizando.`;
 });
 
 const onSalePriceInput = () => {
@@ -560,17 +578,24 @@ async function refreshProcessingStatus() {
     const counts = response.data?.counts || {};
     processingCounts.value = {
       total: Number(counts.total || 0),
-      pending: Number(counts.pending || 0),
+      queued: Number(counts.queued || 0),
       processing: Number(counts.processing || 0),
+      optimizing: Number(counts.optimizing || 0),
       completed: Number(counts.completed || 0),
       failed: Number(counts.failed || 0),
+    };
+    processingMetrics.value = {
+      images: Number(response.data?.metrics?.images || 0),
+      source_size: Number(response.data?.metrics?.source_size || 0),
+      optimized_size: Number(response.data?.metrics?.optimized_size || 0),
+      bytes_saved: Number(response.data?.metrics?.bytes_saved || 0),
     };
 
     if (Array.isArray(response.data?.photos)) {
       propertyPhotos.value = response.data.photos;
     }
 
-    if ((processingCounts.value.pending + processingCounts.value.processing) === 0 && processingTimer) {
+    if ((processingCounts.value.queued + processingCounts.value.processing + processingCounts.value.optimizing) === 0 && processingTimer) {
       clearInterval(processingTimer);
       processingTimer = null;
     }
@@ -614,7 +639,7 @@ const submit = () => {
 onMounted(() => {
   if (!isEdit.value || !props.property?.id) return;
 
-  if ((processingCounts.value.pending + processingCounts.value.processing + processingCounts.value.failed) > 0) {
+  if ((processingCounts.value.queued + processingCounts.value.processing + processingCounts.value.optimizing + processingCounts.value.failed) > 0) {
     refreshProcessingStatus();
   }
 

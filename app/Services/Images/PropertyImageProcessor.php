@@ -34,31 +34,31 @@ class PropertyImageProcessor
         }
 
         $disk = Storage::disk((string) config('image_uploads.final_disk', 'public'));
-        $tempPath = Storage::disk($upload->disk)->path($upload->temp_path);
-        $quality = (int) config('image_uploads.processing.webp_quality', 82);
+        $sourcePath = Storage::disk($upload->disk)->path($upload->temp_path);
+        $quality = (int) config('image_uploads.processing.webp_quality', 85);
 
-        $full = $this->buildWebpVersion($tempPath, (int) config('image_uploads.processing.full_max_width', 1920), $quality);
-        $medium = $this->buildWebpVersion($tempPath, (int) config('image_uploads.processing.medium_max_width', 1200), $quality);
-        $thumb = $this->buildWebpVersion($tempPath, (int) config('image_uploads.processing.thumb_max_width', 600), $quality);
+        $hero = $this->buildWebpVersion($sourcePath, (int) config('image_uploads.processing.hero_max_width', 1920), $quality);
+        $gallery = $this->buildWebpVersion($sourcePath, (int) config('image_uploads.processing.gallery_max_width', 1600), $quality);
+        $thumb = $this->buildWebpVersion($sourcePath, (int) config('image_uploads.processing.thumb_max_width', 400), $quality);
 
-        $fullPath = $this->versionOutputPath($photo, 'full');
-        $mediumPath = $this->versionOutputPath($photo, 'medium');
+        $fullPath = $this->versionOutputPath($photo, 'hero');
+        $mediumPath = $this->versionOutputPath($photo, 'gallery');
         $thumbPath = $this->versionOutputPath($photo, 'thumb');
 
-        $this->saveBinary($disk, $fullPath, $full['binary']);
-        $this->saveBinary($disk, $mediumPath, $medium['binary']);
+        $this->saveBinary($disk, $fullPath, $hero['binary']);
+        $this->saveBinary($disk, $mediumPath, $gallery['binary']);
         $this->saveBinary($disk, $thumbPath, $thumb['binary']);
 
         gc_collect_cycles();
 
         return [
-            'original_path' => null,
+            'original_path' => $upload->temp_path,
             'path' => $fullPath,
             'url' => $disk->url($fullPath),
             'medium_path' => $mediumPath,
             'thumb_path' => $thumbPath,
-            'width' => $full['width'],
-            'height' => $full['height'],
+            'width' => $hero['width'],
+            'height' => $hero['height'],
             'size' => $disk->size($fullPath),
             'mime_type' => 'image/webp',
             'source_size' => (int) ($validated['size'] ?? 0),
