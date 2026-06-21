@@ -15,6 +15,7 @@ use App\Models\Setting;
 use App\Models\Page;
 use App\Models\Lead;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
@@ -603,8 +604,28 @@ class HomeController extends Controller
         }
 
         $disk = Storage::disk('public');
+        $exists = $disk->exists($path);
 
-        if (!$disk->exists($path)) {
+        if (env('TRAE_DEBUG_FRONT_IMAGES_MISSING')) {
+            // #region debug-point C:storage-media-request
+            rescue(function (): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-missing',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'C',
+                    'location' => 'app/Http/Controllers/HomeController.php:storageMedia',
+                    'msg' => '[DEBUG] Storage media requested',
+                    'data' => [
+                        'path' => $path,
+                        'exists' => $exists,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
+        if (!$exists) {
             abort(404);
         }
 
@@ -832,6 +853,28 @@ class HomeController extends Controller
             ->values()
             ->all();
 
+        if (env('TRAE_DEBUG_FRONT_IMAGES_MISSING')) {
+            // #region debug-point A:serialize-property-card
+            rescue(function () use ($property, $photo, $photoUrls): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-missing',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/HomeController.php:serializePropertyCard',
+                    'msg' => '[DEBUG] Property card photo payload prepared',
+                    'data' => [
+                        'property_id' => $property->id,
+                        'selected_photo_id' => $photo?->id,
+                        'photos_count' => count($photoUrls),
+                        'selected_src' => $photoUrls[0]['src'] ?? null,
+                        'selected_full' => $photoUrls[0]['full'] ?? null,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
         return [
             'id' => $property->id,
             'slug' => $property->slug,
@@ -986,7 +1029,7 @@ class HomeController extends Controller
     {
         $url = trim((string) ($photo->url ?? ''));
 
-        if ($url === '' || str_contains($url, '/storage/tmp/property-images/')) {
+        if ($url === '' || $this->propertyPhotoUsesStagingUrl($url)) {
             return null;
         }
 
@@ -1001,6 +1044,18 @@ class HomeController extends Controller
             return null;
         }
 
-        return $photo->original_url;
+        $originalUrl = trim((string) ($photo->original_url ?? ''));
+
+        if ($originalUrl === '' || $this->propertyPhotoUsesStagingUrl($originalUrl)) {
+            return null;
+        }
+
+        return $originalUrl;
+    }
+
+    private function propertyPhotoUsesStagingUrl(string $url): bool
+    {
+        return str_contains($url, '/storage/tmp/property-images/')
+            || str_contains($url, '/storage/property-uploads/originals/');
     }
 }
