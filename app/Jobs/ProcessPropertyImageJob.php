@@ -26,7 +26,9 @@ class ProcessPropertyImageJob implements ShouldQueue
 
     public function handle(PropertyImageProcessor $processor): void
     {
+        /** @var PropertyPhoto $photo */
         $photo = PropertyPhoto::findOrFail($this->photoId);
+        /** @var PropertyImageUpload $upload */
         $upload = PropertyImageUpload::findOrFail($this->uploadId);
 
         try {

@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @property int $id
+ * @property int $property_id
+ * @property string|null $thumb_small_path
+ * @property string|null $thumb_medium_path
+ * @property string|null $original_path
+ */
 class PropertyPhoto extends Model
 {
     protected $fillable = [

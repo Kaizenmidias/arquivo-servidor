@@ -5,6 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property string $disk
+ * @property string $temp_path
+ */
 class PropertyImageUpload extends Model
 {
     protected $fillable = [
