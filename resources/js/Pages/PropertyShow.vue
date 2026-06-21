@@ -1,7 +1,7 @@
 <template>
   <Layout>
-    <div class="container mx-auto px-4 py-4">
-      <a href="/imoveis" class="flex items-center gap-2 text-blue-800 hover:text-blue-600">
+    <div class="ui-shell py-5">
+      <a href="/imoveis" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
@@ -9,44 +9,44 @@
       </a>
     </div>
 
-    <div class="container mx-auto mb-8 px-4">
+    <div class="ui-shell mb-8 ui-fade-up">
       <PropertyGallery :images="photos" :initial-index="0" />
     </div>
 
-    <div class="container mx-auto px-4 pb-12">
+    <div class="ui-shell pb-12">
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div class="space-y-8 lg:col-span-2">
-          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <section class="ui-surface-panel p-6 ui-fade-up ui-fade-up-delay-1">
             <div class="mb-4 flex flex-wrap items-center gap-3">
-              <span class="rounded-full bg-blue-900 px-4 py-1 text-sm font-semibold text-white">{{ property.code }}</span>
-              <span v-if="property.isExclusive" class="rounded-full bg-orange-500 px-4 py-1 text-sm font-semibold text-white">EXCLUSIVO</span>
-              <span class="rounded-full bg-gray-100 px-4 py-1 text-sm font-semibold text-gray-700">{{ photos.length }} Fotos</span>
-              <span v-for="label in businessBadges" :key="label" :class="label === 'ALUGUEL' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-800'" class="rounded-full px-4 py-1 text-sm font-semibold">
+              <span class="rounded-full bg-slate-900 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">{{ property.code }}</span>
+              <span v-if="property.isExclusive" class="rounded-full bg-orange-500 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">Exclusivo</span>
+              <span class="rounded-full bg-slate-100 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">{{ photos.length }} Fotos</span>
+              <span v-for="label in businessBadges" :key="label" :class="label === 'ALUGUEL' ? 'bg-orange-50 text-orange-700' : 'bg-blue-50 text-blue-800'" class="rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em]">
                 {{ label }}
               </span>
             </div>
 
-            <h1 class="text-3xl font-bold text-gray-900">{{ property.title }}</h1>
-            <p class="mt-2 text-gray-600">{{ property.address }}</p>
-            <p v-if="property.condominiumName" class="mt-1 text-sm text-gray-500">Condomínio: {{ property.condominiumName }}</p>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900 lg:text-[2.35rem]">{{ property.title }}</h1>
+            <p class="mt-2 text-base text-slate-600">{{ property.address }}</p>
+            <p v-if="property.condominiumName" class="mt-1 text-sm text-slate-500">Condomínio: {{ property.condominiumName }}</p>
 
             <div v-if="topHighlights.length > 0" class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <div v-for="item in topHighlights" :key="item.label" class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">{{ item.label }}</div>
+              <div v-for="item in topHighlights" :key="item.label" class="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
+                <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ item.label }}</div>
                 <div class="mt-2 text-lg font-bold text-gray-900">{{ item.value }}</div>
               </div>
             </div>
           </section>
 
-          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <section class="ui-surface-panel p-6 ui-fade-up ui-fade-up-delay-2">
             <h2 class="mb-4 text-xl font-bold text-gray-800">Descrição do Imóvel</h2>
             <div class="space-y-4 leading-relaxed text-gray-700" v-html="property.description"></div>
           </section>
 
-          <section v-for="section in detailSections" :key="section.title" class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <section v-for="section in detailSections" :key="section.title" class="ui-surface-panel p-6 ui-fade-up ui-fade-up-delay-3">
             <h2 class="mb-5 text-xl font-bold text-gray-800">{{ section.title }}</h2>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div v-for="item in section.items" :key="item.label" class="flex items-start justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3">
+              <div v-for="item in section.items" :key="item.label" class="flex items-start justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
                 <span class="text-sm font-medium text-gray-500">{{ item.label }}</span>
                 <span class="text-right font-semibold text-gray-900">{{ item.value }}</span>
               </div>
@@ -55,29 +55,29 @@
         </div>
 
         <div class="lg:col-span-1">
-          <div class="sticky top-28 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
+          <div class="ui-surface-panel sticky top-28 space-y-6 p-6 ui-fade-up ui-fade-up-delay-2">
             <div class="flex flex-wrap items-center gap-3">
               <span
                 v-for="label in businessBadges"
                 :key="label"
-                :class="label === 'ALUGUEL' ? 'bg-orange-500' : (label === 'VENDA' ? 'bg-blue-900' : 'bg-gray-700')"
-                class="rounded-full px-4 py-1 text-sm font-bold text-white"
+                :class="label === 'ALUGUEL' ? 'bg-orange-500' : (label === 'VENDA' ? 'bg-slate-900' : 'bg-gray-700')"
+                class="rounded-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white"
               >
                 {{ label }}
               </span>
-              <span v-if="property.propertyType" class="rounded-full bg-gray-100 px-4 py-1 text-sm font-semibold text-gray-700">{{ property.propertyType }}</span>
+              <span v-if="property.propertyType" class="rounded-full bg-slate-100 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">{{ property.propertyType }}</span>
             </div>
 
             <div class="space-y-3">
-              <div v-for="row in priceRows" :key="row.key" class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
-                <div :class="row.key === 'rent' ? 'text-orange-700' : 'text-blue-900'" class="text-sm font-semibold uppercase tracking-[0.18em]">
+              <div v-for="row in priceRows" :key="row.key" class="rounded-[24px] border border-slate-200 bg-slate-50/85 px-4 py-4">
+                <div :class="row.key === 'rent' ? 'text-orange-700' : 'text-blue-900'" class="text-[11px] font-semibold uppercase tracking-[0.18em]">
                   {{ row.label }}
                 </div>
-                <div :class="row.key === 'rent' ? 'text-orange-700' : 'text-blue-900'" class="mt-2 text-4xl font-bold">
-                  {{ formatCurrencyBRL(row.value, 0) }}<span v-if="row.suffix" class="text-2xl">{{ row.suffix }}</span>
+                <div :class="row.key === 'rent' ? 'text-orange-700' : 'text-blue-900'" class="mt-2 text-[2.1rem] font-bold leading-none tracking-tight">
+                  {{ formatCurrencyBRL(row.value, 0) }}<span v-if="row.suffix" class="text-lg">{{ row.suffix }}</span>
                 </div>
               </div>
-              <div v-if="priceRows.length === 0" class="rounded-2xl border border-dashed border-gray-200 px-4 py-4 text-gray-400">
+              <div v-if="priceRows.length === 0" class="rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-gray-400">
                 Consulte valores
               </div>
             </div>
@@ -96,17 +96,17 @@
                     v-model="contactForm.nome"
                     type="text"
                     placeholder="Seu nome *"
-                    class="w-full rounded-full border-0 bg-gray-100 px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
                     required
                   />
                 </div>
                 <div class="flex items-center gap-3">
-                  <div class="rounded-full bg-gray-100 px-4 py-3 text-gray-600">BR</div>
+                  <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-gray-600">BR</div>
                   <input
                     v-model="contactForm.telefone"
                     type="tel"
                     placeholder="(00) 00000-0000"
-                    class="flex-1 rounded-full border-0 bg-gray-100 px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                    class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
                     required
                   />
                 </div>
@@ -115,7 +115,7 @@
                     v-model="contactForm.email"
                     type="email"
                     placeholder="Seu e-mail"
-                    class="w-full rounded-full border-0 bg-gray-100 px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
                   />
                 </div>
                 <div>
@@ -123,12 +123,12 @@
                     v-model="contactForm.mensagem"
                     placeholder="Olá, estou interessado nesse imóvel que encontrei no site."
                     rows="4"
-                    class="w-full resize-none rounded-3xl border-0 bg-gray-100 px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                    class="w-full resize-none rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3 focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
                   ></textarea>
                 </div>
                 <button
                   type="submit"
-                  class="w-full rounded-full bg-blue-900 px-6 py-4 font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  class="w-full rounded-2xl bg-slate-900 px-6 py-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="contactForm.processing"
                 >
                   Enviar mensagem
@@ -136,7 +136,7 @@
               </form>
             </div>
 
-            <div class="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-100 to-orange-50 p-6">
+            <div class="rounded-[24px] border border-orange-200 bg-gradient-to-br from-orange-100 to-orange-50 p-6">
               <div class="flex items-start gap-4">
                 <div class="rounded-full bg-orange-700/20 p-3">
                   <svg class="w-7 h-7 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +149,7 @@
                   <p class="text-sm text-gray-600">Conheça o imóvel pessoalmente</p>
                 </div>
               </div>
-              <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-6 py-4 font-bold text-white transition hover:bg-orange-600">
+              <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-4 text-sm font-semibold text-white transition hover:bg-orange-600">
                 <span>Agendar visita</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />

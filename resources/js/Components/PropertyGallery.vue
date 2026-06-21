@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <div v-if="totalItems > 1" class="flex gap-3 overflow-x-auto pb-2">
+    <DraggableScroller v-if="totalItems > 1" viewport-class="pb-2" content-class="flex gap-3 pr-3">
       <button
         v-for="(item, index) in items"
         :key="`strip-${item.id}`"
@@ -91,13 +91,13 @@
           loading="lazy"
         />
       </button>
-    </div>
+    </DraggableScroller>
 
     <Teleport to="body">
       <Transition name="gallery-lightbox">
         <div
           v-if="isModalOpen"
-          class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/92 px-3 py-4 backdrop-blur-md sm:px-6"
+          class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/96 px-2 py-2 backdrop-blur-md sm:px-4"
           @click.self="closeModal"
         >
           <div class="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-4 text-white sm:px-6">
@@ -116,8 +116,8 @@
             </button>
           </div>
 
-          <div class="flex h-full w-full max-w-7xl flex-col items-center justify-center gap-4 pt-16 sm:gap-6">
-            <div class="relative flex w-full flex-1 items-center justify-center overflow-hidden rounded-[30px] border border-white/10 bg-white/5 shadow-[0_24px_80px_rgba(15,23,42,0.45)]">
+          <div class="flex h-full w-full flex-col items-center justify-center gap-4 pt-16 sm:gap-5">
+            <div class="relative flex h-[78vh] w-[92vw] items-center justify-center overflow-hidden rounded-[28px] border border-white/8 bg-black shadow-[0_30px_90px_rgba(2,6,23,0.55)] sm:h-[82vh] sm:w-[90vw]">
               <button
                 v-if="totalItems > 1"
                 type="button"
@@ -131,7 +131,7 @@
               </button>
 
               <div
-                class="flex h-full w-full items-center justify-center px-4 py-6 sm:px-12 sm:py-10"
+                class="flex h-full w-full items-center justify-center px-3 py-4 sm:px-10 sm:py-8"
                 style="touch-action: pan-y"
                 @touchstart.passive="onTouchStart"
                 @touchend.passive="onTouchEnd"
@@ -147,8 +147,10 @@
                     :controls="activeItem.kind === 'video'"
                     :muted="false"
                     :playsinline="true"
-                    class="max-h-full max-w-full rounded-[24px] object-contain"
+                    class="gallery-stage-media max-h-full max-w-full object-contain"
+                    :class="activeItem.kind === 'image' ? (isZoomed ? 'is-zoomed cursor-zoom-out' : 'cursor-zoom-in') : ''"
                     :loading="activeIndex <= 1 ? 'eager' : 'lazy'"
+                    @click.stop="toggleZoom"
                   />
                 </Transition>
               </div>
@@ -166,8 +168,7 @@
               </button>
             </div>
 
-            <div v-if="totalItems > 1" class="w-full overflow-x-auto pb-1">
-              <div class="mx-auto flex w-max min-w-full gap-3 px-1">
+            <DraggableScroller v-if="totalItems > 1" viewport-class="w-[92vw] pb-1 sm:w-[90vw]" content-class="mx-auto flex w-max min-w-full gap-3 px-1">
                 <button
                   v-for="(item, index) in items"
                   :key="`modal-thumb-${item.id}`"
@@ -189,8 +190,7 @@
                     loading="lazy"
                   />
                 </button>
-              </div>
-            </div>
+            </DraggableScroller>
           </div>
         </div>
       </Transition>
@@ -200,6 +200,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import DraggableScroller from '@/Shared/DraggableScroller.vue';
 
 const props = defineProps({
   images: {
@@ -272,6 +273,7 @@ const previewItems = computed(() => items.value.slice(0, Math.min(items.value.le
 const totalItems = computed(() => items.value.length);
 const activeIndex = ref(clampIndex(props.initialIndex, totalItems.value));
 const isModalOpen = ref(false);
+const isZoomed = ref(false);
 const touchStartX = ref(0);
 
 const activeItem = computed(() => items.value[clampIndex(activeIndex.value, totalItems.value)] || items.value[0]);
@@ -283,20 +285,30 @@ function setActive(index) {
 function openModal(index = activeIndex.value) {
   setActive(index);
   isModalOpen.value = true;
+  isZoomed.value = false;
 }
 
 function closeModal() {
   isModalOpen.value = false;
+  isZoomed.value = false;
 }
 
 function goNext() {
   if (totalItems.value <= 1) return;
+  isZoomed.value = false;
   activeIndex.value = (activeIndex.value + 1) % totalItems.value;
 }
 
 function goPrev() {
   if (totalItems.value <= 1) return;
+  isZoomed.value = false;
   activeIndex.value = (activeIndex.value - 1 + totalItems.value) % totalItems.value;
+}
+
+function toggleZoom() {
+  if (!isModalOpen.value || activeItem.value.kind !== 'image') return;
+
+  isZoomed.value = !isZoomed.value;
 }
 
 function preloadIndex(index) {
@@ -352,6 +364,7 @@ watch(
   () => props.initialIndex,
   (value) => {
     setActive(value);
+    isZoomed.value = false;
   }
 );
 
@@ -359,6 +372,7 @@ watch(
   items,
   (value) => {
     activeIndex.value = clampIndex(activeIndex.value, value.length);
+    isZoomed.value = false;
     preloadAround(activeIndex.value);
   },
   { immediate: true }
@@ -367,6 +381,7 @@ watch(
 watch(
   activeIndex,
   (value) => {
+    isZoomed.value = false;
     preloadAround(value);
   }
 );
@@ -419,5 +434,13 @@ onBeforeUnmount(() => {
 .gallery-media-leave-to {
   opacity: 0;
   transform: scale(0.98);
+}
+
+.gallery-stage-media {
+  transition: transform 220ms ease;
+}
+
+.gallery-stage-media.is-zoomed {
+  transform: scale(1.6);
 }
 </style>

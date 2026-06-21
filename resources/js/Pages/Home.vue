@@ -2,46 +2,45 @@
   <Layout>
     <!-- Hero Section -->
     <section
-      class="relative text-white min-h-[100vh] min-h-[100svh] flex items-center"
+      class="relative flex min-h-[100vh] min-h-[100svh] items-center overflow-hidden text-white"
       :style="{ background: 'linear-gradient(to right, var(--site-primary), var(--site-secondary))' }"
     >
       <div class="absolute inset-0">
         <img :src="homeHeroImage" alt="Imóvel" class="w-full h-full object-cover opacity-20" />
         <div class="absolute inset-0" :style="{ backgroundColor: homeHeroOverlayColor, opacity: homeHeroOverlayOpacity }"></div>
       </div>
-      <div class="container mx-auto px-4 relative z-10 w-full py-12">
-        <div class="text-center mb-12">
-          <h1 class="site-title font-bold mb-4" :style="{ color: homeHeroTitleColor }">{{ homeHeroTitle }}</h1>
-          <p v-if="homeHeroSubtitle" class="text-white/80 max-w-3xl mx-auto" :style="{ color: homeHeroSubtitleColor }">{{ homeHeroSubtitle }}</p>
+      <div class="ui-shell relative z-10 w-full py-16 lg:py-24">
+        <div class="mx-auto mb-12 max-w-4xl text-center ui-fade-up">
+          <h1 class="site-title mb-4 font-bold tracking-tight" :style="{ color: homeHeroTitleColor }">{{ homeHeroTitle }}</h1>
+          <p v-if="homeHeroSubtitle" class="mx-auto max-w-3xl text-base text-white/80 sm:text-lg" :style="{ color: homeHeroSubtitleColor }">{{ homeHeroSubtitle }}</p>
         </div>
         
-        <!-- Search Form -->
-        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-5xl mx-auto text-gray-800">
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="mx-auto max-w-6xl rounded-[28px] border border-white/30 bg-white/92 p-5 text-gray-800 shadow-[0_28px_90px_rgba(15,23,42,0.22)] backdrop-blur-xl ui-fade-up ui-fade-up-delay-1 sm:p-7">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
             <div>
-              <label class="block text-gray-700 text-sm font-semibold mb-1">Negócio</label>
-              <select v-model="search.business_type_id" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Negócio</label>
+              <select v-model="search.business_type_id" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-gray-700 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
                 <option value="">Todos</option>
                 <option v-for="bt in businessTypes" :key="bt.id" :value="bt.id">{{ bt.name }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-gray-700 text-sm font-semibold mb-1">Tipo de imóvel</label>
-              <select v-model="search.property_type" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Tipo de imóvel</label>
+              <select v-model="search.property_type" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-gray-700 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
                 <option value="">Todos</option>
                 <option v-for="groupName in propertyTypeGroupNames" :key="groupName" :value="groupName">{{ groupName }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-gray-700 text-sm font-semibold mb-1">Valor mín.</label>
-              <input v-model="search.price_min" type="text" placeholder="R$ 0,00" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent" @input="onPriceMinInput" />
+              <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Valor mín.</label>
+              <input v-model="search.price_min" type="text" placeholder="R$ 0,00" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-gray-700 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" @input="onPriceMinInput" />
             </div>
             <div>
-              <label class="block text-gray-700 text-sm font-semibold mb-1">Valor máx.</label>
-              <input v-model="search.price_max" type="text" placeholder="R$ ilimitado" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent" @input="onPriceMaxInput" />
+              <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Valor máx.</label>
+              <input v-model="search.price_max" type="text" placeholder="R$ ilimitado" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-gray-700 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" @input="onPriceMaxInput" />
             </div>
             <div class="flex items-end">
-              <button type="button" class="w-full site-button font-bold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2" @click="goSearch">
+              <button type="button" class="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" @click="goSearch">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
@@ -50,7 +49,7 @@
             </div>
           </div>
 
-          <button type="button" class="mt-3 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors mx-auto" @click="toggleAdvanced">
+          <button type="button" class="mx-auto mt-4 flex items-center justify-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900" @click="toggleAdvanced">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M10 18H14V16H10V18ZM3 6V8H21V6H3ZM6 13H18V11H6V13Z"></path>
             </svg>
@@ -60,7 +59,7 @@
             </svg>
           </button>
 
-          <div v-if="showAdvanced" class="mt-4 bg-white/95 backdrop-blur-xl rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-200">
+          <div v-if="showAdvanced" class="mt-4 rounded-[24px] border border-slate-200 bg-slate-50/95 p-4 shadow-inner sm:p-6">
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               <div class="bg-gray-50 rounded-xl p-3">
                 <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Quartos</span>
@@ -146,24 +145,23 @@
       </div>
     </section>
 
-    <section v-if="specialCategories.length > 0" class="py-16 bg-white">
-      <div class="max-w-[1400px] mx-auto px-4">
-        <div class="flex items-center justify-between gap-4 mb-6">
+    <section v-if="specialCategories.length > 0" class="py-16">
+      <div class="ui-shell">
+        <div class="mb-6 flex items-center justify-between gap-4">
           <div>
             <h2 class="text-2xl font-bold text-gray-800">Categorias Especiais</h2>
             <p class="text-gray-500 mt-1">Coleções selecionadas automaticamente pelo painel administrativo.</p>
           </div>
           <a href="/imoveis" class="text-sm font-semibold text-blue-900 hover:text-blue-700 transition">Ver todos os imóveis</a>
         </div>
-        <div class="overflow-x-auto">
-          <div class="flex gap-4 pb-2">
+        <DraggableScroller viewport-class="pb-2" content-class="flex gap-4 pr-4">
             <a
               v-for="category in specialCategories"
               :key="category.id"
               :href="category.url"
               class="group flex-shrink-0 w-72"
             >
-              <div class="relative rounded-[24px] overflow-hidden shadow-lg">
+              <div class="relative overflow-hidden rounded-[24px] shadow-lg ui-card-lift">
                 <img :src="category.cover_url || placeholderImage" :alt="category.name" class="w-full h-80 object-cover transform group-hover:scale-105 transition-transform duration-500 ease-out">
                 <div class="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-colors duration-300"></div>
                 <div class="absolute inset-x-0 bottom-0 p-5 text-white">
@@ -178,50 +176,43 @@
                 </div>
               </div>
             </a>
-          </div>
-        </div>
+        </DraggableScroller>
       </div>
     </section>
 
     <!-- Seleção Especial -->
-    <section class="py-16 bg-white">
-      <div class="max-w-[1400px] mx-auto px-4">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Seleção Especial</h2>
-        <div class="overflow-x-auto">
-          <div class="flex gap-4 pb-2">
+    <section class="py-16">
+      <div class="ui-shell">
+        <h2 class="mb-6 text-2xl font-bold text-gray-800">Seleção Especial</h2>
+        <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
             <a v-for="property in selecaoEspecial" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
               <PropertyCard :property="property" />
             </a>
-          </div>
-        </div>
+        </DraggableScroller>
       </div>
     </section>
 
     <!-- Mais Procurados -->
-    <section class="py-16 bg-gray-50">
-      <div class="max-w-[1400px] mx-auto px-4">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Mais Procurados</h2>
-        <div class="overflow-x-auto">
-          <div class="flex gap-4 pb-2">
+    <section class="bg-gray-50 py-16">
+      <div class="ui-shell">
+        <h2 class="mb-6 text-2xl font-bold text-gray-800">Mais Procurados</h2>
+        <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
             <a v-for="property in maisProcurados" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
               <PropertyCard :property="property" />
             </a>
-          </div>
-        </div>
+        </DraggableScroller>
       </div>
     </section>
 
     <!-- Visto Recentemente -->
-    <section class="py-16 bg-white">
-      <div class="max-w-[1400px] mx-auto px-4">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Visto Recentemente</h2>
-        <div class="overflow-x-auto">
-          <div class="flex gap-4 pb-2">
+    <section class="py-16">
+      <div class="ui-shell">
+        <h2 class="mb-6 text-2xl font-bold text-gray-800">Visto Recentemente</h2>
+        <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
             <a v-for="property in vistoRecentemente" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
               <PropertyCard :property="property" />
             </a>
-          </div>
-        </div>
+        </DraggableScroller>
       </div>
     </section>
 
@@ -320,6 +311,7 @@ import { computed, reactive, ref, onMounted, onUnmounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import Layout from '@/Shared/Layout.vue';
 import PropertyCard from '@/Shared/PropertyCard.vue';
+import DraggableScroller from '@/Shared/DraggableScroller.vue';
 
 const props = defineProps({
   homePage: {

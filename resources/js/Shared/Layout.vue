@@ -1,13 +1,13 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-white text-gray-900">
+  <div class="min-h-screen flex flex-col text-gray-900">
     <Header />
-    <main :class="['flex-grow', isHeroOverlay ? '' : 'pt-20']">
+    <main :class="['flex-grow', usesOverlayHeader ? '' : 'pt-24 lg:pt-28']">
       <slot />
     </main>
     <Footer />
 
     <div v-if="showCookieBanner" class="fixed bottom-6 right-6 z-50 w-[420px] max-w-[calc(100vw-3rem)]">
-      <div class="bg-white border border-gray-200 shadow-2xl rounded-2xl p-5">
+      <div class="ui-surface-panel p-5">
         <div class="flex items-start gap-4">
           <div class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style="background: color-mix(in oklab, var(--site-primary) 12%, transparent)">
             <svg class="w-6 h-6" style="color: var(--site-primary)" fill="currentColor" viewBox="0 0 24 24">
@@ -36,8 +36,8 @@
       </div>
     </div>
 
-    <div v-if="showCookieModal" class="fixed inset-0 z-[60] flex items-center justify-center px-4" style="background: rgba(0,0,0,0.45)">
-      <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden max-h-[80vh] overflow-y-auto">
+    <div v-if="showCookieModal" class="fixed inset-0 z-[60] flex items-center justify-center px-4" style="background: rgba(2,6,23,0.55); backdrop-filter: blur(10px)">
+      <div class="w-full max-w-2xl overflow-hidden rounded-[28px] border border-white/60 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.18)] max-h-[80vh] overflow-y-auto">
         <div class="sticky top-0 flex items-center justify-between p-4 border-b border-gray-200 bg-white">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: color-mix(in oklab, var(--site-primary) 12%, transparent)">
@@ -134,7 +134,7 @@
       href="https://wa.me/5511999999999?text=Olá! Vim do site e tenho interesse em um imóvel"
       target="_blank"
       rel="noopener noreferrer"
-      class="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg transition-transform hover:scale-110"
+      class="fixed bottom-6 right-6 z-50 rounded-full bg-green-500 p-4 text-white shadow-[0_18px_40px_rgba(34,197,94,0.35)] transition-transform hover:scale-105 hover:bg-green-600"
     >
       <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.488-.494-.67-.503-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.037 1.01-1.037 2.466s1.061 2.85 1.208 3.048c.148.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .162 5.332.162 11.887c0 2.096.547 4.14 1.588 5.94L0 24l6.307-1.654a11.88 11.88 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.332 11.89-11.886a11.821 11.821 0 0 0-3.483-8.433" />
@@ -151,7 +151,7 @@ import Footer from './Footer.vue';
 
 const page = usePage();
 const isHome = computed(() => page.component === 'Home' || page.url === '/');
-const isHeroOverlay = computed(() => isHome.value || page.component === 'About');
+const usesOverlayHeader = computed(() => isHome.value);
 
 const STORAGE_KEY = 'cookie_consent_v1';
 

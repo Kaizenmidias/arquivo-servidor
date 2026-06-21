@@ -1,20 +1,23 @@
 <template>
   <Layout>
-    <section class="relative text-white">
+    <section class="relative overflow-hidden text-white">
       <div class="absolute inset-0">
         <img :src="propertiesBannerImage" alt="Imóveis" class="w-full h-full object-cover" />
         <div class="absolute inset-0" :style="{ backgroundColor: propertiesBannerOverlayColor, opacity: propertiesBannerOverlayOpacity }"></div>
       </div>
-      <div class="relative max-w-[1400px] mx-auto px-4 py-16">
-        <h1 class="text-4xl font-bold text-center" :style="{ color: propertiesBannerTitleColor }">{{ propertiesBannerTitle }}</h1>
-        <p v-if="propertiesBannerSubtitle" class="mt-4 text-center max-w-3xl mx-auto" :style="{ color: propertiesBannerSubtitleColor }">{{ propertiesBannerSubtitle }}</p>
+      <div class="ui-shell relative py-16 lg:py-20">
+        <div class="max-w-3xl ui-fade-up">
+          <span class="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-sm">Curadoria de imóveis</span>
+          <h1 class="mt-4 text-4xl font-bold tracking-tight" :style="{ color: propertiesBannerTitleColor }">{{ propertiesBannerTitle }}</h1>
+          <p v-if="propertiesBannerSubtitle" class="mt-4 max-w-2xl text-base text-white/85 sm:text-lg" :style="{ color: propertiesBannerSubtitleColor }">{{ propertiesBannerSubtitle }}</p>
+        </div>
       </div>
     </section>
 
-    <section class="bg-gray-50 py-8">
-      <div class="max-w-[1400px] mx-auto px-4">
+    <section class="bg-transparent py-8 lg:-mt-10 lg:pb-12">
+      <div class="ui-shell">
         <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-          <aside class="bg-white rounded-2xl shadow border border-gray-100 p-5 lg:h-fit sticky top-24 lg:top-6 z-40 max-h-[calc(100vh-7rem)] overflow-y-auto lg:max-h-none lg:overflow-visible">
+          <aside class="ui-surface-panel p-5 lg:h-fit sticky top-28 z-40 max-h-[calc(100vh-8rem)] overflow-y-auto lg:max-h-none lg:overflow-visible">
             <div class="flex items-center justify-between">
               <div class="inline-flex items-center gap-2 font-semibold text-gray-900">
                 <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,12 +33,7 @@
                 <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
-                <input
-                  v-model="form.q"
-                  type="text"
-                  class="w-full border border-gray-200 rounded-full pl-10 pr-4 py-2.5 text-sm"
-                  placeholder="Código, endereço..."
-                />
+                <input v-model="form.q" type="text" class="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Código, endereço..." />
               </div>
             </div>
 
@@ -47,8 +45,8 @@
                     v-for="bt in businessTypes"
                     :key="bt.id"
                     type="button"
-                    class="px-4 py-2 rounded-full text-sm border transition"
-                    :class="form.business_type_id === String(bt.id) ? 'bg-blue-900 text-white border-blue-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'"
+                    class="rounded-full border px-4 py-2 text-sm transition"
+                    :class="form.business_type_id === String(bt.id) ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
                     @click="toggleBusinessType(bt.id)"
                   >
                     {{ bt.name }}
@@ -63,8 +61,8 @@
                     v-for="t in propertyTypeGroups"
                     :key="t.value"
                     type="button"
-                    class="px-4 py-2 rounded-full text-sm border transition"
-                    :class="form.property_type === t.value ? 'bg-blue-900 text-white border-blue-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'"
+                    class="rounded-full border px-4 py-2 text-sm transition"
+                    :class="form.property_type === t.value ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
                     @click="togglePropertyType(t.value)"
                   >
                     {{ t.label }}
@@ -74,7 +72,7 @@
 
               <div>
                 <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Condomínio</div>
-                <select v-model="form.condominium_id" class="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm bg-white" @change="apply">
+                <select v-model="form.condominium_id" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" @change="apply">
                   <option value="">Todos</option>
                   <option v-for="item in condominiums" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
                 </select>
@@ -89,7 +87,7 @@
                       v-model="form.price_min"
                       type="text"
                       inputmode="numeric"
-                      class="w-full border border-gray-200 rounded-full pl-9 pr-3 py-2.5 text-sm"
+                      class="w-full rounded-2xl border border-slate-200 pl-9 pr-3 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
                       placeholder="Mínimo"
                       @input="onPriceMinInput"
                     />
@@ -100,7 +98,7 @@
                       v-model="form.price_max"
                       type="text"
                       inputmode="numeric"
-                      class="w-full border border-gray-200 rounded-full pl-9 pr-3 py-2.5 text-sm"
+                      class="w-full rounded-2xl border border-slate-200 pl-9 pr-3 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
                       placeholder="Máximo"
                       @input="onPriceMaxInput"
                     />
@@ -115,8 +113,8 @@
                     v-for="sc in specialCategories"
                     :key="sc.id"
                     type="button"
-                    class="px-4 py-2 rounded-full text-sm border transition"
-                    :class="form.special_category_ids.includes(String(sc.id)) ? 'bg-blue-900 text-white border-blue-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'"
+                    class="rounded-full border px-4 py-2 text-sm transition"
+                    :class="form.special_category_ids.includes(String(sc.id)) ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
                     @click="toggleSpecialCategory(sc.id)"
                   >
                     {{ sc.name }}
@@ -127,21 +125,21 @@
               <div class="grid grid-cols-1 gap-5">
                 <div>
                   <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Dormitórios</div>
-                  <select v-model="form.bedrooms_min" class="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm">
+                  <select v-model="form.bedrooms_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
                     <option value="">Qualquer</option>
                     <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">Maior ou igual {{ n }}</option>
                   </select>
                 </div>
                 <div>
                   <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Sendo suítes</div>
-                  <select v-model="form.suites_min" class="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm">
+                  <select v-model="form.suites_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
                     <option value="">Qualquer</option>
                     <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">Maior ou igual {{ n }}</option>
                   </select>
                 </div>
                 <div>
                   <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Vagas</div>
-                  <select v-model="form.garages_min" class="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm">
+                  <select v-model="form.garages_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
                     <option value="">Qualquer</option>
                     <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">{{ n }}+</option>
                   </select>
@@ -151,27 +149,27 @@
               <div>
                 <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Área privativa (m²)</div>
                 <div class="grid grid-cols-2 gap-3">
-                  <input v-model="form.area_min" type="text" inputmode="numeric" class="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm" placeholder="Mínimo" />
-                  <input v-model="form.area_max" type="text" inputmode="numeric" class="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm" placeholder="Máximo" />
+                  <input v-model="form.area_min" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Mínimo" />
+                  <input v-model="form.area_max" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Máximo" />
                 </div>
               </div>
 
               <div>
                 <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Área do terreno (m²)</div>
                 <div class="grid grid-cols-2 gap-3">
-                  <input v-model="form.lot_area_min" type="text" inputmode="numeric" class="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm" placeholder="Mínimo" />
-                  <input v-model="form.lot_area_max" type="text" inputmode="numeric" class="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm" placeholder="Máximo" />
+                  <input v-model="form.lot_area_min" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Mínimo" />
+                  <input v-model="form.lot_area_max" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Máximo" />
                 </div>
               </div>
 
-              <button type="button" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-semibold py-3 rounded-full transition" @click="apply">
+              <button type="button" class="w-full rounded-2xl bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" @click="apply">
                 Aplicar filtros
               </button>
             </div>
           </aside>
 
           <main>
-            <a href="/off-market" class="block bg-gradient-to-r from-slate-800 to-blue-900 text-white rounded-2xl p-5 mb-6 border border-white/10">
+            <a href="/off-market" class="mb-6 block rounded-[24px] border border-white/20 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-5 text-white shadow-[0_20px_60px_rgba(15,23,42,0.16)] ui-fade-up">
               <div class="flex items-center justify-between gap-4">
                 <div>
                   <div class="flex items-center gap-2 font-semibold">
@@ -190,13 +188,13 @@
               </div>
             </a>
 
-            <div class="flex items-center justify-between gap-4 mb-6">
+            <div class="mb-6 flex flex-col gap-4 rounded-[24px] border border-white/50 bg-white/80 p-4 shadow-sm backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
               <div class="text-gray-900 font-semibold">
                 {{ totalLabel }}
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-500">Ordenar</span>
-                <select v-model="form.sort" class="border border-gray-200 rounded-full px-4 py-2 text-sm bg-white" @change="apply">
+                <select v-model="form.sort" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" @change="apply">
                   <option value="newest">Mais recentes</option>
                   <option value="price_asc">Menor preço</option>
                   <option value="price_desc">Maior preço</option>
@@ -204,24 +202,24 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              <a v-for="property in items" :key="property.id" :href="property.url" class="group">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <a v-for="property in items" :key="property.id" :href="property.url" class="group ui-fade-up">
                 <PropertyCard :property="property" />
               </a>
             </div>
 
-            <div v-if="items.length === 0" class="py-16 text-center text-gray-600 bg-white rounded-2xl border border-gray-100 mt-6">
+            <div v-if="items.length === 0" class="mt-6 rounded-[24px] border border-dashed border-slate-200 bg-white/80 py-16 text-center text-gray-600 backdrop-blur-sm">
               Nenhum imóvel encontrado com os filtros selecionados.
             </div>
 
             <div v-if="paginationLinks.length > 0" class="flex justify-center mt-10">
-              <nav class="inline-flex items-center gap-1 bg-white border border-gray-200 rounded-full px-2 py-1 shadow-sm">
+              <nav class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 shadow-sm">
                 <Link
                   v-for="(link, idx) in paginationLinks"
                   :key="idx"
                   :href="link.url || '#'"
                   class="px-3 py-2 text-sm rounded-full"
-                  :class="link.active ? 'bg-blue-900 text-white' : (link.url ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed')"
+                  :class="link.active ? 'bg-slate-900 text-white' : (link.url ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed')"
                   v-html="link.label"
                   preserve-scroll
                   preserve-state

@@ -1,43 +1,47 @@
 <template>
-  <header class="fixed top-0 left-0 right-0 z-50 text-white transition-colors duration-300" :class="headerBgClass">
-    <div class="container mx-auto px-4">
-      <div class="flex items-center justify-between h-20">
-        <!-- Logo -->
-        <div class="flex items-center">
-          <a href="/" class="text-2xl font-bold flex items-center gap-2">
-            <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="h-10 w-auto object-contain" />
-            <svg v-else class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          </a>
-        </div>
+  <header class="fixed inset-x-0 top-0 z-50 transition-all duration-300">
+    <div class="ui-shell">
+      <div
+        class="mt-3 flex h-[72px] items-center justify-between rounded-2xl border px-4 transition-all duration-300 lg:px-6"
+        :class="headerSurfaceClass"
+      >
+        <a href="/" class="flex min-w-0 items-center gap-3">
+          <img v-if="logoUrl" :src="logoUrl" :alt="siteName" class="h-10 w-auto max-w-[180px] object-contain lg:max-w-[220px]" />
+          <div v-else class="text-lg font-semibold tracking-tight" :class="textToneClass">{{ siteName }}</div>
+        </a>
 
-        <!-- Desktop Nav -->
-        <nav class="hidden md:flex items-center space-x-8">
-          <a href="/" class="hover:text-white/80 transition font-medium">Início</a>
-          <a href="/imoveis" class="hover:text-white/80 transition font-medium">Imóveis</a>
-          <a href="/venda-seu-imovel" class="hover:text-white/80 transition font-medium">Venda seu Imóvel</a>
+        <nav class="hidden xl:flex items-center gap-1">
+          <a
+            v-for="item in primaryLinks"
+            :key="item.url"
+            :href="item.url"
+            class="rounded-full px-4 py-2 text-sm font-medium transition"
+            :class="navItemClass(item.url)"
+          >
+            {{ item.label }}
+          </a>
         </nav>
 
-        <!-- Right Side -->
-        <div class="flex items-center space-x-4">
-          <!-- Search -->
-          <button class="p-2 hover:bg-white/10 rounded-full transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-2">
+          <a
+            href="/contato"
+            class="hidden rounded-full px-4 py-2 text-sm font-semibold transition lg:inline-flex"
+            :class="secondaryActionClass"
+          >
+            Fale conosco
+          </a>
+          <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full transition" :class="iconButtonClass">
+            <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </button>
-
-          <!-- Favorites -->
-          <button class="p-2 hover:bg-white/10 rounded-full transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button type="button" class="hidden h-10 w-10 items-center justify-center rounded-full transition md:flex" :class="iconButtonClass">
+            <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </button>
-
-          <!-- Hamburger Menu -->
-          <button @click="openMenu" class="p-2 hover:bg-white/10 rounded-full transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full transition" :class="iconButtonClass" @click="openMenu">
+            <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -45,7 +49,6 @@
       </div>
     </div>
 
-    <!-- Drawer Menu -->
     <transition name="fade">
       <DrawerMenu v-if="isMenuOpen" :is-open="isMenuOpen" :menu-items="menuItems" @close="closeMenu" />
     </transition>
@@ -64,13 +67,58 @@ const page = usePage();
 const menuItems = computed(() => page.props.menuItems || []);
 const settings = computed(() => page.props.settings || {});
 const logoUrl = computed(() => settings.value.logo_url || '');
+const siteName = computed(() => settings.value.nome_empresa || 'Imobiliária');
+const currentPath = computed(() => normalizeUrl(page.url || '/'));
+const usesTransparentHeader = computed(() => page.component === 'Home' || currentPath.value === '/');
+const isSolid = computed(() => !usesTransparentHeader.value || isScrolled.value || isMenuOpen.value);
 
-const headerBgClass = computed(() => {
-  return isScrolled.value ? 'bg-black shadow-md' : 'bg-transparent';
+const primaryLinks = [
+  { label: 'Início', url: '/' },
+  { label: 'Imóveis', url: '/imoveis' },
+  { label: 'Venda seu Imóvel', url: '/venda-seu-imovel' },
+];
+
+const headerSurfaceClass = computed(() => {
+  if (isSolid.value) {
+    return 'border-white/70 bg-white/95 text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.10)] backdrop-blur-xl';
+  }
+
+  return 'border-white/15 bg-white/10 text-white shadow-none backdrop-blur-sm';
 });
 
+const textToneClass = computed(() => (isSolid.value ? 'text-slate-900' : 'text-white'));
+const iconButtonClass = computed(() => (
+  isSolid.value
+    ? 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+    : 'border border-white/15 bg-white/10 text-white hover:bg-white/18'
+));
+const secondaryActionClass = computed(() => (
+  isSolid.value
+    ? 'bg-slate-900 text-white hover:bg-slate-800'
+    : 'border border-white/20 bg-white/10 text-white hover:bg-white/18'
+));
+
+function navItemClass(url) {
+  const active = currentPath.value === normalizeUrl(url);
+
+  if (isSolid.value) {
+    return active
+      ? 'bg-slate-900 text-white'
+      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900';
+  }
+
+  return active
+    ? 'bg-white/16 text-white'
+    : 'text-white/88 hover:bg-white/12 hover:text-white';
+}
+
+function normalizeUrl(value) {
+  const path = String(value || '').split('?')[0].replace(/\/+$/, '');
+  return path === '' ? '/' : path;
+}
+
 const onScroll = () => {
-  isScrolled.value = (window.scrollY || 0) > 10;
+  isScrolled.value = (window.scrollY || 0) > 24;
 };
 
 onMounted(() => {
