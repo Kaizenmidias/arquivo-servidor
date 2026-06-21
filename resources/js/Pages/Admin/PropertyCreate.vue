@@ -245,10 +245,10 @@
         <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
           <div class="mb-4">
             <h2 class="text-lg font-semibold text-gray-900">Descrição</h2>
-            <p class="mt-1 text-sm text-gray-500">Conteúdo exibido na página pública do imóvel.</p>
+            <p class="mt-1 text-sm text-gray-500">Conteúdo exibido na página pública do imóvel, com suporte a títulos, listas, alinhamento e colagem formatada.</p>
           </div>
 
-          <textarea v-model="form.descricao" rows="10" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="Descrição do imóvel..."></textarea>
+          <RichTextEditor v-model="form.descricao" placeholder="Descreva os destaques, diferenciais, localização e características do imóvel..." />
           <div v-if="form.errors.descricao" class="mt-1 text-sm text-red-600">{{ form.errors.descricao }}</div>
         </section>
       </div>
@@ -358,6 +358,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Shared/AdminLayout.vue';
 import PropertyImageUploader from '@/Shared/PropertyImageUploader.vue';
+import RichTextEditor from '@/Shared/RichTextEditor.vue';
 
 const page = usePage();
 const adminBase = computed(() => page.props?.paths?.admin || '/admin');

@@ -217,6 +217,74 @@ body.is-site .focus\\:ring-blue-600:focus {
   animation-delay: 0.24s;
 }
 
+.property-rich-content {
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.property-rich-content > * + * {
+  margin-top: 1rem;
+}
+
+.property-rich-content p {
+  margin: 0;
+}
+
+.property-rich-content h1,
+.property-rich-content h2,
+.property-rich-content h3 {
+  color: var(--ui-text);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.property-rich-content h1 {
+  font-size: clamp(1.5rem, 2vw, 1.9rem);
+}
+
+.property-rich-content h2 {
+  font-size: clamp(1.25rem, 1.7vw, 1.55rem);
+}
+
+.property-rich-content h3 {
+  font-size: clamp(1.1rem, 1.4vw, 1.25rem);
+}
+
+.property-rich-content ul,
+.property-rich-content ol {
+  padding-left: 1.35rem;
+}
+
+.property-rich-content ul {
+  list-style: disc;
+}
+
+.property-rich-content ol {
+  list-style: decimal;
+}
+
+.property-rich-content li + li {
+  margin-top: 0.35rem;
+}
+
+.property-rich-content strong,
+.property-rich-content b {
+  font-weight: 700;
+}
+
+.property-rich-content em,
+.property-rich-content i {
+  font-style: italic;
+}
+
+.property-rich-content u {
+  text-decoration: underline;
+}
+
+.property-rich-content s {
+  text-decoration: line-through;
+}
+
 @keyframes ui-fade-up {
   from {
     opacity: 0;

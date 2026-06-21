@@ -33,6 +33,7 @@ use App\Models\MenuItem;
 use App\Models\Setting;
 use App\Models\Page;
 use App\Models\User;
+use App\Support\PropertyDescriptionSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -1003,9 +1004,20 @@ class AdminController extends Controller
         return response()->json(['deleted' => true]);
     }
 
-    public function storeProperty(StorePropertyRequest $request, AttachPropertyImageUploadsAction $attachUploads)
+    public function storeProperty(
+        StorePropertyRequest $request,
+        AttachPropertyImageUploadsAction $attachUploads,
+        PropertyDescriptionSanitizer $descriptionSanitizer
+    )
     {
         $validated = $request->validated();
+        $validated['descricao'] = $descriptionSanitizer->sanitize($validated['descricao'] ?? '');
+
+        if (!$descriptionSanitizer->hasVisibleContent($validated['descricao'])) {
+            throw ValidationException::withMessages([
+                'descricao' => 'Informe uma descricao valida para o imovel.',
+            ]);
+        }
 
         try {
             $galleryTokens = $validated['gallery_upload_tokens'] ?? [];
@@ -1111,10 +1123,19 @@ class AdminController extends Controller
     public function updateProperty(
         UpdatePropertyRequest $request,
         Property $property,
-        AttachPropertyImageUploadsAction $attachUploads
+        AttachPropertyImageUploadsAction $attachUploads,
+        PropertyDescriptionSanitizer $descriptionSanitizer
     )
     {
         $validated = $request->validated();
+        $validated['descricao'] = $descriptionSanitizer->sanitize($validated['descricao'] ?? '');
+
+        if (!$descriptionSanitizer->hasVisibleContent($validated['descricao'])) {
+            throw ValidationException::withMessages([
+                'descricao' => 'Informe uma descricao valida para o imovel.',
+            ]);
+        }
+
         $galleryTokens = $validated['gallery_upload_tokens'] ?? [];
 
         Log::info('Iniciando atualizacao de imovel com uploads temporarios.', [

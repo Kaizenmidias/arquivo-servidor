@@ -40,7 +40,7 @@
 
           <section class="ui-surface-panel p-6 ui-fade-up ui-fade-up-delay-2">
             <h2 class="mb-4 text-xl font-bold text-gray-800">Descrição do Imóvel</h2>
-            <div class="space-y-4 leading-relaxed text-gray-700" v-html="property.description"></div>
+            <div class="property-rich-content text-gray-700" v-html="property.description"></div>
           </section>
 
           <section v-for="section in detailSections" :key="section.title" class="ui-surface-panel p-6 ui-fade-up ui-fade-up-delay-3">
