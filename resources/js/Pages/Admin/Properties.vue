@@ -57,7 +57,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center gap-3">
           <select v-model="bulkAction" class="border border-gray-300 rounded-lg px-4 py-2.5 bg-white">
             <option value="">Ações em massa</option>
-            <option v-if="!isTrash" value="delete">Mover para lixeira</option>
+            <option v-if="!isTrash" value="delete">Excluir permanentemente</option>
             <option v-if="!isTrash" value="activate">Ativar</option>
             <option v-if="!isTrash" value="deactivate">Inativar</option>
             <option v-if="isTrash" value="restore">Restaurar</option>
@@ -154,7 +154,7 @@
                   </a>
                   <Link :href="`${adminBase}/properties/${property.id}/edit`" class="text-blue-600 hover:text-blue-800 font-medium">Editar</Link>
                   <button type="button" class="text-gray-700 hover:text-gray-900 font-medium" @click="duplicate(property.id)">Duplicar</button>
-                  <button type="button" class="text-red-600 hover:text-red-800 font-medium" @click="remove(property.id)">Excluir</button>
+                  <button type="button" class="text-red-600 hover:text-red-800 font-medium" @click="remove(property.id)">Excluir permanentemente</button>
                 </template>
                 <template v-else>
                   <button type="button" class="text-green-700 hover:text-green-800 font-medium" @click="restore(property.id)">Restaurar</button>

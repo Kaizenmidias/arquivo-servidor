@@ -8,11 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $property_id
+ * @property string|null $arquivo
  * @property string|null $thumb_small_path
  * @property string|null $thumb_medium_path
  * @property string|null $original_path
  * @property int|null $source_size
  * @property string|null $source_mime_type
+ * @property string|null $processing_status
  */
 class PropertyPhoto extends Model
 {

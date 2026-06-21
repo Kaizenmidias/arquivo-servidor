@@ -1301,7 +1301,8 @@ class AdminController extends Controller
 
     public function destroyProperty(Property $property)
     {
-        $property->delete();
+        $property->loadMissing(['photos', 'specialCategories', 'features']);
+        $this->purgeProperty($property);
 
         return Redirect::route('admin.properties');
     }
@@ -1349,7 +1350,8 @@ class AdminController extends Controller
 
         if ($action === 'delete') {
             foreach ($items as $p) {
-                $p->delete();
+                $p->loadMissing(['photos', 'specialCategories', 'features']);
+                $this->purgeProperty($p);
             }
         } elseif ($action === 'restore') {
             foreach ($items as $p) {
@@ -1377,6 +1379,7 @@ class AdminController extends Controller
             $this->deletePropertyPhotoAndUpload($photo);
         }
 
+        $this->deleteDetachedPropertyUploads($property);
         $property->specialCategories()->detach();
         $property->features()->detach();
         $property->forceDelete();
@@ -1407,6 +1410,21 @@ class AdminController extends Controller
             ->delete();
 
         $photo->delete();
+    }
+
+    private function deleteDetachedPropertyUploads(Property $property): void
+    {
+        $uploads = PropertyImageUpload::query()
+            ->where('property_id', $property->id)
+            ->get();
+
+        foreach ($uploads as $upload) {
+            Storage::disk((string) $upload->disk)->delete($upload->temp_path);
+        }
+
+        PropertyImageUpload::query()
+            ->where('property_id', $property->id)
+            ->delete();
     }
 
     public function duplicateProperty(Property $property)

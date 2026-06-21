@@ -5,6 +5,7 @@ namespace App\Services\Images;
 use App\Models\PropertyImageUpload;
 use App\Models\PropertyPhoto;
 use Imagick;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -133,7 +134,7 @@ class PropertyImageProcessor
         ];
     }
 
-    private function saveBinary($disk, string $path, string $binary): void
+    private function saveBinary(FilesystemAdapter $disk, string $path, string $binary): void
     {
         $absolutePath = $disk->path($path);
         $this->ensureDirectory($absolutePath);

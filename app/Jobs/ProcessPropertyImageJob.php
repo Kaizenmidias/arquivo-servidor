@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
+/**
+ * @method static mixed dispatch(int $photoId, int $uploadId)
+ */
 class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
 {
     use Queueable;

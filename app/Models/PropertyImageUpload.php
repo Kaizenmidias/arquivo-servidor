@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property string $disk
  * @property string $temp_path
+ * @property string|null $extension
+ * @property string|null $mime_type
+ * @property int|null $size
+ * @property string|null $status
  */
 class PropertyImageUpload extends Model
 {
