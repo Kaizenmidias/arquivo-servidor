@@ -11,7 +11,7 @@
           v-for="label in businessBadges"
           :key="label"
           :class="badgeClass(label)"
-          class="text-white text-xs font-semibold px-2 py-1 rounded"
+          class="text-xs font-semibold px-2 py-1 rounded"
         >
           {{ label }}
         </span>
@@ -186,9 +186,9 @@ const priceRows = computed(() => {
 });
 
 const badgeClass = (label) => {
-  if (label === 'ALUGUEL') return 'bg-orange-500';
-  if (label === 'VENDA') return 'bg-blue-700';
-  return 'bg-gray-700';
+  if (label === 'ALUGUEL') return 'bg-white text-black';
+  if (label === 'VENDA') return 'bg-blue-700 text-white';
+  return 'bg-gray-700 text-white';
 };
 
 const formatCurrencyBRL = (price) => {
