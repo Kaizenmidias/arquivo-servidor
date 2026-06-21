@@ -2056,9 +2056,9 @@ class AdminController extends Controller
                 'conteudo' => '',
                 'ativo' => true,
                 'data' => [
-                    'hero_title_primary' => 'Conexão patrimonial.',
+                    'hero_title_primary' => 'Excelência imobiliária.',
                     'hero_title_secondary' => 'Valor que permanece.',
-                    'hero_subtitle' => 'Há mais de 12 anos conectando pessoas aos melhores endereços com expertise, confiança e sofisticação.',
+                    'hero_subtitle' => 'Há mais de 12 anos entregando curadoria, confiança e sofisticação nos melhores endereços.',
                     'hero_button_label' => 'Explorar imóveis',
                     'hero_button_url' => '/imoveis',
                     'stats' => [
@@ -2080,7 +2080,7 @@ class AdminController extends Controller
                     'team' => [
                         'kicker' => 'Nosso time',
                         'title' => 'Quem faz acontecer',
-                        'subtitle' => 'Profissionais apaixonados por conectar pessoas aos melhores endereços',
+                        'subtitle' => 'Profissionais apaixonados por encontrar os melhores endereços para cada cliente',
                         'members' => [
                             ['name' => 'Profissional 1', 'role' => 'Cargo', 'photo' => null],
                             ['name' => 'Profissional 2', 'role' => 'Cargo', 'photo' => null],
@@ -2116,9 +2116,9 @@ class AdminController extends Controller
             }
             if (empty($about->data) || !is_array($about->data)) {
                 $about->data = [
-                    'hero_title_primary' => 'Conexão patrimonial.',
+                    'hero_title_primary' => 'Excelência imobiliária.',
                     'hero_title_secondary' => 'Valor que permanece.',
-                    'hero_subtitle' => 'Há mais de 12 anos conectando pessoas aos melhores endereços com expertise, confiança e sofisticação.',
+                    'hero_subtitle' => 'Há mais de 12 anos entregando curadoria, confiança e sofisticação nos melhores endereços.',
                     'hero_button_label' => 'Explorar imóveis',
                     'hero_button_url' => '/imoveis',
                     'stats' => [
@@ -2140,7 +2140,7 @@ class AdminController extends Controller
                     'team' => [
                         'kicker' => 'Nosso time',
                         'title' => 'Quem faz acontecer',
-                        'subtitle' => 'Profissionais apaixonados por conectar pessoas aos melhores endereços',
+                        'subtitle' => 'Profissionais apaixonados por encontrar os melhores endereços para cada cliente',
                         'members' => [
                             ['name' => 'Profissional 1', 'role' => 'Cargo', 'photo' => null],
                             ['name' => 'Profissional 2', 'role' => 'Cargo', 'photo' => null],
@@ -2182,7 +2182,7 @@ class AdminController extends Controller
         };
 
         $sampleAboutData = [
-            'hero_title_primary' => 'Conexão patrimonial.',
+            'hero_title_primary' => 'Excelência imobiliária.',
             'hero_title_secondary' => 'Valor que permanece.',
             'hero_subtitle' => 'Especialistas em alto padrão, com curadoria, estratégia e atendimento humano do primeiro contato ao pós-venda.',
             'hero_button_label' => 'Explorar imóveis',
@@ -2216,7 +2216,7 @@ class AdminController extends Controller
             ],
             'quote' => [
                 'text' => 'Um endereço não é apenas um lugar. É onde a vida acontece, onde memórias são criadas e onde histórias começam.',
-                'author' => 'Equipe Conecta',
+                'author' => 'Equipe Meteorikah',
                 'author_role' => 'Imobiliária',
             ],
             'pillars' => [

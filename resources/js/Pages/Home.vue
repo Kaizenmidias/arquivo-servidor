@@ -369,7 +369,7 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
       </linearGradient>
     </defs>
     <rect width="1920" height="800" fill="url(#g)"/>
-    <text x="960" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="54" fill="rgba(255,255,255,0.35)">Conecta Imóvel</text>
+    <text x="960" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="54" fill="rgba(255,255,255,0.35)">Meteorikah Imobiliária</text>
   </svg>`
 )}`;
 

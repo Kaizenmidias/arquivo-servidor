@@ -226,10 +226,10 @@ const aboutHeroOverlayOpacity = computed(() => {
   const raw = Number(props.page?.banner_overlay_opacity ?? 70);
   return Math.max(0, Math.min(100, raw)) / 100;
 });
-const aboutHeroTitlePrimary = computed(() => data.value.hero_title_primary || 'Conexão patrimonial.');
+const aboutHeroTitlePrimary = computed(() => data.value.hero_title_primary || 'Excelência imobiliária.');
 const aboutHeroTitleSecondary = computed(() => data.value.hero_title_secondary || 'Valor que permanece.');
 const aboutHeroSubtitle = computed(
-  () => data.value.hero_subtitle || 'Há mais de 12 anos conectando pessoas aos melhores endereços com expertise, confiança e sofisticação.'
+  () => data.value.hero_subtitle || 'Há mais de 12 anos entregando curadoria, confiança e sofisticação nos melhores endereços.'
 );
 const aboutHeroButtonLabel = computed(() => data.value.hero_button_label || 'Explorar imóveis');
 const aboutHeroButtonUrl = computed(() => data.value.hero_button_url || '/imoveis');
@@ -253,7 +253,7 @@ const aboutEssenceTitleHighlight = computed(() => data.value.essence?.title_high
 const aboutEssenceText1 = computed(
   () =>
     data.value.essence?.text_1 ||
-    'A identidade da imobiliária nasce do conceito de conexão: a relação contínua entre pessoas, imóveis e decisões estratégicas.'
+    'A identidade da Meteorikah nasce da curadoria atenta entre pessoas, imóveis e decisões estratégicas.'
 );
 const aboutEssenceText2 = computed(
   () => data.value.essence?.text_2 || 'Tratamos cada negociação com atenção e cuidado, respeitando a história de quem escolhe um novo lar.'
@@ -268,7 +268,7 @@ const aboutEssenceBadgeLabel = computed(() => data.value.essence?.badge_label ||
 
 const aboutTeamKicker = computed(() => data.value.team?.kicker || 'Nosso time');
 const aboutTeamTitle = computed(() => data.value.team?.title || 'Quem faz acontecer');
-const aboutTeamSubtitle = computed(() => data.value.team?.subtitle || 'Profissionais apaixonados por conectar pessoas aos melhores endereços');
+const aboutTeamSubtitle = computed(() => data.value.team?.subtitle || 'Profissionais apaixonados por encontrar os melhores endereços para cada cliente');
 const aboutTeamMembers = computed(() => {
   const members = Array.isArray(data.value.team?.members) ? data.value.team.members : [];
   const normalized = members
