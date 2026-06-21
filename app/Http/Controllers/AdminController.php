@@ -1041,12 +1041,15 @@ class AdminController extends Controller
                     'business_type_ids',
                     'valor_venda',
                     'valor_locacao',
+                    'valor_condominio',
+                    'valor_iptu',
                 ])->all(),
                 'codigo_referencia' => $codigoReferencia,
                 'slug' => $slug,
                 'codigo_anuncio' => $codigoAnuncio,
                 'moeda' => 'BRL',
                 'ativo' => true,
+                ...$this->buildPropertyCharacteristicsPayload($validated),
                 ...$businessPayload['attributes'],
             ]);
 
@@ -1149,8 +1152,11 @@ class AdminController extends Controller
                 'business_type_ids',
                 'valor_venda',
                 'valor_locacao',
+                'valor_condominio',
+                'valor_iptu',
             ])->all(),
             'codigo_referencia' => $codigoReferencia,
+            ...$this->buildPropertyCharacteristicsPayload($validated),
             ...$businessPayload['attributes'],
         ]);
         $property->save();
@@ -1394,6 +1400,42 @@ class AdminController extends Controller
         $value = $this->parseBrlCurrency($raw);
 
         return $value > 0 ? $value : null;
+    }
+
+    private function parseDecimalNullable(mixed $input): ?float
+    {
+        if ($input === null) {
+            return null;
+        }
+
+        $raw = trim((string) $input);
+        if ($raw === '') {
+            return null;
+        }
+
+        $normalized = str_replace(',', '.', $raw);
+
+        if (!is_numeric($normalized)) {
+            return null;
+        }
+
+        return (float) $normalized;
+    }
+
+    private function buildPropertyCharacteristicsPayload(array $validated): array
+    {
+        $areaConstruida = $this->parseDecimalNullable($validated['area_construida'] ?? null);
+        $valorCondominio = $this->parseBrlCurrencyNullable($validated['valor_condominio'] ?? null);
+        $valorIptu = $this->parseBrlCurrencyNullable($validated['valor_iptu'] ?? null);
+
+        return [
+            'area_construida' => $areaConstruida,
+            'area_util' => $areaConstruida,
+            'valor_condominio' => $valorCondominio,
+            'condominio' => $valorCondominio,
+            'valor_iptu' => $valorIptu,
+            'iptu' => $valorIptu,
+        ];
     }
 
     private function resolveSelectedBusinessTypes(array $ids): \Illuminate\Support\Collection

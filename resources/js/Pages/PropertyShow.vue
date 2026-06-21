@@ -1,8 +1,7 @@
 <template>
   <Layout>
-    <!-- Back Button -->
     <div class="container mx-auto px-4 py-4">
-      <a href="/imoveis" class="text-blue-800 hover:text-blue-600 flex items-center gap-2">
+      <a href="/imoveis" class="flex items-center gap-2 text-blue-800 hover:text-blue-600">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
@@ -10,101 +9,72 @@
       </a>
     </div>
 
-    <!-- Photo Gallery -->
-    <div class="container mx-auto px-4 mb-8">
+    <div class="container mx-auto mb-8 px-4">
       <PropertyGallery :images="photos" :initial-index="0" />
     </div>
 
-    <!-- Property Content -->
     <div class="container mx-auto px-4 pb-12">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Left Column -->
-        <div class="lg:col-span-2">
-          <!-- Title & Quick Info -->
-          <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div>
-              <div class="flex items-center gap-3 mb-2">
-                <span class="bg-blue-900 text-white px-4 py-1 rounded-full text-sm font-semibold">{{ property.code }}</span>
-                <span class="bg-orange-500 text-white px-4 py-1 rounded-full text-sm font-semibold">EXCLUSIVO</span>
-                <span class="bg-gray-200 text-gray-700 px-4 py-1 rounded-full text-sm font-semibold">{{ photos.length }} Fotos</span>
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div class="space-y-8 lg:col-span-2">
+          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="mb-4 flex flex-wrap items-center gap-3">
+              <span class="rounded-full bg-blue-900 px-4 py-1 text-sm font-semibold text-white">{{ property.code }}</span>
+              <span v-if="property.isExclusive" class="rounded-full bg-orange-500 px-4 py-1 text-sm font-semibold text-white">EXCLUSIVO</span>
+              <span class="rounded-full bg-gray-100 px-4 py-1 text-sm font-semibold text-gray-700">{{ photos.length }} Fotos</span>
+              <span v-for="label in businessBadges" :key="label" :class="label === 'ALUGUEL' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-800'" class="rounded-full px-4 py-1 text-sm font-semibold">
+                {{ label }}
+              </span>
+            </div>
+
+            <h1 class="text-3xl font-bold text-gray-900">{{ property.title }}</h1>
+            <p class="mt-2 text-gray-600">{{ property.address }}</p>
+            <p v-if="property.condominiumName" class="mt-1 text-sm text-gray-500">Condomínio: {{ property.condominiumName }}</p>
+
+            <div v-if="topHighlights.length > 0" class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div v-for="item in topHighlights" :key="item.label" class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">{{ item.label }}</div>
+                <div class="mt-2 text-lg font-bold text-gray-900">{{ item.value }}</div>
               </div>
-              <h1 class="text-2xl font-bold text-gray-800 mb-1">{{ property.title }}</h1>
-              <p class="text-gray-600">{{ property.address }}</p>
-              <p v-if="property.condominium" class="text-sm text-gray-500 mt-1">Condomínio: {{ property.condominium }}</p>
             </div>
-            <div class="flex items-center gap-3">
-              <button class="p-2 border border-gray-300 rounded-full hover:bg-gray-50">
-                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </button>
-              <button class="p-2 border border-gray-300 rounded-full hover:bg-gray-50 flex items-center gap-2 px-4">
-                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                Compartilhar
-              </button>
-            </div>
-          </div>
+          </section>
 
-          <!-- Features -->
-          <div class="flex flex-wrap gap-4 mb-6">
-            <div class="flex items-center gap-2 text-gray-600">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              {{ property.bedrooms }} quartos (1 suíte)
-            </div>
-            <div class="flex items-center gap-2 text-gray-600">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
-              {{ property.bathrooms }} vaga(s)
-            </div>
-            <div class="flex items-center gap-2 text-gray-600">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5a2 2 0 012-2z" />
-              </svg>
-              {{ property.garages }} m² Área Privativa
-            </div>
-            <div class="flex items-center gap-2 text-gray-600">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h4a2 2 0 012 2v12a2 2 0 01-2 2h-4a2 2 0 01-2-2V6zM19 12a2 2 0 012-2h4a2 2 0 012 2v4a2 2 0 01-2 2h-4a2 2 0 01-2-2v-4zM15 14a2 2 0 01-2 2H7a2 2 0 01-2-2v-6a2 2 0 012-2h6a2 2 0 012 2v6z" />
-              </svg>
-              {{ property.lotArea }} m² Área do Terreno
-            </div>
-          </div>
+          <section class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 class="mb-4 text-xl font-bold text-gray-800">Descrição do Imóvel</h2>
+            <div class="space-y-4 leading-relaxed text-gray-700" v-html="property.description"></div>
+          </section>
 
-          <!-- Description -->
-          <div class="mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">DESCRIÇÃO DO IMÓVEL</h2>
-            <div class="text-gray-700 leading-relaxed space-y-4" v-html="property.description"></div>
-          </div>
+          <section v-for="section in detailSections" :key="section.title" class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 class="mb-5 text-xl font-bold text-gray-800">{{ section.title }}</h2>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div v-for="item in section.items" :key="item.label" class="flex items-start justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3">
+                <span class="text-sm font-medium text-gray-500">{{ item.label }}</span>
+                <span class="text-right font-semibold text-gray-900">{{ item.value }}</span>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <!-- Right Column - Sidebar -->
         <div class="lg:col-span-1">
-          <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-28 border border-gray-200">
-            <!-- Price & Type -->
-            <div class="flex flex-wrap items-center gap-3 mb-4">
+          <div class="sticky top-28 space-y-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
+            <div class="flex flex-wrap items-center gap-3">
               <span
                 v-for="label in businessBadges"
                 :key="label"
                 :class="label === 'ALUGUEL' ? 'bg-orange-500' : (label === 'VENDA' ? 'bg-blue-900' : 'bg-gray-700')"
-                class="text-white px-4 py-1 rounded-full text-sm font-bold"
+                class="rounded-full px-4 py-1 text-sm font-bold text-white"
               >
                 {{ label }}
               </span>
-              <span class="bg-gray-100 text-gray-700 px-4 py-1 rounded-full text-sm font-semibold">{{ property.propertyType }}</span>
+              <span v-if="property.propertyType" class="rounded-full bg-gray-100 px-4 py-1 text-sm font-semibold text-gray-700">{{ property.propertyType }}</span>
             </div>
 
-            <div class="space-y-3 mb-6">
+            <div class="space-y-3">
               <div v-for="row in priceRows" :key="row.key" class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
                 <div :class="row.key === 'rent' ? 'text-orange-700' : 'text-blue-900'" class="text-sm font-semibold uppercase tracking-[0.18em]">
                   {{ row.label }}
                 </div>
                 <div :class="row.key === 'rent' ? 'text-orange-700' : 'text-blue-900'" class="mt-2 text-4xl font-bold">
-                  {{ formatCurrencyBRL(row.value) }}<span v-if="row.suffix" class="text-2xl">{{ row.suffix }}</span>
+                  {{ formatCurrencyBRL(row.value, 0) }}<span v-if="row.suffix" class="text-2xl">{{ row.suffix }}</span>
                 </div>
               </div>
               <div v-if="priceRows.length === 0" class="rounded-2xl border border-dashed border-gray-200 px-4 py-4 text-gray-400">
@@ -112,37 +82,31 @@
               </div>
             </div>
 
-            <!-- Costs -->
-            <div class="space-y-3 mb-8">
-              <div class="flex items-center justify-between">
-                <span class="text-gray-500">Condomínio</span>
-                <span class="text-gray-800 font-medium">R$ {{ formatPrice(property.condominium) }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-gray-500">IPTU Mensal</span>
-                <span class="text-gray-800 font-medium">R$ {{ formatPrice(property.iptu) }}</span>
+            <div v-if="costRows.length > 0" class="space-y-3 border-t border-gray-100 pt-6">
+              <div v-for="row in costRows" :key="row.label" class="flex items-center justify-between gap-4">
+                <span class="text-gray-500">{{ row.label }}</span>
+                <span class="font-medium text-gray-800">{{ row.value }}</span>
               </div>
             </div>
 
-            <!-- Contact Form -->
-            <div class="border-t border-gray-100 pt-6 mb-6">
+            <div class="border-t border-gray-100 pt-6">
               <form @submit.prevent="submitContact" class="space-y-4">
                 <div>
                   <input
                     v-model="contactForm.nome"
                     type="text"
                     placeholder="Seu nome *"
-                    class="w-full px-4 py-3 bg-gray-100 rounded-full border-0 focus:ring-2 focus:ring-blue-500"
+                    class="w-full rounded-full border-0 bg-gray-100 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
                 <div class="flex items-center gap-3">
-                  <div class="px-4 py-3 bg-gray-100 rounded-full text-gray-600">BR</div>
+                  <div class="rounded-full bg-gray-100 px-4 py-3 text-gray-600">BR</div>
                   <input
                     v-model="contactForm.telefone"
                     type="tel"
                     placeholder="(00) 00000-0000"
-                    class="flex-1 px-4 py-3 bg-gray-100 rounded-full border-0 focus:ring-2 focus:ring-blue-500"
+                    class="flex-1 rounded-full border-0 bg-gray-100 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -151,7 +115,7 @@
                     v-model="contactForm.email"
                     type="email"
                     placeholder="Seu e-mail"
-                    class="w-full px-4 py-3 bg-gray-100 rounded-full border-0 focus:ring-2 focus:ring-blue-500"
+                    class="w-full rounded-full border-0 bg-gray-100 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -159,12 +123,12 @@
                     v-model="contactForm.mensagem"
                     placeholder="Olá, estou interessado nesse imóvel que encontrei no site."
                     rows="4"
-                    class="w-full px-4 py-3 bg-gray-100 rounded-3xl border-0 focus:ring-2 focus:ring-blue-500 resize-none"
+                    class="w-full resize-none rounded-3xl border-0 bg-gray-100 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                   ></textarea>
                 </div>
                 <button
                   type="submit"
-                  class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-4 px-6 rounded-full transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="w-full rounded-full bg-blue-900 px-6 py-4 font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
                   :disabled="contactForm.processing"
                 >
                   Enviar mensagem
@@ -172,10 +136,9 @@
               </form>
             </div>
 
-            <!-- Schedule Visit -->
-            <div class="bg-gradient-to-br from-orange-100 to-orange-50 rounded-2xl p-6 border border-orange-200 mb-6">
+            <div class="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-100 to-orange-50 p-6">
               <div class="flex items-start gap-4">
-                <div class="p-3 bg-orange-700/20 rounded-full">
+                <div class="rounded-full bg-orange-700/20 p-3">
                   <svg class="w-7 h-7 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -183,32 +146,15 @@
                 </div>
                 <div>
                   <h3 class="text-lg font-bold text-gray-800">Agende sua visita</h3>
-                  <p class="text-gray-600 text-sm">Conheça o imóvel pessoalmente</p>
+                  <p class="text-sm text-gray-600">Conheça o imóvel pessoalmente</p>
                 </div>
               </div>
-              <button class="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-full transition flex items-center justify-center gap-2">
+              <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-6 py-4 font-bold text-white transition hover:bg-orange-600">
                 <span>Agendar visita</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </button>
-            </div>
-
-            <!-- Stats -->
-            <div class="flex items-center justify-between text-gray-500">
-              <div class="flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span>385 visualizações</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                <span>1 salvos</span>
-              </div>
             </div>
           </div>
         </div>
@@ -289,6 +235,93 @@ const priceRows = computed(() => {
   return [];
 });
 
+const topHighlights = computed(() => {
+  const items = [];
+
+  if (Number(props.property?.bedrooms || 0) > 0) {
+    items.push({ label: 'Quartos', value: `${formatInteger(props.property.bedrooms)} Quartos` });
+  }
+  if (Number(props.property?.suites || 0) > 0) {
+    items.push({ label: 'Suítes', value: `${formatInteger(props.property.suites)} Suítes` });
+  }
+  if (Number(props.property?.bathrooms || 0) > 0) {
+    items.push({ label: 'Banheiros', value: `${formatInteger(props.property.bathrooms)} Banheiros` });
+  }
+  if (Number(props.property?.lavabos || 0) > 0) {
+    items.push({ label: 'Lavabos', value: `${formatInteger(props.property.lavabos)} Lavabos` });
+  }
+  if (Number(props.property?.garages || 0) > 0) {
+    items.push({ label: 'Vagas', value: `${formatInteger(props.property.garages)} Vagas` });
+  }
+  if (Number(props.property?.floor || 0) > 0) {
+    items.push({ label: 'Andar', value: `${formatInteger(props.property.floor)}º Andar` });
+  }
+  if (Number(props.property?.areaTotal || 0) > 0) {
+    items.push({ label: 'Área Total', value: `${formatArea(props.property.areaTotal)} m²` });
+  }
+  if (Number(props.property?.areaBuilt || 0) > 0) {
+    items.push({ label: 'Área Construída', value: `${formatArea(props.property.areaBuilt)} m²` });
+  }
+
+  return items;
+});
+
+const costRows = computed(() => {
+  const rows = [];
+
+  if (Number(props.property?.valorCondominio || 0) > 0) {
+    rows.push({ label: 'Condomínio', value: formatCurrencyBRL(props.property.valorCondominio, 2) });
+  }
+
+  if (Number(props.property?.valorIptu || 0) > 0) {
+    rows.push({ label: 'IPTU', value: formatCurrencyBRL(props.property.valorIptu, 2) });
+  }
+
+  return rows;
+});
+
+const detailSections = computed(() => {
+  const sections = [];
+
+  const commercial = [];
+  if (props.property?.aceitaPermuta) {
+    commercial.push({ label: 'Aceita Permuta', value: 'Sim' });
+  }
+  if (props.property?.aceitaFinanciamento) {
+    commercial.push({ label: 'Aceita Financiamento', value: 'Sim' });
+  }
+  if (commercial.length > 0) {
+    sections.push({ title: 'Condições Comerciais', items: commercial });
+  }
+
+  const areas = [];
+  if (Number(props.property?.areaTotal || 0) > 0) {
+    areas.push({ label: 'Área Total', value: `${formatArea(props.property.areaTotal)} m²` });
+  }
+  if (Number(props.property?.areaBuilt || 0) > 0) {
+    areas.push({ label: 'Área Construída', value: `${formatArea(props.property.areaBuilt)} m²` });
+  }
+  if (areas.length > 0) {
+    sections.push({ title: 'Áreas', items: areas });
+  }
+
+  const extras = [];
+  if (props.property?.mobiliado) {
+    extras.push({ label: 'Mobiliado', value: 'Sim' });
+  }
+  if (props.property?.posicaoSolar) {
+    extras.push({ label: 'Posição Solar', value: props.property.posicaoSolar });
+  }
+  if (props.property?.anoConstrucao) {
+    extras.push({ label: 'Ano de Construção', value: String(props.property.anoConstrucao) });
+  }
+  if (extras.length > 0) {
+    sections.push({ title: 'Características Extras', items: extras });
+  }
+
+  return sections;
+});
+
 const contactForm = useForm({
   property_id: props.property?.id ?? null,
   nome: '',
@@ -298,13 +331,21 @@ const contactForm = useForm({
   origem: 'Site - Interesse no Imóvel',
 });
 
-function formatPrice(value) {
-  if (!value) return '0';
-  return value.toLocaleString('pt-BR', { minimumFractionDigits: 0 });
+function formatInteger(value) {
+  return Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 }
 
-function formatCurrencyBRL(value) {
-  return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+function formatArea(value) {
+  return Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function formatCurrencyBRL(value, digits = 2) {
+  return Number(value || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
 }
 
 function submitContact() {

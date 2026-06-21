@@ -1,176 +1,309 @@
 <template>
   <AdminLayout>
     <template #pageTitle>{{ isEdit ? 'Editar Imóvel' : 'Novo Imóvel' }}</template>
-    
+
     <div v-if="showProcessingBanner" class="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-4 text-blue-950">
       <div class="flex items-center justify-between gap-4">
         <div>
           <div class="font-semibold">Processando imagens em background</div>
-          <div class="text-sm text-blue-900/80 mt-1">
+          <div class="mt-1 text-sm text-blue-900/80">
             {{ processingSummaryText }}
           </div>
         </div>
-        <div class="text-sm font-semibold whitespace-nowrap">
+        <div class="whitespace-nowrap text-sm font-semibold">
           {{ processingCounts.completed }}/{{ processingCounts.total }} concluídas
         </div>
       </div>
-      <div class="mt-3 h-2 rounded-full bg-blue-100 overflow-hidden">
+      <div class="mt-3 h-2 overflow-hidden rounded-full bg-blue-100">
         <div class="h-2 rounded-full bg-blue-700 transition-all duration-300" :style="{ width: `${processingProgress}%` }"></div>
       </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow p-6 border border-gray-200">
-      <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="space-y-6">
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Título</label>
-            <input v-model="form.titulo" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título do imóvel">
-            <div v-if="form.errors.titulo" class="text-sm text-red-600 mt-1">{{ form.errors.titulo }}</div>
+    <form @submit.prevent="submit" class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div class="space-y-6 xl:col-span-2">
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
+          <div class="mb-6">
+            <h2 class="text-lg font-semibold text-gray-900">Dados Principais</h2>
+            <p class="mt-1 text-sm text-gray-500">Informações básicas do anúncio, negociação e localização principal.</p>
           </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Código de Referência</label>
-            <input v-model="form.codigo_referencia" :disabled="!isEdit" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3 disabled:bg-gray-100 disabled:text-gray-500" placeholder="Gerado automaticamente">
-            <div v-if="form.errors.codigo_referencia" class="text-sm text-red-600 mt-1">{{ form.errors.codigo_referencia }}</div>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-4">
+
+          <div class="space-y-5">
             <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Tipo de imóvel</label>
-              <select v-model="form.tipo_propriedade_id" class="w-full border border-gray-300 rounded-lg px-4 py-3">
-                <option v-for="type in propertyTypes" :key="type.id" :value="type.id">
-                  {{ type.nome_subtipo ? `${type.nome_tipo} / ${type.nome_subtipo}` : type.nome_tipo }}
-                </option>
-              </select>
-              <div v-if="form.errors.tipo_propriedade_id" class="text-sm text-red-600 mt-1">{{ form.errors.tipo_propriedade_id }}</div>
+              <label class="mb-2 block text-sm font-medium text-gray-700">Título</label>
+              <input v-model="form.titulo" type="text" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="Título do imóvel">
+              <div v-if="form.errors.titulo" class="mt-1 text-sm text-red-600">{{ form.errors.titulo }}</div>
             </div>
+
             <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Negócio</label>
-              <div class="rounded-lg border border-gray-300 px-4 py-3 space-y-3">
+              <label class="mb-2 block text-sm font-medium text-gray-700">Código de Referência</label>
+              <input v-model="form.codigo_referencia" :disabled="!isEdit" type="text" class="w-full rounded-lg border border-gray-300 px-4 py-3 disabled:bg-gray-100 disabled:text-gray-500" placeholder="Gerado automaticamente">
+              <div v-if="form.errors.codigo_referencia" class="mt-1 text-sm text-red-600">{{ form.errors.codigo_referencia }}</div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700">Tipo de imóvel</label>
+                <select v-model="form.tipo_propriedade_id" class="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white">
+                  <option v-for="type in propertyTypes" :key="type.id" :value="type.id">
+                    {{ type.nome_subtipo ? `${type.nome_tipo} / ${type.nome_subtipo}` : type.nome_tipo }}
+                  </option>
+                </select>
+                <div v-if="form.errors.tipo_propriedade_id" class="mt-1 text-sm text-red-600">{{ form.errors.tipo_propriedade_id }}</div>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700">Condomínio</label>
+                <select v-model="form.condominium_id" class="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white">
+                  <option :value="null">Selecione um condomínio</option>
+                  <option v-for="item in condominiums" :key="item.id" :value="item.id">{{ item.name }}</option>
+                </select>
+                <div v-if="form.errors.condominium_id" class="mt-1 text-sm text-red-600">{{ form.errors.condominium_id }}</div>
+              </div>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700">Negócio</label>
+              <div class="grid grid-cols-1 gap-3 rounded-lg border border-gray-300 px-4 py-4 sm:grid-cols-3">
                 <label v-for="bt in businessTypes" :key="bt.id" class="flex items-center gap-3 text-sm text-gray-700">
                   <input v-model="form.business_type_ids" type="checkbox" :value="bt.id" class="rounded border-gray-300">
                   <span>{{ businessTypeLabel(bt.name) }}</span>
                 </label>
               </div>
-              <div v-if="form.errors.business_type_ids" class="text-sm text-red-600 mt-1">{{ form.errors.business_type_ids }}</div>
+              <div v-if="form.errors.business_type_ids" class="mt-1 text-sm text-red-600">{{ form.errors.business_type_ids }}</div>
             </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700">Valor de venda</label>
+                <input v-model="form.valor_venda" type="text" inputmode="numeric" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="R$ 0,00" @input="onSalePriceInput">
+                <div v-if="form.errors.valor_venda" class="mt-1 text-sm text-red-600">{{ form.errors.valor_venda }}</div>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700">Valor de locação</label>
+                <input v-model="form.valor_locacao" type="text" inputmode="numeric" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="R$ 0,00" @input="onRentPriceInput">
+                <div v-if="form.errors.valor_locacao" class="mt-1 text-sm text-red-600">{{ form.errors.valor_locacao }}</div>
+              </div>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700">Endereço</label>
+              <input v-model="form.endereco" type="text" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="Rua, Número">
+              <div v-if="form.errors.endereco" class="mt-1 text-sm text-red-600">{{ form.errors.endereco }}</div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700">Bairro</label>
+                <input v-model="form.bairro" type="text" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="Bairro">
+                <div v-if="form.errors.bairro" class="mt-1 text-sm text-red-600">{{ form.errors.bairro }}</div>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700">Cidade</label>
+                <input v-model="form.cidade" type="text" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="Cidade">
+                <div v-if="form.errors.cidade" class="mt-1 text-sm text-red-600">{{ form.errors.cidade }}</div>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700">UF</label>
+                <input v-model="form.estado" type="text" maxlength="2" class="w-full rounded-lg border border-gray-300 px-4 py-3 uppercase" placeholder="SP">
+                <div v-if="form.errors.estado" class="mt-1 text-sm text-red-600">{{ form.errors.estado }}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
+          <div class="mb-6">
+            <h2 class="text-lg font-semibold text-gray-900">Características do Imóvel</h2>
+            <p class="mt-1 text-sm text-gray-500">Campos estruturados para cadastro completo e futuras integrações com CRM.</p>
           </div>
 
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Condomínio</label>
-            <select v-model="form.condominium_id" class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white">
-              <option :value="null">Selecione um condomínio</option>
-              <option v-for="item in condominiums" :key="item.id" :value="item.id">{{ item.name }}</option>
-            </select>
-            <div v-if="form.errors.condominium_id" class="text-sm text-red-600 mt-1">{{ form.errors.condominium_id }}</div>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-8">
             <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Valor de venda</label>
-              <input v-model="form.valor_venda" type="text" inputmode="numeric" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="R$ 0,00" @input="onSalePriceInput">
-              <div v-if="form.errors.valor_venda" class="text-sm text-red-600 mt-1">{{ form.errors.valor_venda }}</div>
+              <div class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Informações Gerais</div>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Quartos</label>
+                  <input v-model.number="form.quartos" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="0">
+                  <div v-if="form.errors.quartos" class="mt-1 text-sm text-red-600">{{ form.errors.quartos }}</div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Suítes</label>
+                  <input v-model.number="form.suites" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="0">
+                  <div v-if="form.errors.suites" class="mt-1 text-sm text-red-600">{{ form.errors.suites }}</div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Banheiros</label>
+                  <input v-model.number="form.banheiros" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="0">
+                  <div v-if="form.errors.banheiros" class="mt-1 text-sm text-red-600">{{ form.errors.banheiros }}</div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Lavabos</label>
+                  <input v-model.number="form.lavabos" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="0">
+                  <div v-if="form.errors.lavabos" class="mt-1 text-sm text-red-600">{{ form.errors.lavabos }}</div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Garagens</label>
+                  <input v-model.number="form.garagens" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="0">
+                  <div v-if="form.errors.garagens" class="mt-1 text-sm text-red-600">{{ form.errors.garagens }}</div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Andar</label>
+                  <input v-model.number="form.andar" type="number" min="0" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="0">
+                  <div v-if="form.errors.andar" class="mt-1 text-sm text-red-600">{{ form.errors.andar }}</div>
+                </div>
+              </div>
             </div>
+
             <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Valor de locação</label>
-              <input v-model="form.valor_locacao" type="text" inputmode="numeric" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="R$ 0,00" @input="onRentPriceInput">
-              <div v-if="form.errors.valor_locacao" class="text-sm text-red-600 mt-1">{{ form.errors.valor_locacao }}</div>
+              <div class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Áreas</div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Área Total (m²)</label>
+                  <input v-model.number="form.area_total" type="number" min="0" step="0.01" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="0,00">
+                  <div v-if="form.errors.area_total" class="mt-1 text-sm text-red-600">{{ form.errors.area_total }}</div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Área Construída (m²)</label>
+                  <input v-model.number="form.area_construida" type="number" min="0" step="0.01" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="0,00">
+                  <div v-if="form.errors.area_construida" class="mt-1 text-sm text-red-600">{{ form.errors.area_construida }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Financeiro</div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Valor do Condomínio</label>
+                  <input v-model="form.valor_condominio" type="text" inputmode="numeric" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="R$ 0,00" @input="onCondominiumPriceInput">
+                  <div v-if="form.errors.valor_condominio" class="mt-1 text-sm text-red-600">{{ form.errors.valor_condominio }}</div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Valor do IPTU</label>
+                  <input v-model="form.valor_iptu" type="text" inputmode="numeric" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="R$ 0,00" @input="onIptuPriceInput">
+                  <div v-if="form.errors.valor_iptu" class="mt-1 text-sm text-red-600">{{ form.errors.valor_iptu }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Comercial</div>
+              <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                  <input v-model="form.aceita_permuta" type="checkbox" class="rounded border-gray-300">
+                  Aceita Permuta
+                </label>
+                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                  <input v-model="form.aceita_financiamento" type="checkbox" class="rounded border-gray-300">
+                  Aceita Financiamento
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Características Extras</div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div class="md:col-span-1">
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Mobiliado</label>
+                  <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                    <input v-model="form.mobiliado" type="checkbox" class="rounded border-gray-300">
+                    Imóvel mobiliado
+                  </label>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Ano de Construção</label>
+                  <input v-model.number="form.ano_construcao" type="number" min="1800" :max="currentYear + 1" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="2021">
+                  <div v-if="form.errors.ano_construcao" class="mt-1 text-sm text-red-600">{{ form.errors.ano_construcao }}</div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700">Posição Solar</label>
+                  <select v-model="form.posicao_solar" class="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white">
+                    <option value="">Selecione</option>
+                    <option v-for="option in solarPositionOptions" :key="option" :value="option">{{ option }}</option>
+                  </select>
+                  <div v-if="form.errors.posicao_solar" class="mt-1 text-sm text-red-600">{{ form.errors.posicao_solar }}</div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Endereço</label>
-            <input v-model="form.endereco" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Rua, Número">
-            <div v-if="form.errors.endereco" class="text-sm text-red-600 mt-1">{{ form.errors.endereco }}</div>
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
+          <div class="mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Descrição</h2>
+            <p class="mt-1 text-sm text-gray-500">Conteúdo exibido na página pública do imóvel.</p>
           </div>
 
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Bairro</label>
-              <input v-model="form.bairro" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Bairro">
-              <div v-if="form.errors.bairro" class="text-sm text-red-600 mt-1">{{ form.errors.bairro }}</div>
-            </div>
-            <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Cidade</label>
-              <input v-model="form.cidade" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Cidade">
-              <div v-if="form.errors.cidade" class="text-sm text-red-600 mt-1">{{ form.errors.cidade }}</div>
-            </div>
-            <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">UF</label>
-              <input v-model="form.estado" type="text" maxlength="2" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="SP">
-              <div v-if="form.errors.estado" class="text-sm text-red-600 mt-1">{{ form.errors.estado }}</div>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Quartos</label>
-              <input v-model.number="form.quartos" type="number" min="0" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="0">
-              <div v-if="form.errors.quartos" class="text-sm text-red-600 mt-1">{{ form.errors.quartos }}</div>
-            </div>
-            <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Banheiros</label>
-              <input v-model.number="form.banheiros" type="number" min="0" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="0">
-              <div v-if="form.errors.banheiros" class="text-sm text-red-600 mt-1">{{ form.errors.banheiros }}</div>
-            </div>
-            <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Garagens</label>
-              <input v-model.number="form.garagens" type="number" min="0" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="0">
-              <div v-if="form.errors.garagens" class="text-sm text-red-600 mt-1">{{ form.errors.garagens }}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="space-y-6">
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Área (m²)</label>
-            <input type="number" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="0">
+          <textarea v-model="form.descricao" rows="10" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="Descrição do imóvel..."></textarea>
+          <div v-if="form.errors.descricao" class="mt-1 text-sm text-red-600">{{ form.errors.descricao }}</div>
+        </section>
+      </div>
+
+      <div class="space-y-6">
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
+          <div class="mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Configurações</h2>
           </div>
 
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Flags</label>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label class="flex items-center gap-2 text-sm text-gray-700">
-                <input v-model="form.is_exclusive" type="checkbox" class="rounded border-gray-300">
-                Exclusivo
-              </label>
-              <label class="flex items-center gap-2 text-sm text-gray-700">
-                <input v-model="form.is_off_market" type="checkbox" class="rounded border-gray-300">
-                Off Market
-              </label>
+          <div class="space-y-6">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700">Flags</label>
+              <div class="grid grid-cols-1 gap-3">
+                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                  <input v-model="form.is_exclusive" type="checkbox" class="rounded border-gray-300">
+                  Exclusivo
+                </label>
+                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                  <input v-model="form.is_off_market" type="checkbox" class="rounded border-gray-300">
+                  Off Market
+                </label>
+              </div>
             </div>
-            <div v-if="form.errors.is_exclusive" class="text-sm text-red-600 mt-1">{{ form.errors.is_exclusive }}</div>
-            <div v-if="form.errors.is_off_market" class="text-sm text-red-600 mt-1">{{ form.errors.is_off_market }}</div>
-          </div>
 
-          <div v-if="specialCategories.length > 0">
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Categoria especial</label>
-            <select v-model="selectedSpecialCategoryId" class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white">
-              <option value="">Nenhuma</option>
-              <option v-for="sc in specialCategories" :key="sc.id" :value="String(sc.id)">{{ sc.name }}</option>
-            </select>
-            <div v-if="form.errors.special_category_ids" class="text-sm text-red-600 mt-1">{{ form.errors.special_category_ids }}</div>
-          </div>
-
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Exibir na Home</label>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <label class="flex items-center gap-2 text-sm text-gray-700">
-                <input v-model="form.show_in_home_selecao_especial" type="checkbox" class="rounded border-gray-300">
-                Seleção especial
-              </label>
-              <label class="flex items-center gap-2 text-sm text-gray-700">
-                <input v-model="form.show_in_home_mais_procurados" type="checkbox" class="rounded border-gray-300">
-                Mais procurados
-              </label>
-              <label class="flex items-center gap-2 text-sm text-gray-700">
-                <input v-model="form.show_in_home_visto_recentemente" type="checkbox" class="rounded border-gray-300">
-                Visto recentemente
-              </label>
+            <div v-if="specialCategories.length > 0">
+              <label class="mb-2 block text-sm font-medium text-gray-700">Categoria especial</label>
+              <select v-model="selectedSpecialCategoryId" class="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white">
+                <option value="">Nenhuma</option>
+                <option v-for="sc in specialCategories" :key="sc.id" :value="String(sc.id)">{{ sc.name }}</option>
+              </select>
+              <div v-if="form.errors.special_category_ids" class="mt-1 text-sm text-red-600">{{ form.errors.special_category_ids }}</div>
             </div>
-            <div v-if="form.errors.show_in_home_selecao_especial" class="text-sm text-red-600 mt-1">{{ form.errors.show_in_home_selecao_especial }}</div>
-            <div v-if="form.errors.show_in_home_mais_procurados" class="text-sm text-red-600 mt-1">{{ form.errors.show_in_home_mais_procurados }}</div>
-            <div v-if="form.errors.show_in_home_visto_recentemente" class="text-sm text-red-600 mt-1">{{ form.errors.show_in_home_visto_recentemente }}</div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700">Exibir na Home</label>
+              <div class="grid grid-cols-1 gap-3">
+                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                  <input v-model="form.show_in_home_selecao_especial" type="checkbox" class="rounded border-gray-300">
+                  Seleção especial
+                </label>
+                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                  <input v-model="form.show_in_home_mais_procurados" type="checkbox" class="rounded border-gray-300">
+                  Mais procurados
+                </label>
+                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                  <input v-model="form.show_in_home_visto_recentemente" type="checkbox" class="rounded border-gray-300">
+                  Visto recentemente
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
+          <div class="mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Imagens</h2>
           </div>
 
           <PropertyImageUploader
@@ -182,40 +315,38 @@
             :max-file-size-bytes="imageUploadConfig?.maxFileSizeBytes || (10 * 1024 * 1024)"
             :parallel-uploads="imageUploadConfig?.parallelUploads || 6"
           />
-          <div v-if="form.errors.featured_upload_token" class="text-sm text-red-600 -mt-4">{{ form.errors.featured_upload_token }}</div>
-          <div v-if="form.errors.gallery_upload_tokens" class="text-sm text-red-600 -mt-4">{{ form.errors.gallery_upload_tokens }}</div>
-          <div v-if="uploadFormError" class="text-sm text-red-600 -mt-4">{{ uploadFormError }}</div>
-          
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Descrição</label>
-            <textarea v-model="form.descricao" rows="8" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Descrição do imóvel..."></textarea>
-            <div v-if="form.errors.descricao" class="text-sm text-red-600 mt-1">{{ form.errors.descricao }}</div>
+          <div v-if="form.errors.featured_upload_token" class="mt-3 text-sm text-red-600">{{ form.errors.featured_upload_token }}</div>
+          <div v-if="form.errors.gallery_upload_tokens" class="mt-1 text-sm text-red-600">{{ form.errors.gallery_upload_tokens }}</div>
+          <div v-if="uploadFormError" class="mt-1 text-sm text-red-600">{{ uploadFormError }}</div>
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
+          <div class="mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">SEO</h2>
           </div>
 
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">SEO</label>
-            <div class="space-y-4">
-              <div>
-                <div class="text-sm text-gray-700 font-medium mb-2">Meta Title</div>
-                <input v-model="form.meta_title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título SEO (opcional)">
-                <div v-if="form.errors.meta_title" class="text-sm text-red-600 mt-1">{{ form.errors.meta_title }}</div>
-              </div>
-              <div>
-                <div class="text-sm text-gray-700 font-medium mb-2">Meta Description</div>
-                <textarea v-model="form.meta_description" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Descrição SEO (opcional)"></textarea>
-                <div v-if="form.errors.meta_description" class="text-sm text-red-600 mt-1">{{ form.errors.meta_description }}</div>
-              </div>
+          <div class="space-y-4">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700">Meta Title</label>
+              <input v-model="form.meta_title" type="text" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="Título SEO (opcional)">
+              <div v-if="form.errors.meta_title" class="mt-1 text-sm text-red-600">{{ form.errors.meta_title }}</div>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700">Meta Description</label>
+              <textarea v-model="form.meta_description" rows="4" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="Descrição SEO (opcional)"></textarea>
+              <div v-if="form.errors.meta_description" class="mt-1 text-sm text-red-600">{{ form.errors.meta_description }}</div>
             </div>
           </div>
-        </div>
-        
-        <div class="lg:col-span-2">
-          <button type="submit" :disabled="form.processing" class="bg-blue-900 hover:bg-blue-800 disabled:opacity-60 text-white px-8 py-3 rounded-lg font-semibold transition">
-            Salvar Imóvel
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
+          <button type="submit" :disabled="form.processing" class="w-full rounded-lg bg-blue-900 px-6 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:opacity-60">
+            {{ form.processing ? 'Salvando...' : 'Salvar Imóvel' }}
           </button>
-        </div>
-      </form>
-    </div>
+        </section>
+      </div>
+    </form>
   </AdminLayout>
 </template>
 
@@ -265,6 +396,8 @@ const props = defineProps({
 });
 
 const isEdit = computed(() => !!props.property?.id);
+const currentYear = new Date().getFullYear();
+const solarPositionOptions = ['Norte', 'Sul', 'Leste', 'Oeste', 'Nordeste', 'Noroeste', 'Sudeste', 'Sudoeste'];
 
 const defaultPropertyTypeId = computed(() => props.propertyTypes[0]?.id ?? null);
 const defaultBusinessTypeIds = computed(() => {
@@ -272,8 +405,16 @@ const defaultBusinessTypeIds = computed(() => {
   return ids.length > 0 ? ids : (props.businessTypes[0]?.id ? [props.businessTypes[0].id] : []);
 });
 
-const formatCurrencyNumberBRL = (value) => {
-  const number = Number(value || 0);
+const formatNullableCurrencyNumberBRL = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) {
+    return '';
+  }
+
   return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
@@ -286,15 +427,27 @@ const form = useForm({
   tipo_propriedade_id: props.property?.tipo_propriedade_id ?? defaultPropertyTypeId.value,
   condominium_id: props.property?.condominium_id ?? null,
   business_type_ids: defaultBusinessTypeIds.value,
-  valor_venda: formatCurrencyNumberBRL(props.property?.valor_venda),
-  valor_locacao: formatCurrencyNumberBRL(props.property?.valor_locacao),
+  valor_venda: formatNullableCurrencyNumberBRL(props.property?.valor_venda),
+  valor_locacao: formatNullableCurrencyNumberBRL(props.property?.valor_locacao),
   endereco: props.property?.endereco || '',
   bairro: props.property?.bairro || '',
   cidade: props.property?.cidade || '',
   estado: props.property?.estado || 'SP',
+  area_total: props.property?.area_total ?? null,
+  area_construida: props.property?.area_construida ?? props.property?.area_util ?? null,
   quartos: props.property?.quartos ?? null,
+  suites: props.property?.suites ?? null,
   banheiros: props.property?.banheiros ?? null,
+  lavabos: props.property?.lavabos ?? null,
   garagens: props.property?.garagens ?? null,
+  andar: props.property?.andar ?? null,
+  valor_condominio: formatNullableCurrencyNumberBRL(props.property?.valor_condominio ?? props.property?.condominio),
+  valor_iptu: formatNullableCurrencyNumberBRL(props.property?.valor_iptu ?? props.property?.iptu),
+  aceita_permuta: !!props.property?.aceita_permuta,
+  aceita_financiamento: !!props.property?.aceita_financiamento,
+  mobiliado: !!props.property?.mobiliado,
+  ano_construcao: props.property?.ano_construcao ?? null,
+  posicao_solar: props.property?.posicao_solar || '',
   is_exclusive: !!props.property?.is_exclusive,
   is_off_market: !!props.property?.is_off_market,
   show_in_home_selecao_especial: !!props.property?.show_in_home_selecao_especial,
@@ -331,6 +484,7 @@ let processingTimer = null;
 
 const formatCurrencyBRL = (value) => {
   const digits = String(value ?? '').replace(/\D/g, '');
+  if (!digits) return '';
   const number = Number(digits) / 100;
   return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
@@ -388,6 +542,14 @@ const onSalePriceInput = () => {
 
 const onRentPriceInput = () => {
   form.valor_locacao = formatCurrencyBRL(form.valor_locacao);
+};
+
+const onCondominiumPriceInput = () => {
+  form.valor_condominio = formatCurrencyBRL(form.valor_condominio);
+};
+
+const onIptuPriceInput = () => {
+  form.valor_iptu = formatCurrencyBRL(form.valor_iptu);
 };
 
 async function refreshProcessingStatus() {
