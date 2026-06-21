@@ -80,7 +80,7 @@ const primaryLinks = [
 
 const headerSurfaceClass = computed(() => {
   if (isSolid.value) {
-    return 'border-white/70 bg-white/93 text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.10)] backdrop-blur-xl';
+    return 'border-white bg-white text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.10)]';
   }
 
   return 'border-white/18 bg-[rgba(60,66,79,0.34)] text-white shadow-none backdrop-blur-sm';
