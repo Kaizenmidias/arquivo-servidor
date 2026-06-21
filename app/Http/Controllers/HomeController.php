@@ -522,12 +522,8 @@ class HomeController extends Controller
 
         $photos = $propertyModel->photos
             ->sortBy('ordem')
-            ->map(fn (PropertyPhoto $p) => [
-                'full' => $p->url ?: $p->original_url ?: $p->medium_url ?: $p->thumb_small_url,
-                'medium' => $this->propertyPhotoCardUrl($p),
-                'thumb' => $p->thumb_small_url ?: $this->propertyPhotoCardUrl($p),
-            ])
-            ->filter(fn ($p) => !empty($p['full']))
+            ->map(fn (PropertyPhoto $p) => $this->serializeResponsivePhoto($p))
+            ->filter(fn ($p) => !empty($p['full']) || !empty($p['src']))
             ->values()
             ->all();
 
@@ -831,7 +827,7 @@ class HomeController extends Controller
         $sortedPhotos = $property->photos->sortBy('ordem');
         $photo = $sortedPhotos->firstWhere('principal', true) ?? $sortedPhotos->first();
         $photoUrls = $sortedPhotos
-            ->map(fn (PropertyPhoto $item) => $this->propertyPhotoCardUrl($item))
+            ->map(fn (PropertyPhoto $item) => $this->serializeResponsivePhoto($item))
             ->filter()
             ->values()
             ->all();
@@ -855,7 +851,7 @@ class HomeController extends Controller
             'type' => $property->primaryBusinessLabel(),
             'businessLabels' => $property->businessLabels(),
             'condominium' => $property->condominium?->name,
-            'photo' => $this->propertyPhotoCardUrl($photo),
+            'photo' => $this->serializeResponsivePhoto($photo),
             'photos' => $photoUrls,
         ];
     }
@@ -943,11 +939,42 @@ class HomeController extends Controller
             return null;
         }
 
-        return $photo->thumb_medium_url
+        return $photo->thumb_small_url
+            ?: $photo->thumb_medium_url
             ?: $photo->medium_url
-            ?: $photo->thumb_small_url
             ?: $photo->original_url
             ?: $photo->url
             ?: null;
+    }
+
+    private function serializeResponsivePhoto(?PropertyPhoto $photo): ?array
+    {
+        if (!$photo) {
+            return null;
+        }
+
+        $thumb = $photo->thumb_small_url ?: $photo->thumb_medium_url ?: $photo->url ?: $photo->original_url;
+        $medium = $photo->thumb_medium_url ?: $photo->url ?: $photo->thumb_small_url ?: $photo->original_url;
+        $full = $photo->url ?: $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $photo->original_url;
+
+        if (!$thumb && !$medium && !$full) {
+            return null;
+        }
+
+        $srcset = collect([
+            $photo->thumb_small_url ? "{$photo->thumb_small_url} 600w" : null,
+            $photo->thumb_medium_url ? "{$photo->thumb_medium_url} 1200w" : null,
+            $photo->url ? "{$photo->url} 1920w" : null,
+        ])->filter()->implode(', ');
+
+        return [
+            'src' => $thumb ?: $medium ?: $full,
+            'thumb' => $thumb ?: $medium ?: $full,
+            'medium' => $medium ?: $thumb ?: $full,
+            'full' => $full ?: $medium ?: $thumb,
+            'srcset' => $srcset !== '' ? $srcset : null,
+            'sizes' => '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 600px',
+            'full_sizes' => '(max-width: 768px) 100vw, 1200px',
+        ];
     }
 }

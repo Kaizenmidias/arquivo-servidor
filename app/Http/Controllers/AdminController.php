@@ -918,10 +918,10 @@ class AdminController extends Controller
             'specialCategories' => $specialCategories,
             'imageUploadConfig' => [
                 'maxFiles' => config('image_uploads.max_files_per_property'),
-                'maxFileSizeBytes' => (int) config('image_uploads.max_file_size_bytes', 10 * 1024 * 1024),
+                'maxFileSizeBytes' => (int) config('image_uploads.max_file_size_bytes', 50 * 1024 * 1024),
                 'parallelUploads' => (int) config('image_uploads.parallel_uploads', 6),
                 'pollIntervalMs' => (int) config('image_uploads.poll_interval_ms', 4000),
-                'requestMaxBodyHint' => (int) config('image_uploads.request_max_body_hint', 256 * 1024 * 1024),
+                'requestMaxBodyHint' => (int) config('image_uploads.request_max_body_hint', 60 * 1024 * 1024),
             ],
         ]);
     }
@@ -1021,6 +1021,11 @@ class AdminController extends Controller
 
         try {
             $galleryTokens = $validated['gallery_upload_tokens'] ?? [];
+            $this->assertPropertyImageLimit(
+                null,
+                count($galleryTokens),
+                !empty($validated['featured_upload_token'])
+            );
 
             Log::info('Iniciando cadastro de imovel com uploads temporarios.', [
                 'user_id' => $request->user()?->id,
@@ -1043,6 +1048,7 @@ class AdminController extends Controller
             $property = Property::create([
                 ...collect($validated)->except([
                     'featured_upload_token',
+                    'featured_existing_photo_id',
                     'gallery_upload_tokens',
                     'special_category_ids',
                     'business_type_ids',
@@ -1112,10 +1118,10 @@ class AdminController extends Controller
             'selectedSpecialCategoryIds' => $property->specialCategories->pluck('id')->values(),
             'imageUploadConfig' => [
                 'maxFiles' => config('image_uploads.max_files_per_property'),
-                'maxFileSizeBytes' => (int) config('image_uploads.max_file_size_bytes', 10 * 1024 * 1024),
+                'maxFileSizeBytes' => (int) config('image_uploads.max_file_size_bytes', 50 * 1024 * 1024),
                 'parallelUploads' => (int) config('image_uploads.parallel_uploads', 6),
                 'pollIntervalMs' => (int) config('image_uploads.poll_interval_ms', 4000),
-                'requestMaxBodyHint' => (int) config('image_uploads.request_max_body_hint', 256 * 1024 * 1024),
+                'requestMaxBodyHint' => (int) config('image_uploads.request_max_body_hint', 60 * 1024 * 1024),
             ],
         ]);
     }
@@ -1137,6 +1143,12 @@ class AdminController extends Controller
         }
 
         $galleryTokens = $validated['gallery_upload_tokens'] ?? [];
+        $this->assertPropertyImageLimit(
+            $property,
+            count($galleryTokens),
+            !empty($validated['featured_upload_token']),
+            $validated['remove_photo_ids'] ?? []
+        );
 
         Log::info('Iniciando atualizacao de imovel com uploads temporarios.', [
             'property_id' => $property->id,
@@ -1158,6 +1170,7 @@ class AdminController extends Controller
         $property->fill([
             ...collect($validated)->except([
                 'featured_upload_token',
+                'featured_existing_photo_id',
                 'gallery_upload_tokens',
                 'remove_photo_ids',
                 'photo_order_ids',
@@ -1228,6 +1241,8 @@ class AdminController extends Controller
             $validated['featured_upload_token'] ?? null,
             $galleryTokens
         );
+
+        $this->syncFeaturedExistingPhoto($property, $validated['featured_existing_photo_id'] ?? null);
 
         Log::info('Atualizacao de imovel finalizada com uploads vinculados.', [
             'property_id' => $property->id,
@@ -1437,6 +1452,79 @@ class AdminController extends Controller
         }
 
         return (float) $normalized;
+    }
+
+    private function assertPropertyImageLimit(
+        ?Property $property,
+        int $newGalleryCount,
+        bool $hasFeaturedUpload,
+        array $removePhotoIds = []
+    ): void {
+        $maxFiles = (int) config('image_uploads.max_files_per_property', 200);
+        if ($maxFiles <= 0) {
+            return;
+        }
+
+        $removedIds = collect($removePhotoIds)
+            ->map(fn ($value) => (int) $value)
+            ->filter(fn (int $value) => $value > 0)
+            ->unique();
+
+        $currentCount = $property?->photos()->count() ?? 0;
+        $existingRemovedCount = $property
+            ? $property->photos()->whereIn('id', $removedIds->all())->count()
+            : 0;
+        $currentFeaturedId = $property?->photos()->where('principal', true)->value('id');
+        $featuredWillBeReplaced = $hasFeaturedUpload
+            && $currentFeaturedId
+            && !$removedIds->contains((int) $currentFeaturedId);
+
+        $projectedCount = $currentCount
+            - $existingRemovedCount
+            - ($featuredWillBeReplaced ? 1 : 0)
+            + max(0, $newGalleryCount)
+            + ($hasFeaturedUpload ? 1 : 0);
+
+        if ($projectedCount > $maxFiles) {
+            throw ValidationException::withMessages([
+                'gallery_upload_tokens' => "Cada imovel pode ter no maximo {$maxFiles} imagens.",
+            ]);
+        }
+    }
+
+    private function syncFeaturedExistingPhoto(Property $property, mixed $featuredExistingPhotoId): void
+    {
+        $photoId = (int) $featuredExistingPhotoId;
+        if ($photoId <= 0) {
+            return;
+        }
+
+        $selectedPhoto = $property->photos()->find($photoId);
+        if (!$selectedPhoto) {
+            return;
+        }
+
+        DB::transaction(function () use ($property, $selectedPhoto): void {
+            $property->photos()->update(['principal' => false]);
+
+            $selectedPhoto->update([
+                'principal' => true,
+                'ordem' => 0,
+            ]);
+
+            $others = $property->photos()
+                ->where('id', '!=', $selectedPhoto->id)
+                ->orderBy('ordem')
+                ->orderBy('id')
+                ->get();
+
+            foreach ($others as $index => $photo) {
+                $photo->update([
+                    'principal' => false,
+                    'ordem' => $index + 1,
+                ]);
+            }
+        });
     }
 
     private function buildPropertyCharacteristicsPayload(array $validated): array

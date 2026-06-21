@@ -9,7 +9,9 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-80"></div>
         <component
           :is="activeItem.kind === 'video' ? 'video' : 'img'"
-          :src="activeItem.kind === 'video' ? activeItem.src : activeItem.full"
+          :src="activeItem.kind === 'video' ? activeItem.src : activeItem.medium"
+          :srcset="activeItem.kind === 'image' ? (activeItem.srcset || undefined) : undefined"
+          :sizes="activeItem.kind === 'image' ? (activeItem.sizes || undefined) : undefined"
           :poster="activeItem.kind === 'video' ? activeItem.poster : undefined"
           :alt="activeItem.alt"
           :autoplay="false"
@@ -43,6 +45,8 @@
           <component
             :is="item.kind === 'video' ? 'video' : 'img'"
             :src="item.kind === 'video' ? item.src : item.thumb"
+            :srcset="item.kind === 'image' ? (item.srcset || undefined) : undefined"
+            :sizes="item.kind === 'image' ? '(max-width: 768px) 50vw, 600px' : undefined"
             :poster="item.kind === 'video' ? item.poster : undefined"
             :alt="item.alt"
             :autoplay="false"
@@ -81,6 +85,8 @@
         <component
           :is="item.kind === 'video' ? 'video' : 'img'"
           :src="item.kind === 'video' ? item.src : item.thumb"
+          :srcset="item.kind === 'image' ? (item.srcset || undefined) : undefined"
+          :sizes="item.kind === 'image' ? '(max-width: 768px) 33vw, 600px' : undefined"
           :poster="item.kind === 'video' ? item.poster : undefined"
           :alt="item.alt"
           :autoplay="false"
@@ -141,6 +147,8 @@
                     :is="activeItem.kind === 'video' ? 'video' : 'img'"
                     :key="activeItem.id"
                     :src="activeItem.kind === 'video' ? activeItem.src : activeItem.full"
+                    :srcset="activeItem.kind === 'image' ? (activeItem.srcset || undefined) : undefined"
+                    :sizes="activeItem.kind === 'image' ? (activeItem.fullSizes || undefined) : undefined"
                     :poster="activeItem.kind === 'video' ? activeItem.poster : undefined"
                     :alt="activeItem.alt"
                     :autoplay="false"
@@ -180,6 +188,8 @@
                   <component
                     :is="item.kind === 'video' ? 'video' : 'img'"
                     :src="item.kind === 'video' ? item.src : item.thumb"
+                    :srcset="item.kind === 'image' ? (item.srcset || undefined) : undefined"
+                    :sizes="item.kind === 'image' ? '(max-width: 768px) 33vw, 600px' : undefined"
                     :poster="item.kind === 'video' ? item.poster : undefined"
                     :alt="item.alt"
                     :autoplay="false"
@@ -261,8 +271,12 @@ const items = computed(() => {
       id: item?.id ?? `${kind}-${index}`,
       kind,
       full: item?.full || fallback,
-      thumb: item?.thumb || item?.medium || fallback,
-      src: item?.src || item?.full || fallback,
+      medium: item?.medium || item?.full || item?.thumb || fallback,
+      thumb: item?.thumb || item?.medium || item?.full || fallback,
+      src: item?.src || item?.thumb || item?.medium || item?.full || fallback,
+      srcset: item?.srcset || null,
+      sizes: item?.sizes || '(max-width: 768px) 100vw, 1200px',
+      fullSizes: item?.full_sizes || '(max-width: 768px) 100vw, 1920px',
       poster: item?.poster || item?.thumb || item?.medium || fallback,
       alt: item?.alt || `Midia ${index + 1}`,
     };

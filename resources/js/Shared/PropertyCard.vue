@@ -1,7 +1,14 @@
 <template>
   <div class="h-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-lg">
     <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
-      <img :src="activePhoto" :alt="property.title" class="h-full w-full object-cover" loading="lazy" />
+      <img
+        :src="activePhoto.src"
+        :srcset="activePhoto.srcset || undefined"
+        :sizes="activePhoto.sizes || undefined"
+        :alt="property.title"
+        class="h-full w-full object-cover"
+        loading="lazy"
+      />
       <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
       <div class="absolute left-3 right-12 top-3 flex flex-wrap items-center gap-1.5">
         <span v-if="property.code" class="rounded-md bg-black/80 px-2 py-1 text-[11px] font-semibold leading-none text-white backdrop-blur-sm">
@@ -122,7 +129,7 @@ const photoList = computed(() => {
   return [placeholderImage];
 });
 
-const activePhoto = computed(() => photoList.value[activePhotoIndex.value] || placeholderImage);
+const activePhoto = computed(() => normalizePhotoItem(photoList.value[activePhotoIndex.value]));
 
 const setPhoto = (idx) => {
   if (idx < 0 || idx >= photoList.value.length) return;
@@ -136,6 +143,22 @@ const nextPhoto = () => {
   const n = photoList.value.length;
   activePhotoIndex.value = (activePhotoIndex.value + 1) % n;
 };
+
+function normalizePhotoItem(photo) {
+  if (typeof photo === 'string') {
+    return {
+      src: photo || placeholderImage,
+      srcset: null,
+      sizes: '(max-width: 768px) 100vw, 600px',
+    };
+  }
+
+  return {
+    src: photo?.src || photo?.thumb || photo?.medium || photo?.full || placeholderImage,
+    srcset: photo?.srcset || null,
+    sizes: photo?.sizes || '(max-width: 768px) 100vw, 600px',
+  };
+}
 
 const businessBadges = computed(() => {
   const labels = Array.isArray(props.property?.businessLabels) ? [...props.property.businessLabels] : [];

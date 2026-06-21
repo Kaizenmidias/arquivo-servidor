@@ -72,6 +72,7 @@ class StorePropertyRequest extends FormRequest
             'show_in_home_mais_procurados' => ['nullable', 'boolean'],
             'show_in_home_visto_recentemente' => ['nullable', 'boolean'],
             'featured_upload_token' => ['nullable', 'uuid'],
+            'featured_existing_photo_id' => ['nullable', 'integer'],
             'gallery_upload_tokens' => ['nullable', 'array'],
             'gallery_upload_tokens.*' => ['uuid'],
             'special_category_ids' => ['nullable', 'array'],

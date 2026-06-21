@@ -77,19 +77,7 @@ class SafeImageUpload implements ValidationRule
             'jpg', 'jpeg' => str_starts_with($header, "\xFF\xD8\xFF"),
             'png' => str_starts_with($header, "\x89PNG\x0D\x0A\x1A\x0A"),
             'webp' => str_starts_with($header, 'RIFF') && substr($header, 8, 4) === 'WEBP',
-            'heic', 'heif' => $this->isHeicHeader($header),
             default => false,
         };
-    }
-
-    private function isHeicHeader(string $header): bool
-    {
-        if (strlen($header) < 12 || substr($header, 4, 4) !== 'ftyp') {
-            return false;
-        }
-
-        $brand = strtolower(substr($header, 8, 4));
-
-        return in_array($brand, ['heic', 'heix', 'hevc', 'hevx', 'mif1', 'msf1'], true);
     }
 }

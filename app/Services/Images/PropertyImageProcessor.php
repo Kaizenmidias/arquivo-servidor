@@ -7,8 +7,6 @@ use App\Models\PropertyPhoto;
 use Imagick;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Imagick\Driver as InterventionImagickDriver;
-use Intervention\Image\ImageManager;
 use RuntimeException;
 
 class PropertyImageProcessor
@@ -26,73 +24,35 @@ class PropertyImageProcessor
             $upload->extension
         );
 
-        $disk = Storage::disk((string) config('image_uploads.final_disk', 'public'));
-        $tempPath = Storage::disk($upload->disk)->path($upload->temp_path);
-
-        $originalPath = $this->versionOutputPath($photo, 'original', strtolower($upload->extension));
-        $this->ensureDirectory($disk->path($originalPath));
-        $disk->put($originalPath, file_get_contents($tempPath));
-
-        $quality = (int) config('image_uploads.processing.webp_quality', 80);
-        $fullMaxWidth = (int) config('image_uploads.processing.full_max_width', 1920);
-        $fullMaxHeight = (int) config('image_uploads.processing.full_max_height', 1080);
-        $mediumMaxWidth = (int) config('image_uploads.processing.medium_max_width', 1200);
-        $mediumMaxHeight = (int) config('image_uploads.processing.medium_max_height', 1200);
-        $thumbMaxWidth = (int) config('image_uploads.processing.thumb_max_width', 400);
-        $thumbMaxHeight = (int) config('image_uploads.processing.thumb_max_height', 400);
-
-        $fullPath = $this->versionOutputPath($photo, 'full', 'webp');
-        $mediumPath = $this->versionOutputPath($photo, 'medium', 'webp');
-        $thumbPath = $this->versionOutputPath($photo, 'thumb', 'webp');
-
-        if (class_exists(ImageManager::class) && class_exists(InterventionImagickDriver::class)) {
-            $full = $this->processWithIntervention($tempPath, $fullMaxWidth, $fullMaxHeight, $quality);
-            $this->saveBinary($disk, $fullPath, $full['binary']);
-
-            $medium = $this->processWithIntervention($tempPath, $mediumMaxWidth, $mediumMaxHeight, $quality);
-            $this->saveBinary($disk, $mediumPath, $medium['binary']);
-
-            $thumb = $this->processWithIntervention($tempPath, $thumbMaxWidth, $thumbMaxHeight, $quality);
-            $this->saveBinary($disk, $thumbPath, $thumb['binary']);
-
-            gc_collect_cycles();
-
-            return [
-                'original_path' => $originalPath,
-                'path' => $fullPath,
-                'url' => $disk->url($fullPath),
-                'medium_path' => $mediumPath,
-                'thumb_path' => $thumbPath,
-                'width' => $full['width'],
-                'height' => $full['height'],
-                'size' => $disk->size($fullPath),
-                'mime_type' => 'image/webp',
-                'source_size' => (int) ($validated['size'] ?? 0),
-                'source_mime_type' => (string) ($validated['mime_type'] ?? $upload->mime_type),
-            ];
-        }
-
         if (!class_exists(Imagick::class)) {
-            Log::error('Processamento de imagem indisponivel: Intervention v3 e Imagick ausentes.', [
+            Log::error('Processamento de imagem indisponivel: extensao Imagick ausente.', [
                 'photo_id' => $photo->id,
                 'upload_id' => $upload->id,
             ]);
-            throw new RuntimeException('O servidor precisa de Intervention Image v3 com driver Imagick.');
+
+            throw new RuntimeException('O servidor precisa da extensao Imagick para processar as imagens.');
         }
 
-        $full = $this->processWithImagick($tempPath, $fullMaxWidth, $fullMaxHeight, $quality);
+        $disk = Storage::disk((string) config('image_uploads.final_disk', 'public'));
+        $tempPath = Storage::disk($upload->disk)->path($upload->temp_path);
+        $quality = (int) config('image_uploads.processing.webp_quality', 82);
+
+        $full = $this->buildWebpVersion($tempPath, (int) config('image_uploads.processing.full_max_width', 1920), $quality);
+        $medium = $this->buildWebpVersion($tempPath, (int) config('image_uploads.processing.medium_max_width', 1200), $quality);
+        $thumb = $this->buildWebpVersion($tempPath, (int) config('image_uploads.processing.thumb_max_width', 600), $quality);
+
+        $fullPath = $this->versionOutputPath($photo, 'full');
+        $mediumPath = $this->versionOutputPath($photo, 'medium');
+        $thumbPath = $this->versionOutputPath($photo, 'thumb');
+
         $this->saveBinary($disk, $fullPath, $full['binary']);
-
-        $medium = $this->processWithImagick($tempPath, $mediumMaxWidth, $mediumMaxHeight, $quality);
         $this->saveBinary($disk, $mediumPath, $medium['binary']);
-
-        $thumb = $this->processWithImagick($tempPath, $thumbMaxWidth, $thumbMaxHeight, $quality);
         $this->saveBinary($disk, $thumbPath, $thumb['binary']);
 
         gc_collect_cycles();
 
         return [
-            'original_path' => $originalPath,
+            'original_path' => null,
             'path' => $fullPath,
             'url' => $disk->url($fullPath),
             'medium_path' => $mediumPath,
@@ -117,27 +77,37 @@ class PropertyImageProcessor
         ]));
     }
 
-    private function processWithIntervention(string $path, int $maxWidth, int $maxHeight, int $quality): array
+    private function buildWebpVersion(string $path, int $maxWidth, int $quality): array
     {
-        $manager = new ImageManager(new InterventionImagickDriver());
-        $image = $manager->read($path);
-        $native = $this->nativeImage($image);
-        if ($native instanceof Imagick && $native->getNumberImages() > 1) {
+        $image = new Imagick();
+        $image->readImage($path);
+
+        if ($image->getNumberImages() > 1) {
             throw new RuntimeException('Animacoes nao sao permitidas no upload de imagens.');
         }
 
-        if ($native instanceof Imagick) {
-            $native->autoOrient();
-            $native->stripImage();
+        $image->autoOrient();
+        $image->stripImage();
+
+        [$targetWidth, $targetHeight] = $this->targetDimensions(
+            $image->getImageWidth(),
+            $image->getImageHeight(),
+            $maxWidth
+        );
+
+        if ($targetWidth !== $image->getImageWidth() || $targetHeight !== $image->getImageHeight()) {
+            $image->resizeImage($targetWidth, $targetHeight, Imagick::FILTER_LANCZOS, 1, true);
         }
 
-        $image->scaleDown($maxWidth, $maxHeight);
+        $image->setImageFormat('webp');
+        $image->setImageCompressionQuality($quality);
 
-        $binary = (string) $image->toWebp($quality);
-        $width = $this->nativeImage($image)?->getImageWidth();
-        $height = $this->nativeImage($image)?->getImageHeight();
+        $binary = (string) $image->getImagesBlob();
+        $width = $image->getImageWidth();
+        $height = $image->getImageHeight();
 
-        $this->cleanupImage($image);
+        $image->clear();
+        $image->destroy();
 
         return [
             'binary' => $binary,
@@ -146,30 +116,18 @@ class PropertyImageProcessor
         ];
     }
 
-    private function processWithImagick(string $path, int $maxWidth, int $maxHeight, int $quality): array
+    private function targetDimensions(int $width, int $height, int $maxWidth): array
     {
-        $image = new Imagick();
-        $image->readImage($path);
-        if ($image->getNumberImages() > 1) {
-            throw new RuntimeException('Animacoes nao sao permitidas no upload de imagens.');
+        if ($width <= 0 || $height <= 0 || $width <= $maxWidth) {
+            return [$width, $height];
         }
 
-        $image->autoOrient();
-        $image->stripImage();
-        $image->thumbnailImage($maxWidth, $maxHeight, true, true);
-        $image->setImageFormat('webp');
-        $image->setImageCompressionQuality($quality);
+        $ratio = $maxWidth / $width;
 
-        $result = [
-            'binary' => (string) $image,
-            'width' => $image->getImageWidth(),
-            'height' => $image->getImageHeight(),
+        return [
+            max(1, (int) round($width * $ratio)),
+            max(1, (int) round($height * $ratio)),
         ];
-
-        $image->clear();
-        $image->destroy();
-
-        return $result;
     }
 
     private function saveBinary($disk, string $path, string $binary): void
@@ -179,15 +137,14 @@ class PropertyImageProcessor
         $disk->put($path, $binary);
     }
 
-    private function versionOutputPath(PropertyPhoto $photo, string $version, string $extension): string
+    private function versionOutputPath(PropertyPhoto $photo, string $version): string
     {
         return sprintf(
-            '%s/%d/%s/%d.%s',
+            '%s/%d/%d-%s.webp',
             trim((string) config('image_uploads.final_directory', 'properties'), '/'),
             $photo->property_id,
-            $version,
             $photo->id,
-            ltrim($extension, '.')
+            $version
         );
     }
 
@@ -197,33 +154,5 @@ class PropertyImageProcessor
         if (!is_dir($directory)) {
             mkdir($directory, 0775, true);
         }
-    }
-
-    private function nativeImage(object $image): ?Imagick
-    {
-        if (!method_exists($image, 'core')) {
-            return null;
-        }
-
-        $core = $image->core();
-        if (is_object($core) && method_exists($core, 'native')) {
-            $native = $core->native();
-            if ($native instanceof Imagick) {
-                return $native;
-            }
-        }
-
-        return null;
-    }
-
-    private function cleanupImage(object $image): void
-    {
-        $native = $this->nativeImage($image);
-        if ($native instanceof Imagick) {
-            $native->clear();
-            $native->destroy();
-        }
-
-        unset($image);
     }
 }

@@ -313,8 +313,8 @@
             :existing-photos="propertyPhotos"
             :upload-url="`${adminBase}/properties/uploads`"
             :delete-upload-base-url="`${adminBase}/properties/uploads`"
-            :max-files="imageUploadConfig?.maxFiles ?? null"
-            :max-file-size-bytes="imageUploadConfig?.maxFileSizeBytes || (10 * 1024 * 1024)"
+            :max-files="imageUploadConfig?.maxFiles ?? 200"
+            :max-file-size-bytes="imageUploadConfig?.maxFileSizeBytes || (50 * 1024 * 1024)"
             :parallel-uploads="imageUploadConfig?.parallelUploads || 6"
           />
           <div v-if="form.errors.featured_upload_token" class="mt-3 text-sm text-red-600">{{ form.errors.featured_upload_token }}</div>
@@ -390,7 +390,7 @@ const props = defineProps({
   },
   imageUploadConfig: {
     type: Object,
-    default: () => ({ maxFiles: null, maxFileSizeBytes: 10 * 1024 * 1024, parallelUploads: 6, pollIntervalMs: 4000 }),
+    default: () => ({ maxFiles: 200, maxFileSizeBytes: 50 * 1024 * 1024, parallelUploads: 6, pollIntervalMs: 4000 }),
   },
 });
 
@@ -453,6 +453,7 @@ const form = useForm({
   show_in_home_mais_procurados: !!props.property?.show_in_home_mais_procurados,
   show_in_home_visto_recentemente: !!props.property?.show_in_home_visto_recentemente,
   featured_upload_token: null,
+  featured_existing_photo_id: props.property?.photos?.find?.((photo) => photo?.principal)?.id ?? null,
   gallery_upload_tokens: [],
   remove_photo_ids: [],
   photo_order_ids: [],
@@ -597,6 +598,7 @@ const submit = () => {
   }
 
   form.featured_upload_token = payload.featured_upload_token;
+  form.featured_existing_photo_id = payload.featured_existing_photo_id;
   form.gallery_upload_tokens = payload.gallery_upload_tokens;
   form.remove_photo_ids = payload.remove_photo_ids;
   form.photo_order_ids = payload.photo_order_ids;

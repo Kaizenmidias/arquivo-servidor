@@ -39,6 +39,9 @@ class ProcessPropertyImageJob implements ShouldQueue
                 'property_id' => $photo->property_id,
             ]);
 
+            $photo->update(['processing_status' => 'optimizing']);
+            $upload->update(['status' => 'optimizing']);
+
             $result = $processor->process($photo, $upload);
 
             $photo->update([

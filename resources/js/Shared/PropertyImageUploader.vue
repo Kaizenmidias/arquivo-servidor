@@ -21,7 +21,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         <p class="text-gray-700 font-medium">Arraste ou clique para enviar a imagem de destaque</p>
-        <p class="text-xs text-gray-500 mt-2">Upload assíncrono com Uppy. Formatos: JPG, PNG, WEBP, HEIC. Maximo {{ maxSizeLabel }} por arquivo.</p>
+        <p class="text-xs text-gray-500 mt-2">Upload assíncrono com Uppy. Formatos: JPG, JPEG, PNG e WEBP. Máximo {{ maxSizeLabel }} por arquivo.</p>
       </div>
 
       <div v-if="featuredItem" class="mt-4 border border-gray-200 rounded-xl overflow-hidden bg-white">
@@ -70,8 +70,8 @@
         <svg class="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
-        <p class="text-gray-700 font-medium">Arraste varias imagens ou clique para enviar</p>
-        <p class="text-xs text-gray-500 mt-2">Uploads paralelos com Uppy. Cada arquivo sobe separadamente, vai para area temporaria segura e depois segue para a fila de processamento.</p>
+        <p class="text-gray-700 font-medium">Arraste várias imagens ou clique para enviar</p>
+        <p class="text-xs text-gray-500 mt-2">Uploads paralelos com Uppy. Até {{ maxFilesLabel }} por imóvel, com processamento em fila, conversão para WEBP e geração automática das versões 1920px, 1200px e 600px.</p>
       </div>
 
       <div v-if="uploadError" class="text-sm text-red-600 mt-2">{{ uploadError }}</div>
@@ -85,8 +85,8 @@
           <div class="text-lg font-semibold text-emerald-700">{{ uploadedCount }}</div>
         </div>
         <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
-          <div class="text-[11px] uppercase tracking-wide text-gray-500">Na fila</div>
-          <div class="text-lg font-semibold text-amber-700">{{ queuedCount }}</div>
+          <div class="text-[11px] uppercase tracking-wide text-gray-500">Processando</div>
+          <div class="text-lg font-semibold text-amber-700">{{ processingCount }}</div>
         </div>
         <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
           <div class="text-[11px] uppercase tracking-wide text-gray-500">Enviando</div>
@@ -127,6 +127,9 @@
             <div v-if="item.error" class="mt-1 text-[11px] text-red-600 line-clamp-2">{{ item.error }}</div>
           </div>
           <div class="absolute top-2 right-2 flex gap-1">
+            <button v-if="!item.isExisting || !item.principal" type="button" class="bg-white/95 hover:bg-white text-slate-700 px-2 py-1 rounded text-[11px] font-semibold" @click.stop="setAsFeatured(item.id)">
+              Destaque
+            </button>
             <button v-if="item.status === 'error'" type="button" class="bg-white/95 hover:bg-white text-blue-700 px-2 py-1 rounded text-[11px] font-semibold" @click.stop="retryItem(item)">
               Retry
             </button>
@@ -168,7 +171,7 @@ const props = defineProps({
   },
   maxFileSizeBytes: {
     type: Number,
-    default: 10 * 1024 * 1024,
+    default: 50 * 1024 * 1024,
   },
   parallelUploads: {
     type: Number,
@@ -176,7 +179,7 @@ const props = defineProps({
   },
 });
 
-const acceptAttr = '.jpg,.jpeg,.png,.webp,.heic,.heif';
+const acceptAttr = '.jpg,.jpeg,.png,.webp';
 const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
     <rect width="800" height="600" fill="#0f172a"/>
@@ -200,15 +203,17 @@ const csrfToken = typeof window.getCsrfToken === 'function' ? window.getCsrfToke
 const xsrfToken = typeof window.getCookieValue === 'function' ? window.getCookieValue('XSRF-TOKEN') : '';
 
 const TRACKED_PENDING_STATUSES = ['queued', 'uploading'];
-const TRACKED_SUCCESS_STATUSES = ['uploaded', 'processing', 'completed'];
+const TRACKED_SUCCESS_STATUSES = ['uploaded', 'processing', 'optimizing', 'completed'];
 const TRACKED_ERROR_STATUSES = ['error', 'failed'];
+const TRACKED_PROCESSING_STATUSES = ['pending', 'processing', 'optimizing'];
 
 const maxSizeLabel = computed(() => `${Math.round(props.maxFileSizeBytes / 1024 / 1024)}MB`);
+const maxFilesLabel = computed(() => `${Math.max(1, Number(props.maxFiles || 200))} imagens`);
 const selectedFeaturedCount = computed(() => (featuredItem.value ? 1 : 0));
 const selectedGalleryCount = computed(() => galleryItems.value.length);
 const totalSelectedCount = computed(() => selectedFeaturedCount.value + selectedGalleryCount.value);
 const uploadingCount = computed(() => getTrackedItems().filter((item) => item.status === 'uploading').length);
-const queuedCount = computed(() => getTrackedItems().filter((item) => item.status === 'queued').length);
+const processingCount = computed(() => getTrackedItems().filter((item) => TRACKED_PROCESSING_STATUSES.includes(item.status)).length);
 const uploadedCount = computed(() => getTrackedItems().filter((item) => TRACKED_SUCCESS_STATUSES.includes(item.status)).length);
 const failedCount = computed(() => getTrackedItems().filter((item) => TRACKED_ERROR_STATUSES.includes(item.status)).length);
 const pendingUploadCount = computed(() => getTrackedItems().filter((item) => TRACKED_PENDING_STATUSES.includes(item.status)).length);
@@ -242,6 +247,8 @@ function normalizeExistingItem(photo) {
   const failed = photo?.processing_status === 'failed';
   const status = failed
     ? 'failed'
+    : photo?.processing_status === 'optimizing'
+      ? 'optimizing'
     : photo?.processing_status === 'processing'
       ? 'processing'
       : photo?.processing_status === 'pending'
@@ -259,9 +266,10 @@ function normalizeExistingItem(photo) {
     previewUrl: photo.thumb_small_url || photo.medium_url || photo.original_url || photo.url || placeholderImage,
     name: photo.principal ? 'Imagem de destaque' : `Imagem ${photo.id}`,
     status,
-    progress: ['processing', 'completed'].includes(status) ? 100 : 0,
+    progress: ['processing', 'optimizing', 'completed'].includes(status) ? 100 : 0,
     error: photo.processing_error || '',
     isExisting: true,
+    principal: !!photo?.principal,
   };
 }
 
@@ -278,6 +286,7 @@ function createUploadItem(file) {
     progress: 0,
     error: '',
     isExisting: false,
+    principal: false,
   };
 }
 
@@ -317,7 +326,7 @@ async function onGalleryDrop(event) {
 
 async function replaceFeatured(file) {
   uploadError.value = '';
-  if (!validateBeforeAdd([file])) return;
+  if (!validateBeforeAdd([file], featuredItem.value ? 1 : 0)) return;
 
   await removeFeatured();
   addFilesToUppy(featuredUppy, [file]);
@@ -331,7 +340,15 @@ async function appendGallery(files) {
   addFilesToUppy(galleryUppy, validFiles);
 }
 
-function validateBeforeAdd(files) {
+function validateBeforeAdd(files, replacingCount = 0) {
+  const totalAfterAdd = currentImageCount() - replacingCount + files.length;
+  const maxFiles = Number(props.maxFiles || 200);
+
+  if (totalAfterAdd > maxFiles) {
+    uploadError.value = `Cada imóvel pode ter no máximo ${maxFiles} imagens.`;
+    return false;
+  }
+
   for (const file of files) {
     if (file.size > props.maxFileSizeBytes) {
       uploadError.value = `A imagem ${file.name} excede o limite de ${maxSizeLabel.value}.`;
@@ -442,6 +459,23 @@ function onDrop(targetId) {
   galleryItems.value = list;
 }
 
+function setAsFeatured(id) {
+  const index = galleryItems.value.findIndex((entry) => entry.id === id);
+  if (index === -1) return;
+
+  const nextFeatured = galleryItems.value[index];
+  const currentFeatured = featuredItem.value;
+
+  galleryItems.value.splice(index, 1);
+  nextFeatured.principal = true;
+  featuredItem.value = nextFeatured;
+
+  if (currentFeatured) {
+    currentFeatured.principal = false;
+    galleryItems.value.unshift(currentFeatured);
+  }
+}
+
 function statusLabel(item) {
   return {
     pending: 'Na fila de processamento',
@@ -449,6 +483,7 @@ function statusLabel(item) {
     uploading: `Enviando ${item.progress}%`,
     uploaded: 'Upload temporario concluido',
     processing: 'Processando imagem',
+    optimizing: 'Otimizando e convertendo para WEBP',
     completed: 'Processamento concluido',
     failed: 'Falhou no processamento',
     error: 'Falha no envio',
@@ -481,6 +516,7 @@ function getSubmissionPayload() {
 
   return {
     featured_upload_token: featuredItem.value?.token || null,
+    featured_existing_photo_id: featuredItem.value?.existingPhotoId || null,
     gallery_upload_tokens: galleryItems.value
       .filter((item) => !item.existingPhotoId && item.token)
       .map((item) => item.token),
@@ -509,9 +545,9 @@ function createUppy(kind) {
     allowMultipleUploadBatches: true,
     retryDelays: [0, 1000, 3000, 5000],
     restrictions: {
-      allowedFileTypes: ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'],
+      allowedFileTypes: ['.jpg', '.jpeg', '.png', '.webp'],
       maxFileSize: props.maxFileSizeBytes,
-      maxNumberOfFiles: kind === 'featured' ? 1 : null,
+      maxNumberOfFiles: kind === 'featured' ? 1 : Number(props.maxFiles || 200),
     },
   });
 
