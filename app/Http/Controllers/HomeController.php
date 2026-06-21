@@ -40,37 +40,6 @@ class HomeController extends Controller
             ]
         );
 
-        $mapProperty = function (Property $property): array {
-            $sortedPhotos = $property->photos->sortBy('ordem');
-            $photo = $sortedPhotos->firstWhere('principal', true) ?? $sortedPhotos->first();
-            $photoUrls = $sortedPhotos
-                ->map(fn (PropertyPhoto $item) => $this->propertyPhotoCardUrl($item))
-                ->filter()
-                ->values()
-                ->all();
-
-            return [
-                'id' => $property->id,
-                'slug' => $property->slug,
-                'url' => '/imoveis/' . $property->slug,
-                'code' => $property->codigo_referencia ?: $property->codigo_anuncio,
-                'title' => $property->titulo,
-                'address' => trim($property->endereco . ' - ' . $property->bairro . ', ' . $property->cidade . '/' . $property->estado),
-                'location' => trim(($property->bairro ? $property->bairro . ' - ' : '') . $property->cidade),
-                'price' => $this->primaryPublicPriceValue($property),
-                'prices' => $this->propertyPublicPrices($property),
-                'bedrooms' => (int) ($property->quartos ?? 0),
-                'bathrooms' => (int) ($property->banheiros ?? 0),
-                'area' => (float) ($property->area_util ?? 0),
-                'lotArea' => (float) ($property->area_total ?? 0),
-                'type' => $property->primaryBusinessLabel(),
-                'businessLabels' => $property->businessLabels(),
-                'condominium' => $property->condominium?->name,
-                'photo' => $this->propertyPhotoCardUrl($photo),
-                'photos' => $photoUrls,
-            ];
-        };
-
         $baseQuery = Property::with(['photos', 'businessType', 'condominium'])
             ->where('ativo', true)
             ->orderByDesc('created_at');
@@ -79,21 +48,21 @@ class HomeController extends Controller
             ->where('show_in_home_selecao_especial', true)
             ->limit(12)
             ->get()
-            ->map($mapProperty)
+            ->map(fn (Property $property) => $this->serializePropertyCard($property))
             ->values();
 
         $maisProcurados = (clone $baseQuery)
             ->where('show_in_home_mais_procurados', true)
             ->limit(12)
             ->get()
-            ->map($mapProperty)
+            ->map(fn (Property $property) => $this->serializePropertyCard($property))
             ->values();
 
         $vistoRecentemente = (clone $baseQuery)
             ->where('show_in_home_visto_recentemente', true)
             ->limit(12)
             ->get()
-            ->map($mapProperty)
+            ->map(fn (Property $property) => $this->serializePropertyCard($property))
             ->values();
 
         $settings = Setting::query()->pluck('valor', 'chave');
@@ -320,40 +289,7 @@ class HomeController extends Controller
         $properties = $query
             ->paginate(18)
             ->withQueryString()
-            ->through(function (Property $property) {
-                $photo = $property->photos
-                    ->sortBy('ordem')
-                    ->firstWhere('principal', true) ?? $property->photos->sortBy('ordem')->first();
-                $photoUrls = $property->photos
-                    ->sortBy('ordem')
-                    ->map(fn (PropertyPhoto $item) => $this->propertyPhotoCardUrl($item))
-                    ->filter()
-                    ->values()
-                    ->all();
-
-                return [
-                    'id' => $property->id,
-                    'slug' => $property->slug,
-                    'url' => '/imoveis/' . $property->slug,
-                    'code' => $property->codigo_referencia ?: $property->codigo_anuncio,
-                    'title' => $property->titulo,
-                    'address' => trim($property->endereco . ' - ' . $property->bairro . ', ' . $property->cidade . '/' . $property->estado),
-                    'location' => trim(($property->bairro ? $property->bairro . ' - ' : '') . $property->cidade),
-                    'price' => $this->primaryPublicPriceValue($property),
-                    'prices' => $this->propertyPublicPrices($property),
-                    'bedrooms' => (int) ($property->quartos ?? 0),
-                    'suites' => (int) ($property->suites ?? 0),
-                    'bathrooms' => (int) ($property->banheiros ?? 0),
-                    'garages' => (int) ($property->garagens ?? 0),
-                    'area' => (float) ($property->area_util ?? 0),
-                    'lotArea' => (float) ($property->area_total ?? 0),
-                    'type' => $property->primaryBusinessLabel(),
-                    'businessLabels' => $property->businessLabels(),
-                    'condominium' => $property->condominium?->name,
-                    'photo' => $this->propertyPhotoCardUrl($photo),
-                    'photos' => $photoUrls,
-                ];
-            });
+            ->through(fn (Property $property) => $this->serializePropertyCard($property));
 
         return Inertia::render('Properties', [
             'properties' => $properties,
@@ -888,6 +824,100 @@ class HomeController extends Controller
     private function primaryPublicPriceValue(Property $property): float
     {
         return (float) ($property->publicPrices()->first()['value'] ?? 0);
+    }
+
+    private function serializePropertyCard(Property $property): array
+    {
+        $sortedPhotos = $property->photos->sortBy('ordem');
+        $photo = $sortedPhotos->firstWhere('principal', true) ?? $sortedPhotos->first();
+        $photoUrls = $sortedPhotos
+            ->map(fn (PropertyPhoto $item) => $this->propertyPhotoCardUrl($item))
+            ->filter()
+            ->values()
+            ->all();
+
+        return [
+            'id' => $property->id,
+            'slug' => $property->slug,
+            'url' => '/imoveis/' . $property->slug,
+            'code' => $property->codigo_referencia ?: $property->codigo_anuncio,
+            'title' => trim((string) $property->titulo),
+            'address' => $this->buildPropertyCardAddress($property),
+            'location' => $this->buildPropertyCardLocation($property),
+            'price' => $this->primaryPublicPriceValue($property),
+            'prices' => $this->propertyPublicPrices($property),
+            'bedrooms' => $this->propertyCardInteger($property->quartos),
+            'suites' => $this->propertyCardInteger($property->suites),
+            'bathrooms' => $this->propertyCardInteger($property->banheiros),
+            'garages' => $this->propertyCardInteger($property->garagens),
+            'area' => $this->propertyCardDecimal($property->area_construida ?? $property->area_util),
+            'lotArea' => $this->propertyCardDecimal($property->area_total),
+            'type' => $property->primaryBusinessLabel(),
+            'businessLabels' => $property->businessLabels(),
+            'condominium' => $property->condominium?->name,
+            'photo' => $this->propertyPhotoCardUrl($photo),
+            'photos' => $photoUrls,
+        ];
+    }
+
+    private function buildPropertyCardLocation(Property $property): string
+    {
+        $parts = array_values(array_filter([
+            $this->sanitizePropertyCardText($property->bairro),
+            $this->sanitizePropertyCardText($property->cidade),
+        ]));
+
+        if ($parts !== []) {
+            return implode(' - ', $parts);
+        }
+
+        return $this->buildPropertyCardAddress($property);
+    }
+
+    private function buildPropertyCardAddress(Property $property): string
+    {
+        $line = array_values(array_filter([
+            $this->sanitizePropertyCardText($property->endereco),
+            $this->sanitizePropertyCardText($property->bairro),
+        ]));
+
+        $city = array_values(array_filter([
+            $this->sanitizePropertyCardText($property->cidade),
+            $this->sanitizePropertyCardText($property->estado),
+        ]));
+
+        $parts = [];
+
+        if ($line !== []) {
+            $parts[] = implode(' - ', $line);
+        }
+
+        if ($city !== []) {
+            $parts[] = implode('/', $city);
+        }
+
+        return implode(', ', $parts);
+    }
+
+    private function sanitizePropertyCardText(mixed $value): ?string
+    {
+        $text = trim((string) ($value ?? ''));
+
+        return $text !== '' ? $text : null;
+    }
+
+    private function propertyCardInteger(mixed $value): ?int
+    {
+        $number = (int) $value;
+
+        return $number > 0 ? $number : null;
+    }
+
+    private function propertyCardDecimal(mixed $value): ?float
+    {
+        $number = (float) $value;
+
+        return $number > 0 ? $number : null;
     }
 
     private function mapOperacaoForXml(Property $property): string
