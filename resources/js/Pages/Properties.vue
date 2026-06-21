@@ -16,155 +16,184 @@
 
     <section class="bg-transparent py-8 lg:-mt-10 lg:pb-12">
       <div class="ui-shell">
+        <div class="mb-4 flex items-center justify-between gap-3 lg:hidden">
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+            @click="openMobileFilters"
+          >
+            <svg class="h-4 w-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12.414V19a1 1 0 01-.553.894l-4 2A1 1 0 019 21v-8.586L3.293 6.707A1 1 0 013 6V4z"></path>
+            </svg>
+            <span>{{ mobileFilterButtonLabel }}</span>
+          </button>
+          <div class="text-sm font-medium text-gray-700">
+            {{ totalLabel }}
+          </div>
+        </div>
+
+        <transition name="fade">
+          <div v-if="isMobileFiltersOpen" class="fixed inset-0 z-[65] bg-slate-950/55 backdrop-blur-sm lg:hidden" @click="closeMobileFilters"></div>
+        </transition>
+
         <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-          <aside class="ui-surface-panel p-5 lg:h-fit sticky top-28 z-40 max-h-[calc(100vh-8rem)] overflow-y-auto lg:max-h-none lg:overflow-visible">
-            <div class="flex items-center justify-between">
-              <div class="inline-flex items-center gap-2 font-semibold text-gray-900">
-                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12.414V19a1 1 0 01-.553.894l-4 2A1 1 0 019 21v-8.586L3.293 6.707A1 1 0 013 6V4z"></path>
-                </svg>
-                <span>Filtros</span>
-              </div>
-              <button type="button" class="text-sm text-gray-500 hover:text-gray-900" @click="clearAll">Limpar</button>
-            </div>
-
-            <div class="mt-4">
-              <div class="relative">
-                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                <input v-model="form.q" type="text" class="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Código, endereço..." />
-              </div>
-            </div>
-
-            <div class="mt-6 space-y-6">
-              <div>
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Negócio</div>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="bt in businessTypes"
-                    :key="bt.id"
-                    type="button"
-                    class="rounded-full border px-4 py-2 text-sm transition"
-                    :class="form.business_type_id === String(bt.id) ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
-                    @click="toggleBusinessType(bt.id)"
-                  >
-                    {{ bt.name }}
+          <aside :class="filterPanelClass">
+            <div class="flex h-full flex-col">
+              <div class="flex items-center justify-between gap-3">
+                <div class="inline-flex items-center gap-2 font-semibold text-gray-900">
+                  <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12.414V19a1 1 0 01-.553.894l-4 2A1 1 0 019 21v-8.586L3.293 6.707A1 1 0 013 6V4z"></path>
+                  </svg>
+                  <span>Filtros</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <button type="button" class="text-sm text-gray-500 hover:text-gray-900" @click="clearAll">Limpar</button>
+                  <button type="button" class="inline-flex rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:hidden" @click="closeMobileFilters">
+                    Fechar
                   </button>
                 </div>
               </div>
 
-              <div>
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Tipo de imóvel</div>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="t in propertyTypeGroups"
-                    :key="t.value"
-                    type="button"
-                    class="rounded-full border px-4 py-2 text-sm transition"
-                    :class="form.property_type === t.value ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
-                    @click="togglePropertyType(t.value)"
-                  >
-                    {{ t.label }}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Condomínio</div>
-                <select v-model="form.condominium_id" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" @change="apply">
-                  <option value="">Todos</option>
-                  <option v-for="item in condominiums" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
-                </select>
-              </div>
-
-              <div>
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Preço</div>
-                <div class="grid grid-cols-2 gap-3">
+              <div class="flex min-h-0 flex-1 flex-col">
+                <div class="mt-4">
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">R$</span>
-                    <input
-                      v-model="form.price_min"
-                      type="text"
-                      inputmode="numeric"
-                      class="w-full rounded-2xl border border-slate-200 pl-9 pr-3 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
-                      placeholder="Mínimo"
-                      @input="onPriceMinInput"
-                    />
-                  </div>
-                  <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">R$</span>
-                    <input
-                      v-model="form.price_max"
-                      type="text"
-                      inputmode="numeric"
-                      class="w-full rounded-2xl border border-slate-200 pl-9 pr-3 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
-                      placeholder="Máximo"
-                      @input="onPriceMaxInput"
-                    />
+                    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input v-model="form.q" type="text" class="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Código, endereço..." />
                   </div>
                 </div>
-              </div>
 
-              <div v-if="specialCategories.length > 0">
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Categorias especiais</div>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="sc in specialCategories"
-                    :key="sc.id"
-                    type="button"
-                    class="rounded-full border px-4 py-2 text-sm transition"
-                    :class="form.special_category_ids.includes(String(sc.id)) ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
-                    @click="toggleSpecialCategory(sc.id)"
-                  >
-                    {{ sc.name }}
+                <div class="mt-6 flex-1 space-y-6 overflow-y-auto pr-1 lg:pr-0">
+                  <div>
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Negócio</div>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        v-for="bt in businessTypes"
+                        :key="bt.id"
+                        type="button"
+                        class="rounded-full border px-4 py-2 text-sm transition"
+                        :class="form.business_type_id === String(bt.id) ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+                        @click="toggleBusinessType(bt.id)"
+                      >
+                        {{ bt.name }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Tipo de imóvel</div>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        v-for="t in propertyTypeGroups"
+                        :key="t.value"
+                        type="button"
+                        class="rounded-full border px-4 py-2 text-sm transition"
+                        :class="form.property_type === t.value ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+                        @click="togglePropertyType(t.value)"
+                      >
+                        {{ t.label }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Condomínio</div>
+                    <select v-model="form.condominium_id" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" @change="apply">
+                      <option value="">Todos</option>
+                      <option v-for="item in condominiums" :key="item.id" :value="String(item.id)">{{ item.name }}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Preço</div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">R$</span>
+                        <input
+                          v-model="form.price_min"
+                          type="text"
+                          inputmode="numeric"
+                          class="w-full rounded-2xl border border-slate-200 pl-9 pr-3 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
+                          placeholder="Mínimo"
+                          @input="onPriceMinInput"
+                        />
+                      </div>
+                      <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">R$</span>
+                        <input
+                          v-model="form.price_max"
+                          type="text"
+                          inputmode="numeric"
+                          class="w-full rounded-2xl border border-slate-200 pl-9 pr-3 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
+                          placeholder="Máximo"
+                          @input="onPriceMaxInput"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-if="specialCategories.length > 0">
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Categorias especiais</div>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        v-for="sc in specialCategories"
+                        :key="sc.id"
+                        type="button"
+                        class="rounded-full border px-4 py-2 text-sm transition"
+                        :class="form.special_category_ids.includes(String(sc.id)) ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-gray-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+                        @click="toggleSpecialCategory(sc.id)"
+                      >
+                        {{ sc.name }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-5">
+                    <div>
+                      <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Dormitórios</div>
+                      <select v-model="form.bedrooms_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
+                        <option value="">Qualquer</option>
+                        <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">Maior ou igual {{ n }}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Sendo suítes</div>
+                      <select v-model="form.suites_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
+                        <option value="">Qualquer</option>
+                        <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">Maior ou igual {{ n }}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Vagas</div>
+                      <select v-model="form.garages_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
+                        <option value="">Qualquer</option>
+                        <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">{{ n }}+</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Área privativa (m²)</div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <input v-model="form.area_min" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Mínimo" />
+                      <input v-model="form.area_max" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Máximo" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Área do terreno (m²)</div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <input v-model="form.lot_area_min" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Mínimo" />
+                      <input v-model="form.lot_area_max" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Máximo" />
+                    </div>
+                  </div>
+
+                  <button type="button" class="w-full rounded-2xl bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" @click="apply">
+                    Aplicar filtros
                   </button>
                 </div>
               </div>
-
-              <div class="grid grid-cols-1 gap-5">
-                <div>
-                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Dormitórios</div>
-                  <select v-model="form.bedrooms_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
-                    <option value="">Qualquer</option>
-                    <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">Maior ou igual {{ n }}</option>
-                  </select>
-                </div>
-                <div>
-                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Sendo suítes</div>
-                  <select v-model="form.suites_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
-                    <option value="">Qualquer</option>
-                    <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">Maior ou igual {{ n }}</option>
-                  </select>
-                </div>
-                <div>
-                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Vagas</div>
-                  <select v-model="form.garages_min" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
-                    <option value="">Qualquer</option>
-                    <option v-for="n in [1,2,3,4,5]" :key="n" :value="String(n)">{{ n }}+</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Área privativa (m²)</div>
-                <div class="grid grid-cols-2 gap-3">
-                  <input v-model="form.area_min" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Mínimo" />
-                  <input v-model="form.area_max" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Máximo" />
-                </div>
-              </div>
-
-              <div>
-                <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Área do terreno (m²)</div>
-                <div class="grid grid-cols-2 gap-3">
-                  <input v-model="form.lot_area_min" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Mínimo" />
-                  <input v-model="form.lot_area_max" type="text" inputmode="numeric" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" placeholder="Máximo" />
-                </div>
-              </div>
-
-              <button type="button" class="w-full rounded-2xl bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" @click="apply">
-                Aplicar filtros
-              </button>
             </div>
           </aside>
 
@@ -234,7 +263,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import Layout from '@/Shared/Layout.vue';
 import PropertyCard from '@/Shared/PropertyCard.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
@@ -301,8 +330,29 @@ const totalLabel = computed(() => {
   const value = typeof total === 'number' ? total : items.value.length;
   return `${value} ${value === 1 ? 'imóvel' : 'imóveis'}`;
 });
+const isMobileFiltersOpen = ref(false);
+const mobileFilterButtonLabel = computed(() => {
+  const activeCount = Object.keys(cleanFilters(form)).filter((key) => key !== 'sort').length;
+  return activeCount > 0 ? `Filtros (${activeCount})` : 'Filtros';
+});
+const filterPanelClass = computed(() => {
+  const desktopClasses = 'lg:sticky lg:top-28 lg:z-40 lg:block lg:max-h-[calc(100vh-8rem)] lg:overflow-hidden';
+  const mobileClasses = isMobileFiltersOpen.value
+    ? 'fixed inset-x-4 bottom-4 top-24 z-[70] block overflow-hidden rounded-[28px] shadow-[0_28px_80px_rgba(15,23,42,0.28)]'
+    : 'hidden';
+
+  return `ui-surface-panel p-5 ${mobileClasses} ${desktopClasses}`;
+});
 
 const normalizeString = (value) => (value === null || value === undefined ? '' : String(value));
+const isDesktopViewport = () => typeof window !== 'undefined' && window.innerWidth >= 1024;
+const setBodyScrollLock = (locked) => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  document.body.classList.toggle('overflow-hidden', locked);
+};
 
 const form = reactive({
   q: normalizeString(props.filters?.q),
@@ -338,6 +388,7 @@ const cleanFilters = (raw) => {
 };
 
 const apply = () => {
+  closeMobileFiltersIfNeeded();
   router.get('/imoveis', cleanFilters(form), { preserveState: true, preserveScroll: true, replace: true });
 };
 
@@ -405,4 +456,41 @@ const clearAll = () => {
   form.sort = 'newest';
   apply();
 };
+
+const openMobileFilters = () => {
+  if (isDesktopViewport()) {
+    return;
+  }
+
+  isMobileFiltersOpen.value = true;
+};
+
+const closeMobileFilters = () => {
+  isMobileFiltersOpen.value = false;
+};
+
+const closeMobileFiltersIfNeeded = () => {
+  if (!isDesktopViewport()) {
+    closeMobileFilters();
+  }
+};
+
+const onResize = () => {
+  if (isDesktopViewport()) {
+    closeMobileFilters();
+  }
+};
+
+watch(isMobileFiltersOpen, (open) => {
+  setBodyScrollLock(open);
+});
+
+onMounted(() => {
+  window.addEventListener('resize', onResize, { passive: true });
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize);
+  setBodyScrollLock(false);
+});
 </script>

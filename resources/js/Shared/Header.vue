@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import DrawerMenu from './DrawerMenu.vue';
 
@@ -119,8 +119,16 @@ function normalizeUrl(value) {
 }
 
 const onScroll = () => {
-  isScrolled.value = (window.scrollY || 0) > 24;
+  isScrolled.value = (window.scrollY || 0) > 0;
 };
+
+watch(isMenuOpen, (open) => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  document.body.classList.toggle('overflow-hidden', open);
+});
 
 onMounted(() => {
   onScroll();
@@ -129,6 +137,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll);
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove('overflow-hidden');
+  }
 });
 
 function openMenu() {

@@ -2,10 +2,10 @@
   <div v-if="isOpen" class="fixed inset-0 z-[70] overflow-hidden">
     <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" @click="close"></div>
     <div :class="[
-      'fixed inset-y-0 right-0 w-full max-w-sm bg-[rgba(60,66,79,0.96)] text-white shadow-[0_24px_80px_rgba(15,23,42,0.45)] transform transition-transform duration-300 ease-in-out backdrop-blur-xl border-l border-white/10',
+      'fixed inset-y-0 right-0 flex h-screen w-full max-w-sm flex-col overflow-hidden bg-[rgba(60,66,79,0.96)] text-white shadow-[0_24px_80px_rgba(15,23,42,0.45)] transform transition-transform duration-300 ease-in-out backdrop-blur-xl border-l border-white/10',
       isOpen ? 'translate-x-0' : 'translate-x-full'
     ]">
-      <div class="flex items-center justify-between px-6 py-5 border-b border-white/10">
+      <div class="flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-5">
         <a href="/" class="flex items-center">
           <img v-if="logoUrl" :src="logoUrl" :alt="siteName" class="h-10 w-auto object-contain brightness-100" />
           <div v-else class="text-xl font-semibold tracking-tight">{{ siteName }}</div>
@@ -16,9 +16,9 @@
           </svg>
         </button>
       </div>
-      <nav class="mt-6 px-4">
+      <nav class="mt-6 flex-1 overflow-y-auto px-4 pb-6 pr-3">
         <div class="mb-4 px-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/45">Menu</div>
-        <div class="space-y-2">
+        <div class="space-y-2 pr-1">
           <a v-for="item in primaryLinks" :key="`p-${item.url}`" :href="item.url" @click="close" class="flex items-center space-x-3 rounded-2xl border border-transparent px-4 py-3.5 transition hover:border-white/10 hover:bg-white/8">
             <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <template v-if="item.icon === 'tag'">

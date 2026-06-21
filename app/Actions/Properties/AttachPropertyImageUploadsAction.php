@@ -146,10 +146,12 @@ class AttachPropertyImageUploadsAction
     private function stagedPreview(PropertyImageUpload $upload): array
     {
         $finalDisk = (string) config('image_uploads.final_disk', 'public');
+        $temporaryDirectory = trim((string) config('image_uploads.temporary_directory', 'tmp/property-images'), '/');
         $path = $upload->disk === $finalDisk ? (string) $upload->temp_path : '';
+        $isTemporaryPreview = str_contains((string) $upload->temp_path, $temporaryDirectory);
 
         try {
-            $url = Storage::disk($upload->disk)->url($upload->temp_path);
+            $url = $isTemporaryPreview ? '' : Storage::disk($upload->disk)->url($upload->temp_path);
         } catch (Throwable) {
             $url = '';
         }

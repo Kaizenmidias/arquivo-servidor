@@ -256,6 +256,9 @@ function normalizeExistingItem(photo) {
         : photo?.processing_status === 'completed'
           ? 'completed'
           : 'uploaded';
+  const rawUrl = typeof photo?.url === 'string' ? photo.url : '';
+  const usesTemporaryPreview = rawUrl.includes('/storage/tmp/property-images/') || rawUrl.includes('tmp/property-images/');
+  const stablePreviewUrl = photo?.thumb_small_url || photo?.medium_url || photo?.original_url || '';
 
   return {
     id: `existing-${photo.id}`,
@@ -263,7 +266,7 @@ function normalizeExistingItem(photo) {
     existingPhotoId: photo.id,
     token: null,
     file: null,
-    previewUrl: photo.thumb_small_url || photo.medium_url || photo.original_url || photo.url || placeholderImage,
+    previewUrl: stablePreviewUrl || (!usesTemporaryPreview && rawUrl ? rawUrl : '') || placeholderImage,
     name: photo.principal ? 'Imagem de destaque' : `Imagem ${photo.id}`,
     status,
     progress: ['processing', 'optimizing', 'completed'].includes(status) ? 100 : 0,
