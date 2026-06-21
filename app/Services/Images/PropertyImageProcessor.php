@@ -58,7 +58,7 @@ class PropertyImageProcessor
         return [
             'original_path' => $upload->temp_path,
             'path' => $fullPath,
-            'url' => $disk->url($fullPath),
+            'url' => url('/media/' . ltrim($fullPath, '/')),
             'medium_path' => $mediumPath,
             'thumb_path' => $thumbPath,
             'width' => $hero['width'],

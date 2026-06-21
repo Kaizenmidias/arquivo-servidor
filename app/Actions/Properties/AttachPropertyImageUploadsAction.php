@@ -185,7 +185,7 @@ class AttachPropertyImageUploadsAction
 
         try {
             if ($this->isBrowserRenderableMime($upload->mime_type)) {
-                $url = Storage::disk($upload->disk)->url($path);
+                $url = url('/media/' . ltrim($path, '/'));
             }
         } catch (Throwable) {
             $url = '';

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -61,33 +60,32 @@ class PropertyPhoto extends Model
 
     public function getThumbSmallUrlAttribute(): ?string
     {
-        if (empty($this->thumb_small_path)) {
-            return null;
-        }
-
-        return Storage::disk('public')->url($this->thumb_small_path);
+        return $this->publicMediaUrl($this->thumb_small_path);
     }
 
     public function getOriginalUrlAttribute(): ?string
     {
-        if (empty($this->original_path)) {
-            return null;
-        }
-
-        return Storage::disk('public')->url($this->original_path);
+        return $this->publicMediaUrl($this->original_path);
     }
 
     public function getMediumUrlAttribute(): ?string
     {
-        if (empty($this->thumb_medium_path)) {
-            return null;
-        }
-
-        return Storage::disk('public')->url($this->thumb_medium_path);
+        return $this->publicMediaUrl($this->thumb_medium_path);
     }
 
     public function getThumbMediumUrlAttribute(): ?string
     {
         return $this->getMediumUrlAttribute();
+    }
+
+    private function publicMediaUrl(?string $path): ?string
+    {
+        $normalized = trim((string) ($path ?? ''), '/');
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return url('/media/' . $normalized);
     }
 }

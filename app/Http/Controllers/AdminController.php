@@ -955,7 +955,7 @@ class AdminController extends Controller
             'size' => $upload->size,
             'status' => $upload->status,
             'preview_url' => in_array($upload->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)
-                ? Storage::disk($upload->disk)->url($upload->temp_path)
+                ? $this->publicMediaUrl($upload->temp_path)
                 : null,
             'uploaded' => true,
         ]);
@@ -990,7 +990,7 @@ class AdminController extends Controller
                 'id' => $photo->id,
                 'principal' => (bool) $photo->principal,
                 'ordem' => (int) $photo->ordem,
-                'url' => $photo->url,
+                'url' => $this->publicMediaUrl($photo->arquivo),
                 'original_url' => $photo->original_url,
                 'medium_url' => $photo->medium_url,
                 'thumb_small_url' => $photo->thumb_small_url,
@@ -1462,7 +1462,7 @@ class AdminController extends Controller
             $newPhoto = PropertyPhoto::create([
                 'property_id' => $new->id,
                 'arquivo' => $path,
-                'url' => $path ? $finalDisk->url($path) : '',
+                'url' => $this->publicMediaUrl($path) ?? '',
                 'original_path' => $originalDest,
                 'width' => $photo->width,
                 'height' => $photo->height,
@@ -3263,7 +3263,18 @@ class AdminController extends Controller
             ?: $photo->medium_url
             ?: $photo->thumb_small_url
             ?: $photo->original_url
-            ?: $photo->url
+            ?: $this->publicMediaUrl($photo->arquivo)
             ?: null;
+    }
+
+    private function publicMediaUrl(?string $path): ?string
+    {
+        $normalized = trim((string) ($path ?? ''), '/');
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return url('/media/' . $normalized);
     }
 }

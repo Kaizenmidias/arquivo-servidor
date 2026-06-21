@@ -41,6 +41,7 @@ Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/contato', [ContactController::class, 'index'])->name('contact');
 Route::get('/instagram/media/{mediaId}', [HomeController::class, 'instagramMedia'])->name('instagram.media');
+Route::get('/media/{path}', [HomeController::class, 'storageMedia'])->where('path', '.*')->name('media.file');
 Route::get('/storage/{path}', [HomeController::class, 'storageMedia'])->where('path', '.*')->name('storage.media');
 
 Route::middleware('guest')->get("/{$loginPath}", [AdminController::class, 'showLogin'])->name('login');

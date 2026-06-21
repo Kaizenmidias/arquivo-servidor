@@ -354,9 +354,8 @@ class HomeController extends Controller
 
             $photoUrls = $property->photos
                 ?->sortBy('ordem')
-                ->map(fn ($p) => $p->url)
+                ->map(fn (PropertyPhoto $photo) => $this->propertyPhotoXmlUrl($photo))
                 ->filter()
-                ->map(fn ($url) => url($url))
                 ->values()
                 ->all() ?? [];
 
@@ -1027,13 +1026,8 @@ class HomeController extends Controller
 
     private function propertyPhotoStableUrl(PropertyPhoto $photo): ?string
     {
-        $url = trim((string) ($photo->url ?? ''));
-
-        if ($url === '' || $this->propertyPhotoUsesStagingUrl($url)) {
-            return null;
-        }
-
-        return $url;
+        return $this->propertyPhotoPublicAssetUrl($photo->arquivo)
+            ?: $this->propertyPhotoLegacyExternalUrl($photo);
     }
 
     private function propertyPhotoRenderableOriginalUrl(PropertyPhoto $photo): ?string
@@ -1044,18 +1038,41 @@ class HomeController extends Controller
             return null;
         }
 
-        $originalUrl = trim((string) ($photo->original_url ?? ''));
-
-        if ($originalUrl === '' || $this->propertyPhotoUsesStagingUrl($originalUrl)) {
-            return null;
-        }
-
-        return $originalUrl;
+        return $this->propertyPhotoPublicAssetUrl($photo->original_path);
     }
 
     private function propertyPhotoUsesStagingUrl(string $url): bool
     {
         return str_contains($url, '/storage/tmp/property-images/')
             || str_contains($url, '/storage/property-uploads/originals/');
+    }
+
+    private function propertyPhotoXmlUrl(PropertyPhoto $photo): ?string
+    {
+        return $this->propertyPhotoPublicAssetUrl($photo->arquivo)
+            ?: $this->propertyPhotoRenderableOriginalUrl($photo)
+            ?: $this->propertyPhotoLegacyExternalUrl($photo);
+    }
+
+    private function propertyPhotoPublicAssetUrl(?string $path): ?string
+    {
+        $normalized = trim((string) ($path ?? ''), '/');
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        return url('/media/' . $normalized);
+    }
+
+    private function propertyPhotoLegacyExternalUrl(PropertyPhoto $photo): ?string
+    {
+        $url = trim((string) ($photo->url ?? ''));
+
+        if ($url === '' || $this->propertyPhotoUsesStagingUrl($url) || str_contains($url, '/storage/')) {
+            return null;
+        }
+
+        return $url;
     }
 }

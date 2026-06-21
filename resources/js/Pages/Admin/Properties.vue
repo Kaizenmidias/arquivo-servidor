@@ -301,7 +301,7 @@ const getPropertyPublicUrl = (property) => {
 };
 
 const remove = (id) => {
-  router.delete(`${adminBase.value}/properties/${id}`);
+  router.post(`${adminBase.value}/properties/${id}`, { _method: 'delete' }, { preserveScroll: true });
 };
 
 const duplicate = (id) => {
@@ -323,7 +323,7 @@ const restore = (id) => {
 };
 
 const forceRemove = (id) => {
-  router.delete(`${adminBase.value}/properties/${id}/force`, { preserveScroll: true });
+  router.post(`${adminBase.value}/properties/${id}/force`, { _method: 'delete' }, { preserveScroll: true });
 };
 
 const toggleSelected = (id) => {
