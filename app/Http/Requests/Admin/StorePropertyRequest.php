@@ -38,7 +38,6 @@ class StorePropertyRequest extends FormRequest
     {
         return [
             'titulo' => ['required', 'string', 'max:255'],
-            'codigo_referencia' => ['nullable', 'string', 'max:255'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string'],
             'descricao' => ['required', 'string'],

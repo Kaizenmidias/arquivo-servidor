@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\QueryException;
 use Throwable;
 
 class AdminController extends Controller
@@ -908,14 +909,12 @@ class AdminController extends Controller
         $businessTypes = BusinessType::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
         $condominiums = Condominium::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
         $specialCategories = SpecialCategory::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
-        $generatedReferenceCode = $this->generateUniqueCodigoReferencia();
 
         return Inertia::render('Admin/PropertyCreate', [
             'propertyTypes' => $propertyTypes,
             'businessTypes' => $businessTypes,
             'condominiums' => $condominiums,
             'specialCategories' => $specialCategories,
-            'generatedReferenceCode' => $generatedReferenceCode,
             'imageUploadConfig' => [
                 'maxFiles' => config('image_uploads.max_files_per_property'),
                 'maxFileSizeBytes' => (int) config('image_uploads.max_file_size_bytes', 10 * 1024 * 1024),
@@ -1019,10 +1018,6 @@ class AdminController extends Controller
             ]);
 
             $slug = $this->generateUniquePropertySlug($validated['titulo']);
-            $codigoReferencia = $this->normalizeCodigoReferencia($validated['codigo_referencia'] ?? null);
-            if ($codigoReferencia === '') {
-                $codigoReferencia = $this->generateUniqueCodigoReferencia();
-            }
             $codigoAnuncio = $this->generateUniqueCodigoAnuncio();
             $selectedBusinessTypes = $this->resolveSelectedBusinessTypes($validated['business_type_ids'] ?? []);
             $businessPayload = $this->buildBusinessPayload($selectedBusinessTypes, $validated);
@@ -1044,7 +1039,6 @@ class AdminController extends Controller
                     'valor_condominio',
                     'valor_iptu',
                 ])->all(),
-                'codigo_referencia' => $codigoReferencia,
                 'slug' => $slug,
                 'codigo_anuncio' => $codigoAnuncio,
                 'moeda' => 'BRL',
@@ -1057,6 +1051,8 @@ class AdminController extends Controller
                 $property->specialCategories()->sync($validated['special_category_ids']);
             }
 
+            $this->assignSequentialCodigoReferencia($property);
+
             $attachUploads->execute(
                 $property,
                 $request->user(),
@@ -1067,11 +1063,12 @@ class AdminController extends Controller
             Log::info('Cadastro de imovel finalizado com uploads vinculados.', [
                 'property_id' => $property->id,
                 'user_id' => $request->user()?->id,
+                'codigo_referencia' => $property->codigo_referencia,
                 'property_photos_total' => $property->photos()->count(),
             ]);
 
-            return Redirect::route('admin.properties')
-                ->with('success', 'Imovel cadastrado com sucesso.');
+            return Redirect::route('admin.properties.edit', ['property' => $property->id])
+                ->with('success', 'Imovel cadastrado com sucesso. Codigo gerado automaticamente.');
         } catch (ValidationException $e) {
             throw $e;
         } catch (Throwable $e) {
@@ -1137,11 +1134,6 @@ class AdminController extends Controller
             ]);
         }
 
-        $codigoReferencia = $this->normalizeCodigoReferencia($validated['codigo_referencia'] ?? null);
-        if ($codigoReferencia === '') {
-            $codigoReferencia = $this->generateUniqueCodigoReferencia();
-        }
-
         $property->fill([
             ...collect($validated)->except([
                 'featured_upload_token',
@@ -1155,11 +1147,14 @@ class AdminController extends Controller
                 'valor_condominio',
                 'valor_iptu',
             ])->all(),
-            'codigo_referencia' => $codigoReferencia,
             ...$this->buildPropertyCharacteristicsPayload($validated),
             ...$businessPayload['attributes'],
         ]);
         $property->save();
+
+        if (empty($property->codigo_referencia)) {
+            $this->assignSequentialCodigoReferencia($property);
+        }
 
         $property->specialCategories()->sync($validated['special_category_ids'] ?? []);
 
@@ -1319,10 +1314,11 @@ class AdminController extends Controller
         $new = $property->replicate();
         $new->titulo = $newTitle;
         $new->slug = $this->generateUniquePropertySlug($newTitle);
-        $new->codigo_referencia = $this->generateUniqueCodigoReferencia();
+        $new->codigo_referencia = null;
         $new->codigo_anuncio = $this->generateUniqueCodigoAnuncio();
         $new->ativo = false;
         $new->save();
+        $this->assignSequentialCodigoReferencia($new);
 
         $new->specialCategories()->sync($property->specialCategories->pluck('id')->values()->all());
         $new->features()->sync($property->features->pluck('id')->values()->all());
@@ -1529,32 +1525,114 @@ class AdminController extends Controller
         return $codigo;
     }
 
-    private function normalizeCodigoReferencia(?string $input): string
+    private function assignSequentialCodigoReferencia(Property $property): void
     {
-        $raw = strtoupper(trim((string) ($input ?? '')));
-        if ($raw === '') {
-            return '';
+        if (!empty($property->codigo_referencia)) {
+            return;
         }
 
-        $raw = preg_replace('/[^A-Z0-9]/', '', $raw) ?? '';
-        if ($raw === '') {
-            return '';
+        $property->loadMissing('propertyType');
+
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $codigo = $this->generateSequentialCodigoReferenciaForProperty($property);
+
+            try {
+                $property->forceFill([
+                    'codigo_referencia' => $codigo,
+                ])->save();
+
+                return;
+            } catch (QueryException $e) {
+                if (!$this->isCodigoReferenciaUniqueViolation($e)) {
+                    throw $e;
+                }
+            }
         }
 
-        if (strlen($raw) < 8) {
-            return '';
-        }
-
-        return substr($raw, 0, 8);
+        throw ValidationException::withMessages([
+            'codigo_referencia' => 'Nao foi possivel gerar um codigo unico para este imovel.',
+        ]);
     }
 
-    private function generateUniqueCodigoReferencia(): string
+    private function generateSequentialCodigoReferenciaForProperty(Property $property): string
     {
-        do {
-            $codigo = strtoupper(Str::random(8));
-        } while (Property::where('codigo_referencia', $codigo)->exists());
+        $prefix = $this->resolveCodigoReferenciaPrefix($property->propertyType);
+        $pattern = '/^' . preg_quote($prefix, '/') . '(\d+)$/';
 
-        return $codigo;
+        $existingCodes = Property::query()
+            ->where('id', '!=', $property->id)
+            ->whereNotNull('codigo_referencia')
+            ->where('codigo_referencia', 'like', $prefix . '%')
+            ->pluck('codigo_referencia');
+
+        $maxSequence = 0;
+
+        foreach ($existingCodes as $existingCode) {
+            $value = strtoupper(trim((string) $existingCode));
+
+            if (preg_match($pattern, $value, $matches) === 1) {
+                $maxSequence = max($maxSequence, (int) $matches[1]);
+            }
+        }
+
+        $nextSequence = $maxSequence + 1;
+
+        do {
+            $candidate = $prefix . str_pad((string) $nextSequence, 3, '0', STR_PAD_LEFT);
+            $exists = Property::query()
+                ->where('id', '!=', $property->id)
+                ->where('codigo_referencia', $candidate)
+                ->exists();
+
+            if (!$exists) {
+                return $candidate;
+            }
+
+            $nextSequence++;
+        } while (true);
+    }
+
+    private function resolveCodigoReferenciaPrefix(?PropertyType $propertyType): string
+    {
+        $candidates = collect([
+            $propertyType?->nome_subtipo,
+            $propertyType?->nome_tipo,
+            $propertyType?->slug,
+        ])
+            ->filter(fn ($value) => !empty($value))
+            ->map(fn ($value) => Str::lower(Str::ascii(trim((string) $value))))
+            ->values();
+
+        $map = [
+            'sala comercial' => 'SA',
+            'apartamento' => 'AP',
+            'casa' => 'CA',
+            'chacara' => 'CH',
+            'cobertura' => 'CO',
+            'fazenda' => 'FA',
+            'galpao' => 'GA',
+            'terreno' => 'TE',
+        ];
+
+        foreach ($map as $label => $prefix) {
+            if ($candidates->contains(fn ($candidate) => str_contains($candidate, $label))) {
+                return $prefix;
+            }
+        }
+
+        $fallback = preg_replace('/[^A-Z]/', '', strtoupper(Str::ascii((string) ($propertyType?->slug ?: $propertyType?->nome_tipo ?: 'IM')))) ?? 'IM';
+        $fallback = substr($fallback, 0, 2);
+
+        return str_pad($fallback !== '' ? $fallback : 'IM', 2, 'X');
+    }
+
+    private function isCodigoReferenciaUniqueViolation(QueryException $e): bool
+    {
+        $sqlState = (string) ($e->errorInfo[0] ?? '');
+        $message = Str::lower($e->getMessage());
+
+        return in_array($sqlState, ['23000', '23505'], true)
+            && str_contains($message, 'codigo_referencia');
     }
     
     public function leads(): Response

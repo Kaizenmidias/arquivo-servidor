@@ -35,9 +35,11 @@
             </div>
 
             <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700">Código de Referência</label>
-              <input v-model="form.codigo_referencia" :disabled="!isEdit" type="text" class="w-full rounded-lg border border-gray-300 px-4 py-3 disabled:bg-gray-100 disabled:text-gray-500" placeholder="Gerado automaticamente">
-              <div v-if="form.errors.codigo_referencia" class="mt-1 text-sm text-red-600">{{ form.errors.codigo_referencia }}</div>
+              <label class="mb-2 block text-sm font-medium text-gray-700">Código do Imóvel</label>
+              <input :value="form.codigo_referencia || ''" type="text" disabled readonly class="w-full rounded-lg border border-gray-300 px-4 py-3 bg-gray-100 text-gray-500" :placeholder="isEdit ? 'Aguardando geração do código' : 'Será gerado automaticamente após o cadastro'">
+              <div class="mt-1 text-sm text-gray-500">
+                {{ isEdit ? 'Código gerado automaticamente conforme o tipo do imóvel.' : 'Será gerado automaticamente após o cadastro do imóvel.' }}
+              </div>
             </div>
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -385,10 +387,6 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
-  generatedReferenceCode: {
-    type: String,
-    default: '',
-  },
   imageUploadConfig: {
     type: Object,
     default: () => ({ maxFiles: null, maxFileSizeBytes: 10 * 1024 * 1024, parallelUploads: 6, pollIntervalMs: 4000 }),
@@ -420,7 +418,7 @@ const formatNullableCurrencyNumberBRL = (value) => {
 
 const form = useForm({
   titulo: props.property?.titulo || '',
-  codigo_referencia: props.property?.codigo_referencia || (isEdit.value ? '' : props.generatedReferenceCode),
+  codigo_referencia: props.property?.codigo_referencia || '',
   meta_title: props.property?.meta_title || '',
   meta_description: props.property?.meta_description || '',
   descricao: props.property?.descricao || '',
