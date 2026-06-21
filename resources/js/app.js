@@ -1,7 +1,6 @@
 import './bootstrap';
 import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 function applyAppearance(settings) {
   if (!settings || typeof settings !== 'object') return;
@@ -44,9 +43,17 @@ function applyAppearance(settings) {
   }
 }
 
+const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
+
 createInertiaApp({
   resolve: (name) => {
-    return resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue'));
+    const page = pages[`./Pages/${name}.vue`];
+
+    if (!page) {
+      throw new Error(`Inertia page not found: ${name}`);
+    }
+
+    return page;
   },
   setup({ el, App, props, plugin }) {
     applyAppearance(props?.initialPage?.props?.settings);
