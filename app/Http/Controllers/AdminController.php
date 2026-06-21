@@ -240,7 +240,6 @@ class AdminController extends Controller
         $todayEnd = $nowLocal->copy()->endOfDay()->utc();
 
         $hasExclusive = Schema::hasColumn('properties', 'is_exclusive');
-        $hasOffMarket = Schema::hasColumn('properties', 'is_off_market');
         $hasMetaTitle = Schema::hasColumn('properties', 'meta_title');
         $hasMetaDescription = Schema::hasColumn('properties', 'meta_description');
 
@@ -322,7 +321,6 @@ class AdminController extends Controller
             'rent' => $businessCount('rent'),
             'season' => $businessCount('season'),
             'exclusive' => $hasExclusive ? Property::query()->where('ativo', true)->where('is_exclusive', true)->count() : 0,
-            'off_market' => $hasOffMarket ? Property::query()->where('ativo', true)->where('is_off_market', true)->count() : 0,
             'inactive' => Property::query()->where('ativo', false)->count(),
             'sale_delta' => $this->percentDelta(
                 $businessCount('sale', [$rangeStart, $rangeEnd]),
@@ -339,10 +337,6 @@ class AdminController extends Controller
             'exclusive_delta' => $hasExclusive ? $this->percentDelta(
                 Property::query()->where('ativo', true)->where('is_exclusive', true)->whereBetween('created_at', [$rangeStart, $rangeEnd])->count(),
                 Property::query()->where('ativo', true)->where('is_exclusive', true)->whereBetween('created_at', [$prevStart, $prevEnd])->count()
-            ) : null,
-            'off_market_delta' => $hasOffMarket ? $this->percentDelta(
-                Property::query()->where('ativo', true)->where('is_off_market', true)->whereBetween('created_at', [$rangeStart, $rangeEnd])->count(),
-                Property::query()->where('ativo', true)->where('is_off_market', true)->whereBetween('created_at', [$prevStart, $prevEnd])->count()
             ) : null,
             'inactive_delta' => $this->percentDelta(
                 Property::query()->where('ativo', false)->whereBetween('created_at', [$rangeStart, $rangeEnd])->count(),
@@ -371,7 +365,6 @@ class AdminController extends Controller
             ['key' => 'evaluate', 'label' => 'Avaliação de imóvel', 'count' => Lead::query()->where('origem', 'Site - Avalie seu Imóvel')->count()],
             ['key' => 'whatsapp', 'label' => 'WhatsApp', 'count' => Lead::query()->where('origem', 'like', '%WhatsApp%')->count()],
             ['key' => 'partner_agent', 'label' => 'Corretor parceiro', 'count' => Lead::query()->where('origem', 'Site - Corretor Parceiro')->count()],
-            ['key' => 'off_market', 'label' => 'Off Market', 'count' => Lead::query()->where('origem', 'Site - Off Market')->count()],
         ];
 
         $seo = [

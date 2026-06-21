@@ -198,25 +198,6 @@
           </aside>
 
           <main>
-            <a href="/off-market" class="mb-6 block rounded-[24px] border border-white/20 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-5 text-white shadow-[0_20px_60px_rgba(15,23,42,0.16)] ui-fade-up">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <div class="flex items-center gap-2 font-semibold">
-                    <svg class="w-5 h-5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span>Acesse imóveis Off-Market</span>
-                  </div>
-                  <div class="text-sm text-white/70">Lista exclusiva de imóveis fora do mercado aberto</div>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </div>
-              </div>
-            </a>
-
             <div class="mb-6 flex flex-col gap-4 rounded-[24px] border border-white/50 bg-white/80 p-4 shadow-sm backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
               <div class="text-gray-900 font-semibold">
                 {{ totalLabel }}

@@ -17,11 +17,6 @@ class PageController extends Controller
         return Inertia::render('About', ['page' => $page]);
     }
 
-    public function offMarket(): Response
-    {
-        return Inertia::render('OffMarket');
-    }
-
     public function exclusiveManagement(): Response
     {
         return Inertia::render('ExclusiveManagement');
@@ -101,30 +96,12 @@ class PageController extends Controller
         return Redirect::back();
     }
 
-    public function sendOffMarket(Request $request)
-    {
-        $validated = $request->validate([
-            'nome' => ['required', 'string', 'max:255'],
-            'telefone' => ['required', 'string', 'max:50'],
-            'email' => ['nullable', 'string', 'max:255'],
-            'mensagem' => ['nullable', 'string'],
-        ]);
-
-        Lead::create([
-            'nome' => $validated['nome'],
-            'telefone' => $validated['telefone'],
-            'email' => $validated['email'] ?? '',
-            'mensagem' => $validated['mensagem'] ?? null,
-            'origem' => 'Site - Off Market',
-            'categoria' => 'leads',
-            'status' => 'Novo Lead',
-        ]);
-
-        return Redirect::back();
-    }
-
     public function show(Page $page): Response
     {
+        if ($page->slug === 'off-market') {
+            abort(404);
+        }
+
         return Inertia::render('PageShow', ['page' => $page]);
     }
 }

@@ -495,7 +495,6 @@ const statusCards = computed(() => [
   { key: 'rent', title: 'Aluguel', value: formatNumber(props.propertyStatus?.rent), delta: props.propertyStatus?.rent_delta ?? null },
   { key: 'season', title: 'Temporada', value: formatNumber(props.propertyStatus?.season), delta: props.propertyStatus?.season_delta ?? null },
   { key: 'exclusive', title: 'Exclusivos', value: formatNumber(props.propertyStatus?.exclusive), delta: props.propertyStatus?.exclusive_delta ?? null },
-  { key: 'off_market', title: 'Off Market', value: formatNumber(props.propertyStatus?.off_market), delta: props.propertyStatus?.off_market_delta ?? null },
   { key: 'inactive', title: 'Inativos', value: formatNumber(props.propertyStatus?.inactive), delta: props.propertyStatus?.inactive_delta ?? null },
 ]);
 

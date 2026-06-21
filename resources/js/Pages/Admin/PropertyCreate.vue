@@ -270,10 +270,6 @@
                   <input v-model="form.is_exclusive" type="checkbox" class="rounded border-gray-300">
                   Exclusivo
                 </label>
-                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
-                  <input v-model="form.is_off_market" type="checkbox" class="rounded border-gray-300">
-                  Off Market
-                </label>
               </div>
             </div>
 
@@ -452,7 +448,6 @@ const form = useForm({
   ano_construcao: props.property?.ano_construcao ?? null,
   posicao_solar: props.property?.posicao_solar || '',
   is_exclusive: !!props.property?.is_exclusive,
-  is_off_market: !!props.property?.is_off_market,
   show_in_home_selecao_especial: !!props.property?.show_in_home_selecao_especial,
   show_in_home_mais_procurados: !!props.property?.show_in_home_mais_procurados,
   show_in_home_visto_recentemente: !!props.property?.show_in_home_visto_recentemente,

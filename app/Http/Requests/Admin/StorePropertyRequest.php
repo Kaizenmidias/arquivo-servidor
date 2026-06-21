@@ -21,7 +21,6 @@ class StorePropertyRequest extends FormRequest
     {
         $this->merge([
             'is_exclusive' => $this->boolean('is_exclusive'),
-            'is_off_market' => $this->boolean('is_off_market'),
             'show_in_home_selecao_especial' => $this->boolean('show_in_home_selecao_especial'),
             'show_in_home_mais_procurados' => $this->boolean('show_in_home_mais_procurados'),
             'show_in_home_visto_recentemente' => $this->boolean('show_in_home_visto_recentemente'),
@@ -67,7 +66,6 @@ class StorePropertyRequest extends FormRequest
             'ano_construcao' => ['nullable', 'integer', 'min:1800', 'max:' . (date('Y') + 1)],
             'posicao_solar' => ['nullable', 'string', Rule::in($this->solarPositions())],
             'is_exclusive' => ['nullable', 'boolean'],
-            'is_off_market' => ['nullable', 'boolean'],
             'show_in_home_selecao_especial' => ['nullable', 'boolean'],
             'show_in_home_mais_procurados' => ['nullable', 'boolean'],
             'show_in_home_visto_recentemente' => ['nullable', 'boolean'],

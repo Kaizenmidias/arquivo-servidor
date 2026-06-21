@@ -63,6 +63,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'menuItems' => fn () => MenuItem::query()
                 ->where('is_active', true)
+                ->where('url', '!=', '/off-market')
                 ->orderBy('order')
                 ->get(['id', 'label', 'icon', 'url', 'order', 'is_active']),
             'settings' => fn () => Setting::query()->pluck('valor', 'chave'),

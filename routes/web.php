@@ -32,7 +32,6 @@ Route::get('/imoveis', [HomeController::class, 'properties'])->name('properties'
 Route::get('/imoveis/{slug}', [HomeController::class, 'showProperty'])->name('property.show');
 Route::get('/venda-seu-imovel', [HomeController::class, 'sell'])->name('sell');
 Route::get('/quem-somos', [PageController::class, 'about'])->name('about');
-Route::get('/off-market', [PageController::class, 'offMarket'])->name('off-market');
 Route::get('/gestao-exclusiva', [PageController::class, 'exclusiveManagement'])->name('exclusive-management');
 Route::get('/calculadora', [CalculatorController::class, 'index'])->name('calculator');
 Route::get('/avalie-seu-imovel', [PageController::class, 'evaluate'])->name('evaluate');
@@ -146,6 +145,4 @@ Route::post('/contato/send', [ContactController::class, 'send'])->name('contact.
 Route::post('/venda-seu-imovel/send', [HomeController::class, 'sendSell'])->name('sell.send');
 Route::post('/avalie-seu-imovel/send', [PageController::class, 'sendEvaluate'])->name('evaluate.send');
 Route::post('/corretor-parceiro/send', [PageController::class, 'sendPartnerAgent'])->name('partner-agent.send');
-Route::post('/off-market/send', [PageController::class, 'sendOffMarket'])->name('off-market.send');
-
 Route::get('/{page:slug}', [PageController::class, 'show'])->name('page.show');
