@@ -49,7 +49,7 @@
             </div>
           </div>
 
-          <button type="button" class="mx-auto mt-4 flex items-center justify-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900" @click="toggleAdvanced">
+          <button type="button" class="mx-auto mt-4 flex items-center justify-center gap-2 rounded-full bg-[rgba(60,66,79,0.88)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[rgba(60,66,79,0.96)]" @click="toggleAdvanced">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M10 18H14V16H10V18ZM3 6V8H21V6H3ZM6 13H18V11H6V13Z"></path>
             </svg>

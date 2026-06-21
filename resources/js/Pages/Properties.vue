@@ -299,7 +299,7 @@ const paginationLinks = computed(() => props.properties?.links || []);
 const totalLabel = computed(() => {
   const total = meta.value?.total;
   const value = typeof total === 'number' ? total : items.value.length;
-  return `${value} imóvel${value === 1 ? '' : 'is'}`;
+  return `${value} ${value === 1 ? 'imóvel' : 'imóveis'}`;
 });
 
 const normalizeString = (value) => (value === null || value === undefined ? '' : String(value));
