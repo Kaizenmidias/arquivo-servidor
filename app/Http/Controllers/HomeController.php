@@ -943,7 +943,7 @@ class HomeController extends Controller
             ?: $photo->thumb_medium_url
             ?: $photo->medium_url
             ?: $photo->original_url
-            ?: $photo->url
+            ?: $this->propertyPhotoStableUrl($photo)
             ?: null;
     }
 
@@ -953,9 +953,10 @@ class HomeController extends Controller
             return null;
         }
 
-        $thumb = $photo->thumb_small_url ?: $photo->thumb_medium_url ?: $photo->url ?: $photo->original_url;
-        $medium = $photo->thumb_medium_url ?: $photo->url ?: $photo->thumb_small_url ?: $photo->original_url;
-        $full = $photo->url ?: $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $photo->original_url;
+        $stableUrl = $this->propertyPhotoStableUrl($photo);
+        $thumb = $photo->thumb_small_url ?: $photo->thumb_medium_url ?: $photo->original_url ?: $stableUrl;
+        $medium = $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $photo->original_url ?: $stableUrl;
+        $full = $photo->original_url ?: $stableUrl ?: $photo->thumb_medium_url ?: $photo->thumb_small_url;
 
         if (!$thumb && !$medium && !$full) {
             return null;
@@ -964,7 +965,7 @@ class HomeController extends Controller
         $srcset = collect([
             $photo->thumb_small_url ? "{$photo->thumb_small_url} 600w" : null,
             $photo->thumb_medium_url ? "{$photo->thumb_medium_url} 1200w" : null,
-            $photo->url ? "{$photo->url} 1920w" : null,
+            $stableUrl ? "{$stableUrl} 1920w" : null,
         ])->filter()->implode(', ');
 
         return [
@@ -976,5 +977,16 @@ class HomeController extends Controller
             'sizes' => '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 600px',
             'full_sizes' => '(max-width: 768px) 100vw, 1200px',
         ];
+    }
+
+    private function propertyPhotoStableUrl(PropertyPhoto $photo): ?string
+    {
+        $url = trim((string) ($photo->url ?? ''));
+
+        if ($url === '' || str_contains($url, '/storage/tmp/property-images/')) {
+            return null;
+        }
+
+        return $url;
     }
 }

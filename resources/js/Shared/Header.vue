@@ -118,8 +118,21 @@ function normalizeUrl(value) {
   return path === '' ? '/' : path;
 }
 
+const getScrollTop = () => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return 0;
+  }
+
+  return Math.max(
+    window.scrollY || 0,
+    window.pageYOffset || 0,
+    document.documentElement?.scrollTop || 0,
+    document.body?.scrollTop || 0,
+  );
+};
+
 const onScroll = () => {
-  isScrolled.value = (window.scrollY || 0) > 0;
+  isScrolled.value = getScrollTop() > 0;
 };
 
 watch(isMenuOpen, (open) => {

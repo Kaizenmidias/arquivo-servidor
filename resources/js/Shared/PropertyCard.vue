@@ -207,8 +207,8 @@ const priceLabelClass = (key) => {
 
 const priceValueClass = (key) => {
   if (key === 'rent') return 'text-[17px] text-orange-700';
-  if (key === 'sale') return 'text-[21px] text-blue-900';
-  return 'text-[19px] text-gray-900';
+  if (key === 'sale') return 'text-[17px] text-blue-900';
+  return 'text-[17px] text-gray-900';
 };
 
 const displayLocation = computed(() => {
