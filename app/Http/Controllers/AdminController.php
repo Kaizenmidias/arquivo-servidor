@@ -1106,11 +1106,69 @@ class AdminController extends Controller
     {
         abort_unless($photo->property_id === $property->id, 404);
 
+        if (env('TRAE_DEBUG_ADMIN_REPROCESS_FAILURE')) {
+            // #region debug-point A:reprocess-enter
+            rescue(function () use ($property, $photo): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'admin-reprocess-failure',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/AdminController.php:reprocessPropertyImage:enter',
+                    'msg' => '[DEBUG] Reprocess request entered',
+                    'data' => [
+                        'property_id' => $property->id,
+                        'photo_id' => $photo->id,
+                        'photo_processing_status' => $photo->processing_status,
+                        'photo_processing_error' => $photo->processing_error,
+                        'photo_original_path' => $photo->original_path,
+                        'photo_arquivo' => $photo->arquivo,
+                        'photo_source_mime_type' => $photo->source_mime_type,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
         $upload = PropertyImageUpload::query()
             ->where('property_photo_id', $photo->id)
             ->where('property_id', $property->id)
             ->latest('id')
-            ->firstOrFail();
+            ->first();
+
+        if (!$upload) {
+            $upload = $this->rebuildPropertyUploadForReprocess($property, $photo);
+        }
+
+        if (!$upload) {
+            return response()->json([
+                'message' => 'Nao foi possivel reenfileirar a imagem porque o arquivo original nao foi encontrado no servidor.',
+                'error' => 'property_image_original_missing',
+            ], 422);
+        }
+
+        if (env('TRAE_DEBUG_ADMIN_REPROCESS_FAILURE')) {
+            // #region debug-point A:reprocess-upload-found
+            rescue(function () use ($property, $photo, $upload): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'admin-reprocess-failure',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/AdminController.php:reprocessPropertyImage:upload-found',
+                    'msg' => '[DEBUG] Reprocess found linked upload',
+                    'data' => [
+                        'property_id' => $property->id,
+                        'photo_id' => $photo->id,
+                        'upload_id' => $upload->id,
+                        'upload_status' => $upload->status,
+                        'upload_temp_path' => $upload->temp_path,
+                        'upload_mime_type' => $upload->mime_type,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
 
         $photo->update([
             'processing_status' => 'uploaded',
@@ -1138,6 +1196,81 @@ class AdminController extends Controller
             'photo_id' => $photo->id,
             'upload_id' => $upload->id,
         ]);
+    }
+
+    private function rebuildPropertyUploadForReprocess(Property $property, PropertyPhoto $photo): ?PropertyImageUpload
+    {
+        $source = $this->findReprocessSourceForPhoto($photo);
+
+        if (!$source) {
+            Log::warning('Reprocessamento sem upload vinculado e sem arquivo original recuperavel.', [
+                'property_id' => $property->id,
+                'photo_id' => $photo->id,
+                'original_path' => $photo->original_path,
+                'arquivo' => $photo->arquivo,
+            ]);
+
+            return null;
+        }
+
+        [$diskName, $path] = $source;
+        $disk = Storage::disk($diskName);
+        $mimeType = (string) ($photo->source_mime_type ?: $photo->mime_type ?: rescue(fn (): string => (string) $disk->mimeType($path), 'application/octet-stream', false));
+        $size = (int) ($photo->source_size ?: $photo->size ?: rescue(fn (): int => (int) $disk->size($path), 0, false));
+
+        $upload = PropertyImageUpload::create([
+            'user_id' => auth()->id() ?? 1,
+            'property_id' => $property->id,
+            'property_photo_id' => $photo->id,
+            'token' => (string) Str::uuid(),
+            'disk' => $diskName,
+            'temp_path' => $path,
+            'original_name' => basename($path),
+            'sanitized_name' => basename($path),
+            'extension' => strtolower((string) pathinfo($path, PATHINFO_EXTENSION)),
+            'mime_type' => $mimeType,
+            'size' => $size,
+            'sha256' => hash('sha256', $path . '|' . $photo->id . '|reprocess'),
+            'status' => 'uploaded',
+            'validation_error' => null,
+            'expires_at' => null,
+            'processed_at' => null,
+            'attached_at' => now(),
+        ]);
+
+        Log::info('Upload de recuperacao criado para reprocessamento de foto legada.', [
+            'property_id' => $property->id,
+            'photo_id' => $photo->id,
+            'upload_id' => $upload->id,
+            'disk' => $diskName,
+            'path' => $path,
+        ]);
+
+        return $upload;
+    }
+
+    private function findReprocessSourceForPhoto(PropertyPhoto $photo): ?array
+    {
+        $candidates = [
+            [(string) config('image_uploads.original_disk', 'public'), $photo->original_path],
+            [(string) config('image_uploads.final_disk', 'public'), $photo->original_path],
+            [(string) config('image_uploads.original_disk', 'public'), $photo->arquivo],
+            [(string) config('image_uploads.final_disk', 'public'), $photo->arquivo],
+        ];
+
+        foreach ($candidates as [$diskName, $path]) {
+            $normalizedPath = trim((string) ($path ?? ''), '/');
+
+            if ($normalizedPath === '') {
+                continue;
+            }
+
+            if (Storage::disk($diskName)->exists($normalizedPath)) {
+                return [$diskName, $normalizedPath];
+            }
+        }
+
+        return null;
     }
 
     public function storeProperty(

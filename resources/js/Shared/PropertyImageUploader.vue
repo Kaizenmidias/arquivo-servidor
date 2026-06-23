@@ -511,6 +511,29 @@ async function reprocessItem(item) {
   try {
     await axios.post(`${props.reprocessImageBaseUrl}/${item.existingPhotoId}/reprocess`);
   } catch (error) {
+    if (import.meta.env.VITE_TRAE_DEBUG_ADMIN_REPROCESS_FAILURE === '1') {
+      // #region debug-point B:reprocess-error
+      fetch('http://127.0.0.1:7777/event', {
+        method: 'POST',
+        body: JSON.stringify({
+          sessionId: 'admin-reprocess-failure',
+          runId: 'pre-fix',
+          hypothesisId: 'B',
+          location: 'resources/js/Shared/PropertyImageUploader.vue:reprocessItem:catch',
+          msg: '[DEBUG] Reprocess request failed on admin uploader',
+          data: {
+            photoId: item?.existingPhotoId ?? null,
+            status: error?.response?.status ?? null,
+            data: error?.response?.data ?? null,
+            message: error?.message ?? null,
+            url: `${props.reprocessImageBaseUrl}/${item.existingPhotoId}/reprocess`,
+          },
+          ts: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+    }
+
     item.status = 'failed';
     item.error = error?.response?.data?.message || 'Nao foi possivel reenfileirar a imagem.';
   }
