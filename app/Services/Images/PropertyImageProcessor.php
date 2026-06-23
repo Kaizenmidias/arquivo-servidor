@@ -6,6 +6,7 @@ use App\Models\PropertyImageUpload;
 use App\Models\PropertyPhoto;
 use Imagick;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -25,7 +26,57 @@ class PropertyImageProcessor
             $upload->extension
         );
 
+        if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+            // #region debug-point C:processor-enter
+            rescue(function () use ($photo, $upload, $validated): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-imagick',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'C',
+                    'location' => 'app/Services/Images/PropertyImageProcessor.php:process:enter',
+                    'msg' => '[DEBUG] Processor entered with validated upload metadata',
+                    'data' => [
+                        'photo_id' => $photo->id,
+                        'upload_id' => $upload->id,
+                        'disk' => $upload->disk,
+                        'temp_path' => $upload->temp_path,
+                        'extension' => $upload->extension,
+                        'upload_mime_type' => $upload->mime_type,
+                        'validated_mime_type' => $validated['mime_type'] ?? null,
+                        'validated_size' => $validated['size'] ?? null,
+                        'php_version' => PHP_VERSION,
+                        'imagick_loaded' => class_exists(Imagick::class),
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
         if (!class_exists(Imagick::class)) {
+            if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+                // #region debug-point C:processor-imagick-missing
+                rescue(function () use ($photo, $upload): void {
+                    Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                        'sessionId' => 'front-images-imagick',
+                        'runId' => 'pre-fix',
+                        'hypothesisId' => 'C',
+                        'location' => 'app/Services/Images/PropertyImageProcessor.php:process:imagick-missing',
+                        'msg' => '[DEBUG] Processor aborted because Imagick is unavailable',
+                        'data' => [
+                            'photo_id' => $photo->id,
+                            'upload_id' => $upload->id,
+                            'temp_path' => $upload->temp_path,
+                            'upload_mime_type' => $upload->mime_type,
+                            'php_version' => PHP_VERSION,
+                            'loaded_extensions' => get_loaded_extensions(),
+                        ],
+                        'ts' => (int) round(microtime(true) * 1000),
+                    ]);
+                }, report: false);
+                // #endregion
+            }
+
             Log::error('Processamento de imagem indisponivel: extensao Imagick ausente.', [
                 'photo_id' => $photo->id,
                 'upload_id' => $upload->id,
@@ -38,6 +89,27 @@ class PropertyImageProcessor
         $sourcePath = Storage::disk($upload->disk)->path($upload->temp_path);
         if (!is_file($sourcePath)) {
             throw new RuntimeException('O arquivo original da imagem nao foi encontrado no storage definitivo.');
+        }
+
+        if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+            // #region debug-point C:processor-source-found
+            rescue(function () use ($photo, $upload, $sourcePath): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-imagick',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'C',
+                    'location' => 'app/Services/Images/PropertyImageProcessor.php:process:source-found',
+                    'msg' => '[DEBUG] Processor found original source file',
+                    'data' => [
+                        'photo_id' => $photo->id,
+                        'upload_id' => $upload->id,
+                        'source_path' => $sourcePath,
+                        'filesize' => @filesize($sourcePath) ?: null,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
         }
 
         $quality = (int) config('image_uploads.processing.webp_quality', 85);
@@ -53,6 +125,27 @@ class PropertyImageProcessor
         $this->saveBinary($disk, $fullPath, $hero['binary']);
         $this->saveBinary($disk, $mediumPath, $gallery['binary']);
         $this->saveBinary($disk, $thumbPath, $thumb['binary']);
+
+        if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+            // #region debug-point C:processor-derived-saved
+            rescue(function () use ($photo, $fullPath, $mediumPath, $thumbPath): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-imagick',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'C',
+                    'location' => 'app/Services/Images/PropertyImageProcessor.php:process:derived-saved',
+                    'msg' => '[DEBUG] Processor saved WEBP derivatives',
+                    'data' => [
+                        'photo_id' => $photo->id,
+                        'hero_path' => $fullPath,
+                        'gallery_path' => $mediumPath,
+                        'thumb_path' => $thumbPath,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
 
         gc_collect_cycles();
 

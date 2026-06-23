@@ -222,6 +222,19 @@ function isTemporaryImageUrl(url) {
     || normalized.includes('property-uploads/originals/');
 }
 
+function isBrowserRenderableMime(mimeType) {
+  const normalized = typeof mimeType === 'string' ? mimeType.trim().toLowerCase() : '';
+  return [
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/png',
+    'image/x-png',
+    'image/webp',
+    'image/gif',
+  ].includes(normalized);
+}
+
 const TRACKED_PENDING_STATUSES = ['queued', 'uploading'];
 const TRACKED_SUCCESS_STATUSES = ['uploaded', 'processing', 'ready'];
 const TRACKED_ERROR_STATUSES = ['error', 'failed'];
@@ -274,13 +287,23 @@ function normalizeExistingItem(photo) {
       : 'uploaded';
   const rawUrl = typeof photo?.url === 'string' ? photo.url : '';
   const usesTemporaryPreview = isTemporaryImageUrl(rawUrl);
+  const sourceMimeType = typeof photo?.source_mime_type === 'string' ? photo.source_mime_type : '';
+  const canRenderOriginal = isBrowserRenderableMime(sourceMimeType);
   const stablePreviewCandidates = [
     photo?.thumb_small_url,
     photo?.medium_url,
-    rawUrl,
-    photo?.original_url,
+    canRenderOriginal ? rawUrl : '',
+    canRenderOriginal ? photo?.original_url : '',
   ].filter((value) => typeof value === 'string' && value.trim() !== '' && !isTemporaryImageUrl(value));
   const stablePreviewUrl = stablePreviewCandidates[0] || '';
+  const requiresImagick = /imagick/i.test(String(photo?.processing_error || '')) || ['image/heic', 'image/heif'].includes(sourceMimeType.toLowerCase());
+  const friendlyProcessingError = failed && requiresImagick
+    ? (
+      stablePreviewUrl
+        ? 'Original salvo com sucesso. Ative a extensao Imagick no servidor para gerar as versoes WEBP.'
+        : 'Esta imagem depende da extensao Imagick no servidor para ser convertida em WEBP e exibida no site.'
+    )
+    : (photo?.processing_error || '');
 
   if (import.meta.env.VITE_TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419 === '1' && (usesTemporaryPreview || stablePreviewUrl.includes('tmp/property-images/'))) {
     // #region debug-point B:existing-preview-temporary
@@ -316,9 +339,11 @@ function normalizeExistingItem(photo) {
     name: photo.principal ? 'Imagem de destaque' : `Imagem ${photo.id}`,
     status,
     progress: ['uploaded', 'processing', 'ready'].includes(status) ? 100 : 0,
-    error: photo.processing_error || '',
+    error: friendlyProcessingError,
     isExisting: true,
     principal: !!photo?.principal,
+    hasRenderablePreview: stablePreviewUrl !== '',
+    requiresImagick,
   };
 }
 
@@ -543,6 +568,14 @@ function setAsFeatured(id) {
 }
 
 function statusLabel(item) {
+  if (item.status === 'failed' && item.hasRenderablePreview) {
+    return 'Original salvo; WEBP pendente';
+  }
+
+  if (item.status === 'failed' && item.requiresImagick) {
+    return 'Falhou; requer Imagick';
+  }
+
   return {
     queued: 'Na fila',
     uploading: `Enviando ${item.progress}%`,

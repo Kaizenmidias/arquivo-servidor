@@ -1011,6 +1011,37 @@ class HomeController extends Controller
         $medium = $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $stableUrl ?: $renderableOriginalUrl;
         $full = $stableUrl ?: $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $renderableOriginalUrl;
 
+        if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+            // #region debug-point A:serialize-responsive-photo
+            rescue(function () use ($photo, $stableUrl, $renderableOriginalUrl, $thumb, $medium, $full): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-imagick',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/HomeController.php:serializeResponsivePhoto',
+                    'msg' => '[DEBUG] Responsive photo URLs resolved',
+                    'data' => [
+                        'photo_id' => $photo->id,
+                        'property_id' => $photo->property_id,
+                        'processing_status' => $photo->processing_status,
+                        'source_mime_type' => $photo->source_mime_type,
+                        'mime_type' => $photo->mime_type,
+                        'original_path' => $photo->original_path,
+                        'arquivo' => $photo->arquivo,
+                        'thumb_small_path' => $photo->thumb_small_path,
+                        'thumb_medium_path' => $photo->thumb_medium_path,
+                        'stable_url' => $stableUrl,
+                        'renderable_original_url' => $renderableOriginalUrl,
+                        'thumb' => $thumb,
+                        'medium' => $medium,
+                        'full' => $full,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
         if (!$thumb && !$medium && !$full) {
             return null;
         }
@@ -1034,19 +1065,105 @@ class HomeController extends Controller
 
     private function propertyPhotoStableUrl(PropertyPhoto $photo): ?string
     {
-        return $this->propertyPhotoPublicAssetUrl($photo->arquivo)
-            ?: $this->propertyPhotoLegacyExternalUrl($photo);
+        $arquivoUrl = $this->propertyPhotoPublicAssetUrl($photo->arquivo);
+
+        if ($arquivoUrl && $this->propertyPhotoPathIsRenderable($photo->arquivo, $photo->mime_type, $photo->source_mime_type)) {
+            return $arquivoUrl;
+        }
+
+        return $this->propertyPhotoLegacyExternalUrl($photo);
     }
 
     private function propertyPhotoRenderableOriginalUrl(PropertyPhoto $photo): ?string
     {
         $mimeType = strtolower((string) ($photo->source_mime_type ?: $photo->mime_type ?: ''));
 
-        if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        if (!$this->propertyPhotoPathIsRenderable($photo->original_path, $photo->source_mime_type, $photo->mime_type)) {
+            if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+                // #region debug-point A:renderable-original-rejected
+                rescue(function () use ($photo, $mimeType): void {
+                    Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                        'sessionId' => 'front-images-imagick',
+                        'runId' => 'pre-fix',
+                        'hypothesisId' => 'A',
+                        'location' => 'app/Http/Controllers/HomeController.php:propertyPhotoRenderableOriginalUrl:rejected',
+                        'msg' => '[DEBUG] Original fallback rejected for mime type',
+                        'data' => [
+                            'photo_id' => $photo->id,
+                            'property_id' => $photo->property_id,
+                            'processing_status' => $photo->processing_status,
+                            'source_mime_type' => $photo->source_mime_type,
+                            'mime_type' => $photo->mime_type,
+                            'resolved_mime_type' => $mimeType,
+                            'original_path' => $photo->original_path,
+                        ],
+                        'ts' => (int) round(microtime(true) * 1000),
+                    ]);
+                }, report: false);
+                // #endregion
+            }
+
             return null;
         }
 
-        return $this->propertyPhotoPublicAssetUrl($photo->original_path);
+        $url = $this->propertyPhotoPublicAssetUrl($photo->original_path);
+
+        if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+            // #region debug-point A:renderable-original-accepted
+            rescue(function () use ($photo, $mimeType, $url): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-imagick',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/HomeController.php:propertyPhotoRenderableOriginalUrl:accepted',
+                    'msg' => '[DEBUG] Original fallback accepted',
+                    'data' => [
+                        'photo_id' => $photo->id,
+                        'property_id' => $photo->property_id,
+                        'processing_status' => $photo->processing_status,
+                        'resolved_mime_type' => $mimeType,
+                        'original_path' => $photo->original_path,
+                        'url' => $url,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
+        return $url;
+    }
+
+    private function propertyPhotoPathIsRenderable(?string $path, ?string ...$mimeCandidates): bool
+    {
+        $normalizedPath = trim((string) ($path ?? ''), '/');
+
+        if ($normalizedPath === '') {
+            return false;
+        }
+
+        foreach ($mimeCandidates as $mimeCandidate) {
+            if ($this->isBrowserRenderableImageMime($mimeCandidate)) {
+                return true;
+            }
+        }
+
+        $extension = strtolower((string) pathinfo($normalizedPath, PATHINFO_EXTENSION));
+
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true);
+    }
+
+    private function isBrowserRenderableImageMime(?string $mimeType): bool
+    {
+        return in_array(strtolower(trim((string) ($mimeType ?? ''))), [
+            'image/jpeg',
+            'image/jpg',
+            'image/pjpeg',
+            'image/png',
+            'image/x-png',
+            'image/webp',
+            'image/gif',
+        ], true);
     }
 
     private function propertyPhotoUsesStagingUrl(string $url): bool

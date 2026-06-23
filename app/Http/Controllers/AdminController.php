@@ -1074,8 +1074,8 @@ class AdminController extends Controller
                 'id' => $photo->id,
                 'principal' => (bool) $photo->principal,
                 'ordem' => (int) $photo->ordem,
-                'url' => $this->publicMediaUrl($photo->arquivo),
-                'original_url' => $photo->original_url,
+                'url' => $this->propertyPhotoPreviewUrl($photo),
+                'original_url' => $this->propertyPhotoRenderableOriginalUrl($photo),
                 'medium_url' => $photo->medium_url,
                 'thumb_small_url' => $photo->thumb_small_url,
                 'size' => $photo->size,
@@ -3366,8 +3366,8 @@ class AdminController extends Controller
             $photo->thumb_medium_url,
             $photo->medium_url,
             $photo->thumb_small_url,
-            $this->publicMediaUrl($photo->arquivo),
-            $photo->original_url,
+            $this->propertyPhotoArquivoUrl($photo),
+            $this->propertyPhotoRenderableOriginalUrl($photo),
         ];
 
         foreach ($candidates as $candidate) {
@@ -3388,6 +3388,72 @@ class AdminController extends Controller
             || str_contains($normalized, '/media/tmp/property-images/')
             || str_contains($normalized, '/storage/property-uploads/originals/')
             || str_contains($normalized, '/media/property-uploads/originals/');
+    }
+
+    private function propertyPhotoPreviewUrl(PropertyPhoto $photo): ?string
+    {
+        foreach ([
+            $photo->thumb_small_url,
+            $photo->medium_url,
+            $this->propertyPhotoArquivoUrl($photo),
+            $this->propertyPhotoRenderableOriginalUrl($photo),
+        ] as $candidate) {
+            if (!$this->photoUrlUsesTemporaryPath($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private function propertyPhotoArquivoUrl(PropertyPhoto $photo): ?string
+    {
+        if (!$this->propertyPhotoPathIsRenderable($photo->arquivo, $photo->mime_type, $photo->source_mime_type)) {
+            return null;
+        }
+
+        return $this->publicMediaUrl($photo->arquivo);
+    }
+
+    private function propertyPhotoRenderableOriginalUrl(PropertyPhoto $photo): ?string
+    {
+        if (!$this->propertyPhotoPathIsRenderable($photo->original_path, $photo->source_mime_type, $photo->mime_type)) {
+            return null;
+        }
+
+        return $this->publicMediaUrl($photo->original_path);
+    }
+
+    private function propertyPhotoPathIsRenderable(?string $path, ?string ...$mimeCandidates): bool
+    {
+        $normalizedPath = trim((string) ($path ?? ''), '/');
+
+        if ($normalizedPath === '') {
+            return false;
+        }
+
+        foreach ($mimeCandidates as $mimeCandidate) {
+            if ($this->isBrowserRenderableImageMime($mimeCandidate)) {
+                return true;
+            }
+        }
+
+        $extension = strtolower((string) pathinfo($normalizedPath, PATHINFO_EXTENSION));
+
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true);
+    }
+
+    private function isBrowserRenderableImageMime(?string $mimeType): bool
+    {
+        return in_array(strtolower(trim((string) ($mimeType ?? ''))), [
+            'image/jpeg',
+            'image/jpg',
+            'image/pjpeg',
+            'image/png',
+            'image/x-png',
+            'image/webp',
+            'image/gif',
+        ], true);
     }
 
     private function publicMediaUrl(?string $path): ?string

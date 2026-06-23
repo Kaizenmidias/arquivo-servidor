@@ -27,6 +27,7 @@ jobs:
             git fetch --all
             git reset --hard origin/master
             composer install --no-dev --optimize-autoloader
+            php83 -m | grep -i "^imagick$" >/dev/null || { echo "Imagick extension is not loaded in php83. Install/enable Imagick before processing property images."; exit 1; }
             php83 artisan migrate --force
             php83 artisan optimize:clear
             php83 artisan config:cache

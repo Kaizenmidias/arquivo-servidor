@@ -73,6 +73,32 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
             // #endregion
         }
 
+        if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+            // #region debug-point B:job-handle-enter
+            rescue(function () use ($photo, $upload): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-imagick',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'B',
+                    'location' => 'app/Jobs/ProcessPropertyImageJob.php:handle:enter',
+                    'msg' => '[DEBUG] Image job entered with current persisted state',
+                    'data' => [
+                        'job_photo_id' => $this->photoId,
+                        'job_upload_id' => $this->uploadId,
+                        'photo_processing_status' => $photo->processing_status,
+                        'photo_original_path' => $photo->original_path,
+                        'photo_source_mime_type' => $photo->source_mime_type,
+                        'upload_status' => $upload->status,
+                        'upload_temp_path' => $upload->temp_path,
+                        'upload_mime_type' => $upload->mime_type,
+                        'attempt' => method_exists($this, 'attempts') ? $this->attempts() : null,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
         if ($photo->processing_status === 'ready' && $upload->status === 'ready') {
             Log::info('Job de processamento ignorado porque a imagem ja esta pronta.', [
                 'photo_id' => $photo->id,
@@ -103,6 +129,29 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
                 'processing_status' => 'processing',
                 'processing_error' => null,
             ]);
+
+            if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+                // #region debug-point B:job-state-promoted
+                rescue(function () use ($photo, $upload): void {
+                    Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                        'sessionId' => 'front-images-imagick',
+                        'runId' => 'pre-fix',
+                        'hypothesisId' => 'B',
+                        'location' => 'app/Jobs/ProcessPropertyImageJob.php:handle:state-promoted',
+                        'msg' => '[DEBUG] Image job persisted original path before processing',
+                        'data' => [
+                            'photo_id' => $photo->id,
+                            'upload_id' => $upload->id,
+                            'photo_original_path' => $photo->fresh()?->original_path,
+                            'photo_source_mime_type' => $photo->fresh()?->source_mime_type,
+                            'photo_processing_status' => $photo->fresh()?->processing_status,
+                            'upload_status' => $upload->fresh()?->status,
+                        ],
+                        'ts' => (int) round(microtime(true) * 1000),
+                    ]);
+                }, report: false);
+                // #endregion
+            }
 
             Log::info('Processamento de imagem iniciado.', [
                 'photo_id' => $photo->id,
@@ -166,6 +215,31 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
                 'property_id' => $photo->property_id,
             ]);
         } catch (Throwable $e) {
+            if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+                // #region debug-point B:job-handle-failure
+                rescue(function () use ($photo, $upload, $e): void {
+                    Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                        'sessionId' => 'front-images-imagick',
+                        'runId' => 'pre-fix',
+                        'hypothesisId' => 'B',
+                        'location' => 'app/Jobs/ProcessPropertyImageJob.php:handle:failure',
+                        'msg' => '[DEBUG] Image job failed before final failed() handler',
+                        'data' => [
+                            'photo_id' => $photo->id,
+                            'upload_id' => $upload->id,
+                            'photo_original_path' => $photo->fresh()?->original_path,
+                            'photo_source_mime_type' => $photo->fresh()?->source_mime_type,
+                            'photo_processing_status' => $photo->fresh()?->processing_status,
+                            'upload_status' => $upload->fresh()?->status,
+                            'error' => $e->getMessage(),
+                            'attempt' => method_exists($this, 'attempts') ? $this->attempts() : null,
+                        ],
+                        'ts' => (int) round(microtime(true) * 1000),
+                    ]);
+                }, report: false);
+                // #endregion
+            }
+
             if (env('TRAE_DEBUG_PROPERTY_IMAGE_REBUILD')) {
                 // #region debug-point D:job-handle-failure
                 rescue(function () use ($photo, $upload, $e): void {
@@ -211,10 +285,23 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
         $upload = PropertyImageUpload::find($this->uploadId);
 
         if ($photo) {
-            $photo->update([
+            $failedPayload = [
                 'processing_status' => 'failed',
                 'processing_error' => $e->getMessage(),
-            ]);
+            ];
+
+            if ($upload) {
+                $failedPayload['original_path'] = $photo->original_path ?: $upload->temp_path;
+                $failedPayload['source_mime_type'] = $photo->source_mime_type ?: $upload->mime_type;
+
+                if ($this->isBrowserRenderableMime($upload->mime_type)) {
+                    $failedPayload['arquivo'] = $photo->arquivo ?: $upload->temp_path;
+                    $failedPayload['url'] = $photo->url ?: url('/media/' . ltrim($upload->temp_path, '/'));
+                    $failedPayload['mime_type'] = $photo->mime_type ?: $upload->mime_type;
+                }
+            }
+
+            $photo->update($failedPayload);
         }
 
         if ($upload) {
@@ -223,6 +310,31 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
                 'expires_at' => null,
                 'validation_error' => $e->getMessage(),
             ]);
+        }
+
+        if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
+            // #region debug-point B:job-failed-handler
+            rescue(function () use ($photo, $upload, $e): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-images-imagick',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'B',
+                    'location' => 'app/Jobs/ProcessPropertyImageJob.php:failed',
+                    'msg' => '[DEBUG] Image job marked records as failed after retries',
+                    'data' => [
+                        'photo_id' => $photo?->id,
+                        'upload_id' => $upload?->id,
+                        'photo_original_path' => $photo?->original_path,
+                        'photo_source_mime_type' => $photo?->source_mime_type,
+                        'photo_processing_status' => $photo?->processing_status,
+                        'upload_temp_path' => $upload?->temp_path,
+                        'upload_status' => $upload?->status,
+                        'error' => $e->getMessage(),
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
         }
 
         Log::error('Processamento de imagem finalizado com falha apos retries.', [
@@ -235,5 +347,18 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
     private function processingLockKey(): string
     {
         return 'property-photo-processing-lock:' . $this->photoId;
+    }
+
+    private function isBrowserRenderableMime(?string $mimeType): bool
+    {
+        return in_array(strtolower(trim((string) ($mimeType ?? ''))), [
+            'image/jpeg',
+            'image/jpg',
+            'image/pjpeg',
+            'image/png',
+            'image/x-png',
+            'image/webp',
+            'image/gif',
+        ], true);
     }
 }
