@@ -38,7 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'user_agent' => $request->userAgent(),
             ]);
 
-            if ($request->expectsJson() || $request->is('admin/*')) {
+            if ($request->expectsJson() || $request->header('X-Inertia') || $request->is('admin/*')) {
                 return response()->json([
                     'message' => 'Falha de autenticacao da sessao. Atualize a pagina e tente novamente.',
                     'error' => 'csrf_token_mismatch',

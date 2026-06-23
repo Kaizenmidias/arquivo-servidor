@@ -605,6 +605,11 @@ class HomeController extends Controller
             abort(404);
         }
 
+        if (str_starts_with(trim($path, '/'), 'tmp/property-images/')
+            || str_starts_with(trim($path, '/'), 'property-uploads/originals/')) {
+            abort(404);
+        }
+
         $disk = Storage::disk('public');
         $exists = $disk->exists($path);
 

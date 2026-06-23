@@ -38,6 +38,7 @@ use App\Support\PropertyDescriptionSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -57,6 +58,33 @@ class AdminController extends Controller
 
     public function login(Request $request)
     {
+        if (env('TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419')) {
+            // #region debug-point A:login-request-enter
+            rescue(function () use ($request): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'admin-auth-upload-419',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/AdminController.php:login-enter',
+                    'msg' => '[DEBUG] Admin login request entered',
+                    'data' => [
+                        'method' => $request->method(),
+                        'path' => $request->path(),
+                        'has_session_cookie' => $request->cookies->has(config('session.cookie')),
+                        'has_xsrf_cookie' => $request->cookies->has('XSRF-TOKEN'),
+                        'has_x_csrf_token_header' => $request->headers->has('X-CSRF-TOKEN'),
+                        'has_x_xsrf_token_header' => $request->headers->has('X-XSRF-TOKEN'),
+                        'origin' => $request->headers->get('origin'),
+                        'referer' => $request->headers->get('referer'),
+                        'user_agent' => $request->userAgent(),
+                        'session_id' => $request->session()->getId(),
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
         $validated = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
@@ -66,6 +94,25 @@ class AdminController extends Controller
         $remember = (bool) ($validated['remember'] ?? false);
 
         if (!Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']], $remember)) {
+            if (env('TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419')) {
+                // #region debug-point A:login-attempt-failed
+                rescue(function () use ($request, $validated): void {
+                    Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                        'sessionId' => 'admin-auth-upload-419',
+                        'runId' => 'pre-fix',
+                        'hypothesisId' => 'A',
+                        'location' => 'app/Http/Controllers/AdminController.php:login-failed',
+                        'msg' => '[DEBUG] Admin login credentials rejected',
+                        'data' => [
+                            'email' => $validated['email'] ?? null,
+                            'session_id' => $request->session()->getId(),
+                        ],
+                        'ts' => (int) round(microtime(true) * 1000),
+                    ]);
+                }, report: false);
+                // #endregion
+            }
+
             return Redirect::back()
                 ->withErrors(['email' => 'Email ou senha inválidos.'])
                 ->withInput(['email' => $validated['email']]);
@@ -80,6 +127,25 @@ class AdminController extends Controller
         }
 
         $request->session()->regenerate();
+
+        if (env('TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419')) {
+            // #region debug-point A:login-success
+            rescue(function () use ($request): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'admin-auth-upload-419',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/AdminController.php:login-success',
+                    'msg' => '[DEBUG] Admin login succeeded',
+                    'data' => [
+                        'user_id' => $request->user()?->id,
+                        'session_id' => $request->session()->getId(),
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
 
         return Redirect::intended(route('admin.dashboard'));
     }
@@ -940,6 +1006,31 @@ class AdminController extends Controller
             'user_id' => $request->user()?->id,
             'token' => $upload->token,
         ]);
+
+        if (env('TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419')) {
+            // #region debug-point B:upload-response
+            rescue(function () use ($request, $upload): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'admin-auth-upload-419',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'B',
+                    'location' => 'app/Http/Controllers/AdminController.php:stage-upload-response',
+                    'msg' => '[DEBUG] Stage upload response prepared',
+                    'data' => [
+                        'upload_id' => $upload->id,
+                        'user_id' => $request->user()?->id,
+                        'status' => $upload->status,
+                        'mime_type' => $upload->mime_type,
+                        'temp_path' => $upload->temp_path,
+                        'preview_url' => in_array($upload->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)
+                            ? $this->publicMediaUrl($upload->temp_path)
+                            : null,
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
 
         return response()->json([
             'token' => $upload->token,
@@ -3271,12 +3362,32 @@ class AdminController extends Controller
             return null;
         }
 
-        return $photo->thumb_medium_url
-            ?: $photo->medium_url
-            ?: $photo->thumb_small_url
-            ?: $photo->original_url
-            ?: $this->publicMediaUrl($photo->arquivo)
-            ?: null;
+        $candidates = [
+            $photo->thumb_medium_url,
+            $photo->medium_url,
+            $photo->thumb_small_url,
+            $this->publicMediaUrl($photo->arquivo),
+            $photo->original_url,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (!$this->photoUrlUsesTemporaryPath($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private function photoUrlUsesTemporaryPath(?string $url): bool
+    {
+        $normalized = (string) ($url ?? '');
+
+        return $normalized === ''
+            || str_contains($normalized, '/storage/tmp/property-images/')
+            || str_contains($normalized, '/media/tmp/property-images/')
+            || str_contains($normalized, '/storage/property-uploads/originals/')
+            || str_contains($normalized, '/media/property-uploads/originals/');
     }
 
     private function publicMediaUrl(?string $path): ?string

@@ -212,6 +212,16 @@ let galleryUppy = null;
 const csrfToken = typeof window.getCsrfToken === 'function' ? window.getCsrfToken() : '';
 const xsrfToken = typeof window.getCookieValue === 'function' ? window.getCookieValue('XSRF-TOKEN') : '';
 
+function isTemporaryImageUrl(url) {
+  const normalized = typeof url === 'string' ? url : '';
+  return normalized.includes('/storage/tmp/property-images/')
+    || normalized.includes('/media/tmp/property-images/')
+    || normalized.includes('tmp/property-images/')
+    || normalized.includes('/storage/property-uploads/originals/')
+    || normalized.includes('/media/property-uploads/originals/')
+    || normalized.includes('property-uploads/originals/');
+}
+
 const TRACKED_PENDING_STATUSES = ['queued', 'uploading'];
 const TRACKED_SUCCESS_STATUSES = ['uploaded', 'processing', 'ready'];
 const TRACKED_ERROR_STATUSES = ['error', 'failed'];
@@ -263,8 +273,38 @@ function normalizeExistingItem(photo) {
       ? 'processing'
       : 'uploaded';
   const rawUrl = typeof photo?.url === 'string' ? photo.url : '';
-  const usesTemporaryPreview = rawUrl.includes('/storage/tmp/property-images/') || rawUrl.includes('tmp/property-images/');
-  const stablePreviewUrl = photo?.thumb_small_url || photo?.medium_url || photo?.original_url || rawUrl || '';
+  const usesTemporaryPreview = isTemporaryImageUrl(rawUrl);
+  const stablePreviewCandidates = [
+    photo?.thumb_small_url,
+    photo?.medium_url,
+    rawUrl,
+    photo?.original_url,
+  ].filter((value) => typeof value === 'string' && value.trim() !== '' && !isTemporaryImageUrl(value));
+  const stablePreviewUrl = stablePreviewCandidates[0] || '';
+
+  if (import.meta.env.VITE_TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419 === '1' && (usesTemporaryPreview || stablePreviewUrl.includes('tmp/property-images/'))) {
+    // #region debug-point B:existing-preview-temporary
+    fetch('http://127.0.0.1:7777/event', {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: 'admin-auth-upload-419',
+        runId: 'pre-fix',
+        hypothesisId: 'B',
+        location: 'resources/js/Shared/PropertyImageUploader.vue:normalizeExistingItem',
+        msg: '[DEBUG] Existing photo preview resolved to temporary path',
+        data: {
+          photoId: photo?.id ?? null,
+          rawUrl,
+          originalUrl: photo?.original_url ?? null,
+          mediumUrl: photo?.medium_url ?? null,
+          thumbSmallUrl: photo?.thumb_small_url ?? null,
+          stablePreviewUrl,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }
 
   return {
     id: `existing-${photo.id}`,
@@ -272,7 +312,7 @@ function normalizeExistingItem(photo) {
     existingPhotoId: photo.id,
     token: null,
     file: null,
-    previewUrl: stablePreviewUrl || (!usesTemporaryPreview && rawUrl ? rawUrl : '') || placeholderImage,
+    previewUrl: stablePreviewUrl || placeholderImage,
     name: photo.principal ? 'Imagem de destaque' : `Imagem ${photo.id}`,
     status,
     progress: ['uploaded', 'processing', 'ready'].includes(status) ? 100 : 0,
@@ -616,6 +656,28 @@ function createUppy(kind) {
     item.status = response?.body?.status || 'uploaded';
     item.progress = 100;
     item.error = '';
+
+    if (import.meta.env.VITE_TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419 === '1') {
+      // #region debug-point B:uppy-upload-success
+      fetch('http://127.0.0.1:7777/event', {
+        method: 'POST',
+        body: JSON.stringify({
+          sessionId: 'admin-auth-upload-419',
+          runId: 'pre-fix',
+          hypothesisId: 'B',
+          location: 'resources/js/Shared/PropertyImageUploader.vue:upload-success',
+          msg: '[DEBUG] Uppy upload success received',
+          data: {
+            fileName: file?.name ?? null,
+            token: response?.body?.token ?? null,
+            status: response?.body?.status ?? null,
+            previewUrl: response?.body?.preview_url ?? null,
+          },
+          ts: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+    }
   });
 
   uppy.on('upload-error', (file, error, response) => {
@@ -624,6 +686,30 @@ function createUppy(kind) {
     item.status = 'error';
     item.progress = 0;
     item.error = formatUploadError(error, response);
+
+    if (import.meta.env.VITE_TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419 === '1') {
+      // #region debug-point C:uppy-upload-error
+      fetch('http://127.0.0.1:7777/event', {
+        method: 'POST',
+        body: JSON.stringify({
+          sessionId: 'admin-auth-upload-419',
+          runId: 'pre-fix',
+          hypothesisId: 'C',
+          location: 'resources/js/Shared/PropertyImageUploader.vue:upload-error',
+          msg: '[DEBUG] Uppy upload error captured',
+          data: {
+            fileName: file?.name ?? null,
+            errorMessage: error?.message ?? null,
+            responseStatus: response?.status ?? null,
+            responseBody: response?.body ?? null,
+            hasMetaCsrfToken: !!csrfToken,
+            hasXsrfCookieHeaderSeed: !!xsrfToken,
+          },
+          ts: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+    }
   });
 
   uppy.on('restriction-failed', (file, error) => {

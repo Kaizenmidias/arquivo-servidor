@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Str;
 
+$appEnv = (string) env('APP_ENV', 'production');
+$sessionSecureDefault = !in_array($appEnv, ['local', 'testing'], true);
+$sessionSameSiteDefault = $sessionSecureDefault ? 'none' : 'lax';
+$sessionPartitionedDefault = $sessionSecureDefault && $sessionSameSiteDefault === 'none';
+
 return [
 
     /*
@@ -169,7 +174,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', $sessionSecureDefault),
 
     /*
     |--------------------------------------------------------------------------
@@ -199,7 +204,7 @@ return [
     |
     */
 
-    'same_site' => env('SESSION_SAME_SITE', 'lax'),
+    'same_site' => env('SESSION_SAME_SITE', $sessionSameSiteDefault),
 
     /*
     |--------------------------------------------------------------------------
@@ -212,7 +217,7 @@ return [
     |
     */
 
-    'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
+    'partitioned' => env('SESSION_PARTITIONED_COOKIE', $sessionPartitionedDefault),
 
     /*
     |--------------------------------------------------------------------------
