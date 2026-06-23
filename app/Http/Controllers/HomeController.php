@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class HomeController extends Controller
 {
@@ -599,79 +599,119 @@ class HomeController extends Controller
         return response($content, 200)->header('Content-Type', 'image/jpeg');
     }
 
-    public function storageMedia(string $path): BinaryFileResponse
+    public function storageMedia(string $path): SymfonyResponse
     {
         $normalizedPath = trim($path, '/');
+        $resolvedMedia = null;
+        $storagePath = null;
+        $mime = null;
+        $response = null;
 
-        if ($normalizedPath === '' || str_contains($normalizedPath, '..')) {
-            abort(404);
-        }
+        try {
+            if ($normalizedPath === '' || str_contains($normalizedPath, '..')) {
+                abort(404);
+            }
 
-        if (str_starts_with($normalizedPath, 'tmp/property-images/')
-            || str_starts_with($normalizedPath, 'property-uploads/originals/')) {
-            abort(404);
-        }
+            if (str_starts_with($normalizedPath, 'tmp/property-images/')
+                || str_starts_with($normalizedPath, 'property-uploads/originals/')) {
+                abort(404);
+            }
 
-        $resolvedMedia = $this->resolvePublicMediaAsset($normalizedPath);
-        $exists = $resolvedMedia !== null;
+            $resolvedMedia = $this->resolvePublicMediaAsset($normalizedPath);
+            $exists = $resolvedMedia !== null;
 
-        if (env('TRAE_DEBUG_FRONT_IMAGES_MISSING')) {
-            // #region debug-point C:storage-media-request
-            rescue(function () use ($normalizedPath, $resolvedMedia, $exists): void {
-                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
-                    'sessionId' => 'front-images-missing',
-                    'runId' => 'pre-fix',
-                    'hypothesisId' => 'C',
-                    'location' => 'app/Http/Controllers/HomeController.php:storageMedia',
-                    'msg' => '[DEBUG] Storage media requested',
-                    'data' => [
-                        'path' => $normalizedPath,
-                        'exists' => $exists,
-                        'resolved_disk' => $resolvedMedia['disk'] ?? null,
-                        'resolved_full_path' => $resolvedMedia['full_path'] ?? null,
-                    ],
-                    'ts' => (int) round(microtime(true) * 1000),
+            if (env('TRAE_DEBUG_FRONT_IMAGES_MISSING')) {
+                // #region debug-point C:storage-media-request
+                rescue(function () use ($normalizedPath, $resolvedMedia, $exists): void {
+                    Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                        'sessionId' => 'front-images-missing',
+                        'runId' => 'pre-fix',
+                        'hypothesisId' => 'C',
+                        'location' => 'app/Http/Controllers/HomeController.php:storageMedia',
+                        'msg' => '[DEBUG] Storage media requested',
+                        'data' => [
+                            'path' => $normalizedPath,
+                            'exists' => $exists,
+                            'resolved_disk' => $resolvedMedia['disk'] ?? null,
+                            'resolved_full_path' => $resolvedMedia['full_path'] ?? null,
+                        ],
+                        'ts' => (int) round(microtime(true) * 1000),
+                    ]);
+                }, report: false);
+                // #endregion
+            }
+
+            if (env('TRAE_DEBUG_MEDIA_ROUTE_500')) {
+                Log::info('Media route request entered.', [
+                    'requested_path' => $path,
+                    'normalized_path' => $normalizedPath,
+                    'resolved_media' => $resolvedMedia,
+                    'exists' => $exists,
+                    'request_url' => request()->fullUrl(),
                 ]);
-            }, report: false);
-            // #endregion
-        }
+            }
 
-        if (!$exists) {
+            if (!$exists) {
+                abort(404);
+            }
+
+            $storagePath = $resolvedMedia['path'];
+            $mime = $resolvedMedia['mime'];
+
+            if (empty($mime)) {
+                $ext = strtolower(pathinfo($storagePath, PATHINFO_EXTENSION));
+                $mime = match ($ext) {
+                    'jpg', 'jpeg' => 'image/jpeg',
+                    'png' => 'image/png',
+                    'webp' => 'image/webp',
+                    'gif' => 'image/gif',
+                    'svg' => 'image/svg+xml',
+                    'ico' => 'image/x-icon',
+                    default => 'application/octet-stream',
+                };
+            }
+
+            $response = Storage::disk($resolvedMedia['disk'])->response($storagePath, null, [
+                'Content-Type' => $mime,
+                'Access-Control-Allow-Origin' => '*',
+                'Cross-Origin-Resource-Policy' => 'cross-origin',
+                'Cache-Control' => 'public, max-age=31536000, immutable',
+            ]);
+
+            if (env('TRAE_DEBUG_MEDIA_ROUTE_500')) {
+                Log::info('Media route response prepared.', [
+                    'normalized_path' => $normalizedPath,
+                    'disk' => $resolvedMedia['disk'] ?? null,
+                    'storage_path' => $storagePath,
+                    'full_path' => $resolvedMedia['full_path'] ?? null,
+                    'mime' => $mime,
+                    'response_class' => get_class($response),
+                ]);
+            }
+
+            return $response;
+        } catch (\Throwable $e) {
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface
+                && $e->getStatusCode() === 404) {
+                throw $e;
+            }
+
+            Log::error('Media route delivery failed.', [
+                'requested_path' => $path,
+                'normalized_path' => $normalizedPath,
+                'resolved_media' => $resolvedMedia,
+                'disk' => $resolvedMedia['disk'] ?? null,
+                'storage_path' => $storagePath,
+                'full_path' => $resolvedMedia['full_path'] ?? null,
+                'mime' => $mime,
+                'response_class' => is_object($response) ? get_class($response) : null,
+                'exception_class' => $e::class,
+                'exception_message' => $e->getMessage(),
+                'exception_trace' => $e->getTraceAsString(),
+            ]);
+
             abort(404);
         }
-
-        $disk = Storage::disk($resolvedMedia['disk']);
-        $storagePath = $resolvedMedia['path'];
-        $mime = $resolvedMedia['mime'];
-
-        if (empty($mime)) {
-            $ext = strtolower(pathinfo($storagePath, PATHINFO_EXTENSION));
-            $mime = match ($ext) {
-                'jpg', 'jpeg' => 'image/jpeg',
-                'png' => 'image/png',
-                'webp' => 'image/webp',
-                'gif' => 'image/gif',
-                'svg' => 'image/svg+xml',
-                'ico' => 'image/x-icon',
-                default => 'application/octet-stream',
-            };
-        }
-
-        $stream = $disk->readStream($storagePath);
-
-        if (!is_resource($stream)) {
-            abort(404);
-        }
-
-        return response()->stream(function () use ($stream): void {
-            fpassthru($stream);
-            fclose($stream);
-        }, 200, [
-            'Content-Type' => $mime,
-            'Access-Control-Allow-Origin' => '*',
-            'Cross-Origin-Resource-Policy' => 'cross-origin',
-            'Cache-Control' => 'public, max-age=31536000, immutable',
-        ]);
     }
 
     private function resolvePublicMediaAsset(string $path): ?array
