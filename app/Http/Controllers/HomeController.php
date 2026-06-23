@@ -1155,7 +1155,7 @@ class HomeController extends Controller
 
     private function propertyPhotoStableUrl(PropertyPhoto $photo): ?string
     {
-        $arquivoUrl = $this->propertyPhotoPublicAssetUrl($photo->arquivo);
+        $arquivoUrl = $this->propertyPhotoExistingPublicAssetUrl($photo->arquivo);
 
         if ($arquivoUrl && $this->propertyPhotoPathIsRenderable($photo->arquivo, $photo->mime_type, $photo->source_mime_type)) {
             return $arquivoUrl;
@@ -1196,7 +1196,7 @@ class HomeController extends Controller
             return null;
         }
 
-        $url = $this->propertyPhotoPublicAssetUrl($photo->original_path);
+        $url = $this->propertyPhotoExistingPublicAssetUrl($photo->original_path);
 
         if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
             // #region debug-point A:renderable-original-accepted
@@ -1272,12 +1272,24 @@ class HomeController extends Controller
             return null;
         }
 
+        $parsedPath = parse_url($normalized, PHP_URL_PATH);
+
+        if (is_string($parsedPath) && str_starts_with($parsedPath, '/media/')) {
+            $assetPath = ltrim(substr($parsedPath, strlen('/media/')), '/');
+
+            return $this->propertyPhotoExistingPublicAssetUrl($assetPath);
+        }
+
+        if (is_string($parsedPath) && str_starts_with($parsedPath, '/storage/')) {
+            return null;
+        }
+
         return $normalized;
     }
 
     private function propertyPhotoXmlUrl(PropertyPhoto $photo): ?string
     {
-        return $this->propertyPhotoPublicAssetUrl($photo->arquivo)
+        return $this->propertyPhotoExistingPublicAssetUrl($photo->arquivo)
             ?: $this->propertyPhotoRenderableOriginalUrl($photo)
             ?: $this->propertyPhotoLegacyExternalUrl($photo);
     }
@@ -1287,6 +1299,23 @@ class HomeController extends Controller
         $normalized = trim((string) ($path ?? ''), '/');
 
         if ($normalized === '') {
+            return null;
+        }
+
+        return url('/media/' . $normalized);
+    }
+
+    private function propertyPhotoExistingPublicAssetUrl(?string $path): ?string
+    {
+        $normalized = trim((string) ($path ?? ''), '/');
+
+        if ($normalized === ''
+            || str_starts_with($normalized, 'tmp/property-images/')
+            || str_starts_with($normalized, 'property-uploads/originals/')) {
+            return null;
+        }
+
+        if (!$this->resolvePublicMediaAsset($normalized)) {
             return null;
         }
 

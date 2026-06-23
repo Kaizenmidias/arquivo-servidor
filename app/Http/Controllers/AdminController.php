@@ -1656,7 +1656,7 @@ class AdminController extends Controller
         $new->slug = $this->generateUniquePropertySlug($newTitle);
         $new->codigo_referencia = null;
         $new->codigo_anuncio = $this->generateUniqueCodigoAnuncio();
-        $new->ativo = false;
+        $new->ativo = true;
         $new->save();
         $this->assignSequentialCodigoReferencia($new);
 
