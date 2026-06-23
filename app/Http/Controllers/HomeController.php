@@ -640,11 +640,12 @@ class HomeController extends Controller
             abort(404);
         }
 
-        $fullPath = $resolvedMedia['full_path'];
+        $disk = Storage::disk($resolvedMedia['disk']);
+        $storagePath = $resolvedMedia['path'];
         $mime = $resolvedMedia['mime'];
 
         if (empty($mime)) {
-            $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            $ext = strtolower(pathinfo($storagePath, PATHINFO_EXTENSION));
             $mime = match ($ext) {
                 'jpg', 'jpeg' => 'image/jpeg',
                 'png' => 'image/png',
@@ -656,7 +657,16 @@ class HomeController extends Controller
             };
         }
 
-        return response()->file($fullPath, [
+        $stream = $disk->readStream($storagePath);
+
+        if (!is_resource($stream)) {
+            abort(404);
+        }
+
+        return response()->stream(function () use ($stream): void {
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, [
             'Content-Type' => $mime,
             'Access-Control-Allow-Origin' => '*',
             'Cross-Origin-Resource-Policy' => 'cross-origin',
@@ -688,6 +698,7 @@ class HomeController extends Controller
 
             return [
                 'disk' => $diskName,
+                'path' => $path,
                 'full_path' => $fullPath,
                 'mime' => $mime,
             ];
@@ -1021,9 +1032,9 @@ class HomeController extends Controller
             return null;
         }
 
-        $resolvedUrl = $photo->thumb_small_url
-            ?: $photo->thumb_medium_url
-            ?: $photo->medium_url
+        $resolvedUrl = $this->propertyPhotoValidPublicUrl($photo->thumb_small_url)
+            ?: $this->propertyPhotoValidPublicUrl($photo->thumb_medium_url)
+            ?: $this->propertyPhotoValidPublicUrl($photo->medium_url)
             ?: $this->propertyPhotoStableUrl($photo)
             ?: $this->propertyPhotoRenderableOriginalUrl($photo)
             ?: null;
