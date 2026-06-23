@@ -56,8 +56,19 @@
     <div>
       <div class="flex items-center justify-between gap-3">
         <label class="block text-gray-700 text-sm font-medium">Galeria</label>
-        <div class="text-xs text-gray-500">
-          {{ uploadHeadline }}
+        <div class="flex items-center gap-3">
+          <button
+            v-if="failedGalleryExistingCount > 0"
+            type="button"
+            class="text-xs font-semibold text-amber-700 transition hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="isBulkReprocessing"
+            @click.stop="reprocessAllGalleryItems"
+          >
+            {{ isBulkReprocessing ? 'Reprocessando...' : `Reprocessar todas (${failedGalleryExistingCount})` }}
+          </button>
+          <div class="text-xs text-gray-500">
+            {{ uploadHeadline }}
+          </div>
         </div>
       </div>
       <input ref="galleryInputRef" type="file" :accept="acceptAttr" multiple class="hidden" @change="onGallerySelected">
@@ -207,6 +218,7 @@ const uploadError = ref('');
 const removedPhotoIds = ref([]);
 const featuredItem = ref(null);
 const galleryItems = ref([]);
+const isBulkReprocessing = ref(false);
 let featuredUppy = null;
 let galleryUppy = null;
 const csrfToken = typeof window.getCsrfToken === 'function' ? window.getCsrfToken() : '';
@@ -264,6 +276,10 @@ const uploadCompletionPercentage = computed(() => {
 
   return Math.max(0, Math.min(100, Math.round((uploadedCount.value / totalSelectedCount.value) * 100)));
 });
+const failedGalleryExistingItems = computed(() => galleryItems.value.filter(
+  (item) => item.isExisting && item.status === 'failed' && item.existingPhotoId,
+));
+const failedGalleryExistingCount = computed(() => failedGalleryExistingItems.value.length);
 const uploadProgressText = computed(() => {
   if (failedCount.value > 0) {
     return `${uploadedCount.value} de ${totalSelectedCount.value} imagens enviadas, ${failedCount.value} falharam`;
@@ -537,6 +553,34 @@ async function reprocessItem(item) {
     item.status = 'failed';
     item.error = error?.response?.data?.message || 'Nao foi possivel reenfileirar a imagem.';
   }
+}
+
+async function reprocessAllGalleryItems() {
+  if (isBulkReprocessing.value || failedGalleryExistingItems.value.length === 0) {
+    return;
+  }
+
+  isBulkReprocessing.value = true;
+  uploadError.value = '';
+
+  let failedRequests = 0;
+  const itemsToReprocess = [...failedGalleryExistingItems.value];
+
+  for (const item of itemsToReprocess) {
+    await reprocessItem(item);
+
+    if (item.status === 'failed') {
+      failedRequests += 1;
+    }
+  }
+
+  if (failedRequests > 0) {
+    uploadError.value = failedRequests === 1
+      ? '1 imagem da galeria nao pode ser reenfileirada.'
+      : `${failedRequests} imagens da galeria nao puderam ser reenfileiradas.`;
+  }
+
+  isBulkReprocessing.value = false;
 }
 
 function cancelItem(item) {
