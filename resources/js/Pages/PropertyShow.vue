@@ -169,15 +169,15 @@
       <Transition name="visit-modal">
         <div
           v-if="isVisitModalOpen"
-          class="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm"
+          class="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/80 px-3 py-3 backdrop-blur-sm sm:px-4 sm:py-6"
           @click.self="closeVisitModal"
         >
-          <div class="relative w-full max-w-2xl overflow-hidden rounded-[32px] bg-white shadow-[0_32px_90px_rgba(2,6,23,0.35)]">
-            <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5 sm:px-8">
+          <div class="relative flex max-h-[calc(100vh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_32px_90px_rgba(2,6,23,0.35)] sm:max-h-[85vh] sm:rounded-[32px]">
+            <div class="flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-8 sm:py-5">
               <div>
                 <div class="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">Agendar Visita</div>
-                <h2 class="mt-2 text-2xl font-bold text-slate-900">Agendar Visita</h2>
-                <p class="mt-1 text-sm text-slate-500">{{ property.title }}</p>
+                <h2 class="mt-2 text-xl font-bold text-slate-900 sm:text-2xl">Agendar Visita</h2>
+                <p class="mt-1 line-clamp-2 text-sm text-slate-500">{{ property.title }}</p>
               </div>
               <button
                 type="button"
@@ -191,8 +191,8 @@
               </button>
             </div>
 
-            <form class="space-y-5 px-6 py-6 sm:px-8 sm:py-8" @submit.prevent="submitVisitRequest">
-              <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <form class="flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:space-y-5 sm:px-8 sm:py-6" @submit.prevent="submitVisitRequest">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
                 <div class="sm:col-span-2">
                   <label class="mb-2 block text-sm font-semibold text-slate-800">Seu nome *</label>
                   <input
@@ -254,14 +254,14 @@
                   <label class="mb-2 block text-sm font-semibold text-slate-800">Observações</label>
                   <textarea
                     v-model="visitForm.observacoes"
-                    rows="4"
+                    rows="3"
                     placeholder="Alguma informação adicional? (opcional)"
                     class="w-full resize-none rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
                   ></textarea>
                 </div>
               </div>
 
-              <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+              <div class="sticky bottom-0 flex flex-col-reverse gap-3 border-t border-slate-100 bg-white pt-4 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"

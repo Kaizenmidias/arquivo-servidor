@@ -83,12 +83,13 @@
       </div>
 
       <div class="mt-4 space-y-2.5 border-t border-gray-100 pt-3">
-        <div v-for="row in priceRows" :key="row.key" class="flex items-center justify-between gap-3">
+        <div v-for="row in priceRows" :key="row.key" class="flex items-center justify-between gap-3 overflow-hidden">
           <span :class="priceLabelClass(row.key)" class="rounded-md px-2 py-1 text-[11px] font-semibold uppercase leading-none tracking-wide">
             {{ row.label }}
           </span>
-          <span :class="priceValueClass(row.key)" class="min-w-0 flex-1 text-right font-bold leading-none tabular-nums card-price">
-            <span>{{ formatCurrencyBRL(row.value) }}</span><span v-if="row.suffix" class="ml-0.5 whitespace-nowrap">{{ row.suffix }}</span>
+          <span :class="priceValueClass(row.key)" class="card-price flex min-w-0 flex-1 items-baseline justify-end gap-0.5 whitespace-nowrap text-right font-bold leading-none tabular-nums">
+            <span class="truncate">{{ formatCurrencyBRL(row.value) }}</span>
+            <span v-if="row.suffix" class="shrink-0 whitespace-nowrap">{{ row.suffix }}</span>
           </span>
         </div>
         <div v-if="priceRows.length === 0" class="text-[13px] font-medium text-gray-400">
@@ -206,9 +207,9 @@ const priceLabelClass = (key) => {
 };
 
 const priceValueClass = (key) => {
-  if (key === 'rent') return 'text-[17px] text-orange-700';
-  if (key === 'sale') return 'text-[17px] text-blue-900';
-  return 'text-[17px] text-gray-900';
+  if (key === 'rent') return 'text-[15px] text-orange-700 sm:text-[17px]';
+  if (key === 'sale') return 'text-[15px] text-blue-900 sm:text-[17px]';
+  return 'text-[15px] text-gray-900 sm:text-[17px]';
 };
 
 const displayLocation = computed(() => {
