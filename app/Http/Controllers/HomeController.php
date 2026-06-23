@@ -601,21 +601,23 @@ class HomeController extends Controller
 
     public function storageMedia(string $path): BinaryFileResponse
     {
-        if (str_contains($path, '..')) {
+        $normalizedPath = trim($path, '/');
+
+        if ($normalizedPath === '' || str_contains($normalizedPath, '..')) {
             abort(404);
         }
 
-        if (str_starts_with(trim($path, '/'), 'tmp/property-images/')
-            || str_starts_with(trim($path, '/'), 'property-uploads/originals/')) {
+        if (str_starts_with($normalizedPath, 'tmp/property-images/')
+            || str_starts_with($normalizedPath, 'property-uploads/originals/')) {
             abort(404);
         }
 
-        $disk = Storage::disk('public');
-        $exists = $disk->exists($path);
+        $resolvedMedia = $this->resolvePublicMediaAsset($normalizedPath);
+        $exists = $resolvedMedia !== null;
 
         if (env('TRAE_DEBUG_FRONT_IMAGES_MISSING')) {
             // #region debug-point C:storage-media-request
-            rescue(function (): void {
+            rescue(function () use ($normalizedPath, $resolvedMedia, $exists): void {
                 Http::timeout(1)->post('http://127.0.0.1:7777/event', [
                     'sessionId' => 'front-images-missing',
                     'runId' => 'pre-fix',
@@ -623,8 +625,10 @@ class HomeController extends Controller
                     'location' => 'app/Http/Controllers/HomeController.php:storageMedia',
                     'msg' => '[DEBUG] Storage media requested',
                     'data' => [
-                        'path' => $path,
+                        'path' => $normalizedPath,
                         'exists' => $exists,
+                        'resolved_disk' => $resolvedMedia['disk'] ?? null,
+                        'resolved_full_path' => $resolvedMedia['full_path'] ?? null,
                     ],
                     'ts' => (int) round(microtime(true) * 1000),
                 ]);
@@ -636,12 +640,8 @@ class HomeController extends Controller
             abort(404);
         }
 
-        $fullPath = $disk->path($path);
-        try {
-            $mime = File::mimeType($fullPath);
-        } catch (\Throwable) {
-            $mime = null;
-        }
+        $fullPath = $resolvedMedia['full_path'];
+        $mime = $resolvedMedia['mime'];
 
         if (empty($mime)) {
             $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
@@ -662,6 +662,38 @@ class HomeController extends Controller
             'Cross-Origin-Resource-Policy' => 'cross-origin',
             'Cache-Control' => 'public, max-age=31536000, immutable',
         ]);
+    }
+
+    private function resolvePublicMediaAsset(string $path): ?array
+    {
+        $candidateDisks = array_values(array_unique(array_filter([
+            (string) config('image_uploads.final_disk', 'public'),
+            (string) config('image_uploads.original_disk', 'public'),
+            'public',
+        ])));
+
+        foreach ($candidateDisks as $diskName) {
+            $disk = Storage::disk($diskName);
+
+            if (!$disk->exists($path)) {
+                continue;
+            }
+
+            $fullPath = $disk->path($path);
+            $mime = rescue(
+                fn (): ?string => $disk->mimeType($path) ?: File::mimeType($fullPath),
+                null,
+                false
+            );
+
+            return [
+                'disk' => $diskName,
+                'full_path' => $fullPath,
+                'mime' => $mime,
+            ];
+        }
+
+        return null;
     }
 
     private function parseBrlCurrencyNullable(mixed $input): ?float
