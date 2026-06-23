@@ -23,9 +23,15 @@
           {{ label }}
         </span>
       </div>
-      <button type="button" class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm hover:bg-white">
-        <svg class="h-4.5 w-4.5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+      <button
+        type="button"
+        class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full shadow-md backdrop-blur-sm transition"
+        :class="isFavorited ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-white/95 text-gray-700 hover:bg-white'"
+        :aria-label="isFavorited ? 'Remover dos favoritos' : 'Salvar nos favoritos'"
+        @click.stop.prevent="togglePropertyFavorite"
+      >
+        <svg class="h-3.5 w-3.5" :fill="isFavorited ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
         </svg>
       </button>
 
@@ -88,7 +94,7 @@
             {{ row.label }}
           </span>
           <span :class="priceValueClass(row.key)" class="card-price flex min-w-0 flex-1 items-baseline justify-end gap-0.5 whitespace-nowrap text-right font-bold leading-none tabular-nums">
-            <span class="truncate">{{ formatCurrencyBRL(row.value) }}</span>
+            <span>{{ formatCurrencyBRL(row.value) }}</span>
             <span v-if="row.suffix" class="shrink-0 whitespace-nowrap">{{ row.suffix }}</span>
           </span>
         </div>
@@ -101,7 +107,8 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useFavorites } from '@/composables/useFavorites';
 
 const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
@@ -120,6 +127,8 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
 )}`;
 
 const props = defineProps({ property: { type: Object, required: true } });
+
+const { hydrateFavorites, isFavorite, toggleFavorite } = useFavorites();
 
 const activePhotoIndex = ref(0);
 
@@ -207,9 +216,9 @@ const priceLabelClass = (key) => {
 };
 
 const priceValueClass = (key) => {
-  if (key === 'rent') return 'text-[15px] text-orange-700 sm:text-[17px]';
-  if (key === 'sale') return 'text-[15px] text-blue-900 sm:text-[17px]';
-  return 'text-[15px] text-gray-900 sm:text-[17px]';
+  if (key === 'rent') return 'text-[13px] tracking-tight text-orange-700 sm:text-[14px]';
+  if (key === 'sale') return 'text-[13px] tracking-tight text-blue-900 sm:text-[14px]';
+  return 'text-[13px] tracking-tight text-gray-900 sm:text-[14px]';
 };
 
 const displayLocation = computed(() => {
@@ -220,7 +229,12 @@ const displayLocation = computed(() => {
 
 const formatCurrencyBRL = (price) => {
   const value = Number(price || 0);
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return value.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
 };
 
 const formatArea = (value) => {
@@ -272,6 +286,16 @@ const statItems = computed(() => {
   }
 
   return items;
+});
+
+const isFavorited = computed(() => isFavorite(props.property?.id));
+
+function togglePropertyFavorite() {
+  toggleFavorite(props.property);
+}
+
+onMounted(() => {
+  hydrateFavorites();
 });
 </script>
 
