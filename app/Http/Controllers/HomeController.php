@@ -1313,7 +1313,36 @@ class HomeController extends Controller
             return null;
         }
 
-        return url('/media/' . $normalized);
+        $resolvedUrl = url('/media/' . $normalized);
+
+        if (env('TRAE_DEBUG_HTTPS_IMAGE_MIXED_CONTENT')) {
+            // #region debug-point B:property-photo-public-asset-url
+            rescue(function () use ($normalized, $resolvedUrl): void {
+                $request = request();
+
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'https-image-mixed-content',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'B',
+                    'location' => 'app/Http/Controllers/HomeController.php:propertyPhotoPublicAssetUrl',
+                    'msg' => '[DEBUG] Public media URL generated for property photo',
+                    'data' => [
+                        'path' => $normalized,
+                        'resolved_url' => $resolvedUrl,
+                        'app_url_config' => config('app.url'),
+                        'url_root' => url('/'),
+                        'request_scheme' => $request->getScheme(),
+                        'request_is_secure' => $request->isSecure(),
+                        'x_forwarded_proto' => $request->headers->get('x-forwarded-proto'),
+                        'forwarded' => $request->headers->get('forwarded'),
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
+        return $resolvedUrl;
     }
 
     private function propertyPhotoExistingPublicAssetUrl(?string $path): ?string
@@ -1339,6 +1368,12 @@ class HomeController extends Controller
 
         if ($url === '' || $this->propertyPhotoUsesStagingUrl($url) || str_contains($url, '/storage/')) {
             return null;
+        }
+
+        $parsedPath = parse_url($url, PHP_URL_PATH);
+
+        if (is_string($parsedPath) && str_starts_with($parsedPath, '/media/')) {
+            return $this->propertyPhotoValidPublicUrl($url);
         }
 
         return $url;
