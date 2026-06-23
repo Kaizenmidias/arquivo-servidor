@@ -149,7 +149,11 @@
                   <p class="text-sm text-gray-600">Conheça o imóvel pessoalmente</p>
                 </div>
               </div>
-              <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700">
+              <button
+                type="button"
+                class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600"
+                @click="openVisitModal"
+              >
                 <span>Agendar visita</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -160,11 +164,129 @@
         </div>
       </div>
     </div>
+
+    <Teleport to="body">
+      <Transition name="visit-modal">
+        <div
+          v-if="isVisitModalOpen"
+          class="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm"
+          @click.self="closeVisitModal"
+        >
+          <div class="relative w-full max-w-2xl overflow-hidden rounded-[32px] bg-white shadow-[0_32px_90px_rgba(2,6,23,0.35)]">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5 sm:px-8">
+              <div>
+                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">Agendar Visita</div>
+                <h2 class="mt-2 text-2xl font-bold text-slate-900">Agendar Visita</h2>
+                <p class="mt-1 text-sm text-slate-500">{{ property.title }}</p>
+              </div>
+              <button
+                type="button"
+                class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
+                aria-label="Fechar modal de visita"
+                @click="closeVisitModal"
+              >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+
+            <form class="space-y-5 px-6 py-6 sm:px-8 sm:py-8" @submit.prevent="submitVisitRequest">
+              <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                  <label class="mb-2 block text-sm font-semibold text-slate-800">Seu nome *</label>
+                  <input
+                    v-model="visitForm.nome"
+                    type="text"
+                    placeholder="Digite seu nome completo"
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                    required
+                  />
+                  <p v-if="visitForm.errors.nome" class="mt-2 text-sm text-red-600">{{ visitForm.errors.nome }}</p>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-800">E-mail</label>
+                  <input
+                    v-model="visitForm.email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                  />
+                  <p v-if="visitForm.errors.email" class="mt-2 text-sm text-red-600">{{ visitForm.errors.email }}</p>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-800">Telefone</label>
+                  <input
+                    v-model="visitForm.telefone"
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                    required
+                  />
+                  <p v-if="visitForm.errors.telefone" class="mt-2 text-sm text-red-600">{{ visitForm.errors.telefone }}</p>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-800">Data preferida *</label>
+                  <input
+                    v-model="visitForm.preferred_date"
+                    type="date"
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                    required
+                  />
+                  <p class="mt-2 text-xs text-slate-400">dd/mm/aaaa</p>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-800">Horário preferido</label>
+                  <select
+                    v-model="visitForm.preferred_time"
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                  >
+                    <option value="">Selecione...</option>
+                    <option v-for="option in visitTimeOptions" :key="option" :value="option">{{ option }}</option>
+                  </select>
+                </div>
+
+                <div class="sm:col-span-2">
+                  <label class="mb-2 block text-sm font-semibold text-slate-800">Observações</label>
+                  <textarea
+                    v-model="visitForm.observacoes"
+                    rows="4"
+                    placeholder="Alguma informação adicional? (opcional)"
+                    class="w-full resize-none rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  @click="closeVisitModal"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  class="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="visitForm.processing"
+                >
+                  {{ visitForm.processing ? 'Enviando...' : 'Solicitar Visita' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </Layout>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import PropertyGallery from '@/Components/PropertyGallery.vue';
 import Layout from '@/Shared/Layout.vue';
@@ -331,6 +453,34 @@ const contactForm = useForm({
   origem: 'Site - Interesse no Imóvel',
 });
 
+const isVisitModalOpen = ref(false);
+
+const visitTimeOptions = [
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '13:00',
+  '14:00',
+  '15:00',
+  '16:00',
+  '17:00',
+  '18:00',
+];
+
+const visitForm = useForm({
+  property_id: props.property?.id ?? null,
+  nome: '',
+  email: '',
+  telefone: '',
+  preferred_date: '',
+  preferred_time: '',
+  observacoes: '',
+  mensagem: '',
+  origem: 'Site - Agendamento de Visita',
+});
+
 function formatInteger(value) {
   return Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 }
@@ -359,4 +509,99 @@ function submitContact() {
     },
   });
 }
+
+function openVisitModal() {
+  isVisitModalOpen.value = true;
+}
+
+function closeVisitModal() {
+  if (visitForm.processing) {
+    return;
+  }
+
+  isVisitModalOpen.value = false;
+}
+
+function resetVisitForm() {
+  visitForm.reset('nome', 'email', 'telefone', 'preferred_date', 'preferred_time', 'observacoes', 'mensagem');
+  visitForm.origem = 'Site - Agendamento de Visita';
+  visitForm.property_id = props.property?.id ?? null;
+  visitForm.clearErrors();
+}
+
+function formatVisitDate(date) {
+  if (!date) {
+    return '';
+  }
+
+  const [year, month, day] = String(date).split('-');
+
+  if (!year || !month || !day) {
+    return String(date);
+  }
+
+  return `${day}/${month}/${year}`;
+}
+
+function buildVisitMessage() {
+  const lines = [`Imóvel: ${props.property?.title || 'Imóvel sem título'}`];
+
+  if (visitForm.preferred_date) {
+    lines.push(`Data preferida: ${formatVisitDate(visitForm.preferred_date)}`);
+  }
+
+  if (visitForm.preferred_time) {
+    lines.push(`Horário preferido: ${visitForm.preferred_time}`);
+  }
+
+  if (visitForm.observacoes) {
+    lines.push(`Observações: ${visitForm.observacoes}`);
+  }
+
+  return lines.join('\n');
+}
+
+function submitVisitRequest() {
+  visitForm.mensagem = buildVisitMessage();
+
+  visitForm.post('/contato/send', {
+    preserveScroll: true,
+    onSuccess: () => {
+      alert('Solicitação de visita enviada com sucesso! Entraremos em contato em breve.');
+      closeVisitModal();
+      resetVisitForm();
+    },
+  });
+}
+
+watch(isVisitModalOpen, (isOpen) => {
+  document.body.classList.toggle('overflow-hidden', isOpen);
+});
+
+onBeforeUnmount(() => {
+  document.body.classList.remove('overflow-hidden');
+});
 </script>
+
+<style scoped>
+.visit-modal-enter-active,
+.visit-modal-leave-active {
+  transition: opacity 0.24s ease;
+}
+
+.visit-modal-enter-active > div,
+.visit-modal-leave-active > div {
+  transition: transform 0.24s ease, opacity 0.24s ease;
+}
+
+.visit-modal-enter-from,
+.visit-modal-leave-to {
+  opacity: 0;
+}
+
+.visit-modal-enter-from > div,
+.visit-modal-leave-to > div {
+  opacity: 0;
+  transform: translateY(16px) scale(0.98);
+}
+</style>

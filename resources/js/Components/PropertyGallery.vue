@@ -39,7 +39,7 @@
           v-for="(item, index) in previewItems"
           :key="item.id"
           type="button"
-          class="group relative overflow-hidden rounded-[22px] bg-slate-950 shadow-lg ring-1 ring-black/5 transition duration-300"
+          class="group relative aspect-[4/3] overflow-hidden rounded-[22px] bg-slate-100 shadow-lg ring-1 ring-black/5 transition duration-300"
           @click="openModal(index)"
         >
           <component
@@ -53,7 +53,7 @@
             :controls="false"
             :muted="true"
             :playsinline="true"
-            class="h-32 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-36 lg:h-[132px]"
+            class="absolute inset-0 block h-full w-full object-cover transition duration-500 group-hover:scale-105"
             loading="lazy"
           />
           <div
