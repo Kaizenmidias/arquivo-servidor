@@ -103,7 +103,7 @@
       <Transition name="gallery-lightbox">
         <div
           v-if="isModalOpen"
-          class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/96 px-2 py-2 backdrop-blur-md sm:px-4"
+          class="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 px-2 py-2 backdrop-blur-sm sm:px-4"
           @click.self="closeModal"
         >
           <div class="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-4 text-white sm:px-6">
@@ -112,7 +112,7 @@
             </div>
             <button
               type="button"
-              class="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20"
+              class="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/65 text-white shadow-lg transition hover:bg-black/80"
               aria-label="Fechar galeria"
               @click="closeModal"
             >
@@ -123,7 +123,7 @@
           </div>
 
           <div class="flex h-full w-full flex-col items-center justify-center gap-4 pt-16 sm:gap-5">
-            <div class="relative flex h-[78vh] w-[92vw] items-center justify-center overflow-hidden rounded-[28px] border border-white/8 bg-black shadow-[0_30px_90px_rgba(2,6,23,0.55)] sm:h-[82vh] sm:w-[90vw]">
+            <div class="relative flex h-[78vh] w-[92vw] items-center justify-center overflow-hidden rounded-[28px] bg-black shadow-[0_30px_90px_rgba(0,0,0,0.65)] sm:h-[82vh] sm:w-[90vw]">
               <button
                 v-if="totalItems > 1"
                 type="button"
@@ -137,7 +137,7 @@
               </button>
 
               <div
-                class="flex h-full w-full items-center justify-center px-3 py-4 sm:px-10 sm:py-8"
+                class="flex h-full w-full items-center justify-center overflow-hidden bg-black"
                 style="touch-action: pan-y"
                 @touchstart.passive="onTouchStart"
                 @touchend.passive="onTouchEnd"
@@ -155,7 +155,7 @@
                     :controls="activeItem.kind === 'video'"
                     :muted="false"
                     :playsinline="true"
-                    class="gallery-stage-media max-h-full max-w-full object-contain"
+                    class="gallery-stage-media h-full w-full bg-black object-cover"
                     :class="activeItem.kind === 'image' ? (isZoomed ? 'is-zoomed cursor-zoom-out' : 'cursor-zoom-in') : ''"
                     :loading="activeIndex <= 1 ? 'eager' : 'lazy'"
                     @click.stop="toggleZoom"
@@ -228,7 +228,7 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#020617"/>
-        <stop offset="1" stop-color="#1d4ed8"/>
+        <stop offset="1" stop-color="#111827"/>
       </linearGradient>
     </defs>
     <rect width="1600" height="1000" fill="url(#g)"/>
@@ -238,6 +238,34 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
     <text x="800" y="900" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="rgba(255,255,255,0.72)">Imagem indisponivel</text>
   </svg>`
 )}`;
+
+function containsTemporaryImageUrl(value) {
+  const normalized = typeof value === 'string' ? value : '';
+
+  return normalized.includes('/storage/tmp/property-images/')
+    || normalized.includes('/media/tmp/property-images/')
+    || normalized.includes('tmp/property-images/');
+}
+
+function normalizePublicImageUrl(value) {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+
+  if (!normalized || containsTemporaryImageUrl(normalized)) {
+    return '';
+  }
+
+  return normalized;
+}
+
+function normalizePublicSrcset(value) {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+
+  if (!normalized || containsTemporaryImageUrl(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
 
 function clampIndex(index, length) {
   if (!length) return 0;
@@ -265,19 +293,57 @@ const items = computed(() => {
 
   return incoming.map((item, index) => {
     const kind = item?.type === 'video' ? 'video' : 'image';
-    const fallback = item?.full || item?.medium || item?.thumb || item?.src || item?.poster || placeholderImage;
+    const full = normalizePublicImageUrl(item?.full);
+    const medium = normalizePublicImageUrl(item?.medium);
+    const thumb = normalizePublicImageUrl(item?.thumb);
+    const src = normalizePublicImageUrl(item?.src);
+    const poster = normalizePublicImageUrl(item?.poster);
+    const srcset = normalizePublicSrcset(item?.srcset);
+    const fallback = full || medium || thumb || src || poster || placeholderImage;
+
+    if (import.meta.env.VITE_TRAE_DEBUG_FRONT_GALLERY_TMP_URLS === '1') {
+      // #region debug-point B:gallery-item-received
+      fetch('http://127.0.0.1:7777/event', {
+        method: 'POST',
+        body: JSON.stringify({
+          sessionId: 'front-gallery-tmp-urls',
+          runId: 'pre-fix',
+          hypothesisId: 'B',
+          location: 'resources/js/Components/PropertyGallery.vue:items',
+          msg: '[DEBUG] Property gallery received item payload',
+          data: {
+            index,
+            id: item?.id ?? null,
+            src,
+            thumb,
+            medium,
+            full,
+            srcset,
+            containsTmp: [
+              src,
+              thumb,
+              medium,
+              full,
+              srcset,
+            ].some((candidate) => containsTemporaryImageUrl(candidate)),
+          },
+          ts: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+    }
 
     return {
       id: item?.id ?? `${kind}-${index}`,
       kind,
-      full: item?.full || fallback,
-      medium: item?.medium || item?.full || item?.thumb || fallback,
-      thumb: item?.thumb || item?.medium || item?.full || fallback,
-      src: item?.src || item?.thumb || item?.medium || item?.full || fallback,
-      srcset: item?.srcset || null,
+      full: full || fallback,
+      medium: medium || full || thumb || fallback,
+      thumb: thumb || medium || full || fallback,
+      src: src || thumb || medium || full || fallback,
+      srcset,
       sizes: item?.sizes || '(max-width: 768px) 100vw, 1200px',
       fullSizes: item?.full_sizes || '(max-width: 768px) 100vw, 1920px',
-      poster: item?.poster || item?.thumb || item?.medium || fallback,
+      poster: poster || thumb || medium || fallback,
       alt: item?.alt || `Midia ${index + 1}`,
     };
   });

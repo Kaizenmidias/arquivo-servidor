@@ -149,7 +149,7 @@
                   <p class="text-sm text-gray-600">Conheça o imóvel pessoalmente</p>
                 </div>
               </div>
-              <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 px-6 py-4 text-sm font-semibold text-white transition hover:bg-orange-600">
+              <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700">
                 <span>Agendar visita</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />

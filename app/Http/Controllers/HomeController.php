@@ -1007,9 +1007,11 @@ class HomeController extends Controller
 
         $stableUrl = $this->propertyPhotoStableUrl($photo);
         $renderableOriginalUrl = $this->propertyPhotoRenderableOriginalUrl($photo);
-        $thumb = $photo->thumb_small_url ?: $photo->thumb_medium_url ?: $stableUrl ?: $renderableOriginalUrl;
-        $medium = $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $stableUrl ?: $renderableOriginalUrl;
-        $full = $stableUrl ?: $photo->thumb_medium_url ?: $photo->thumb_small_url ?: $renderableOriginalUrl;
+        $thumbSmallUrl = $this->propertyPhotoValidPublicUrl($photo->thumb_small_url);
+        $thumbMediumUrl = $this->propertyPhotoValidPublicUrl($photo->thumb_medium_url);
+        $thumb = $thumbSmallUrl ?: $thumbMediumUrl ?: $stableUrl ?: $renderableOriginalUrl;
+        $medium = $thumbMediumUrl ?: $thumbSmallUrl ?: $stableUrl ?: $renderableOriginalUrl;
+        $full = $stableUrl ?: $thumbMediumUrl ?: $thumbSmallUrl ?: $renderableOriginalUrl;
 
         if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
             // #region debug-point A:serialize-responsive-photo
@@ -1042,15 +1044,71 @@ class HomeController extends Controller
             // #endregion
         }
 
+        if (env('TRAE_DEBUG_FRONT_GALLERY_TMP_URLS')) {
+            // #region debug-point A:serialize-responsive-photo-temporary
+            rescue(function () use ($photo, $thumb, $medium, $full): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-gallery-tmp-urls',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/HomeController.php:serializeResponsivePhoto',
+                    'msg' => '[DEBUG] Public gallery photo payload prepared',
+                    'data' => [
+                        'photo_id' => $photo->id,
+                        'property_id' => $photo->property_id,
+                        'thumb_small_url' => $thumbSmallUrl,
+                        'thumb_medium_url' => $thumbMediumUrl,
+                        'original_url' => $photo->original_url,
+                        'url' => $photo->url,
+                        'thumb' => $thumb,
+                        'medium' => $medium,
+                        'full' => $full,
+                        'contains_tmp' => collect([
+                            $thumbSmallUrl,
+                            $thumbMediumUrl,
+                            $photo->original_url,
+                            $photo->url,
+                            $thumb,
+                            $medium,
+                            $full,
+                        ])->filter(fn (?string $value) => is_string($value) && str_contains($value, '/tmp/property-images/'))->isNotEmpty(),
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
+
         if (!$thumb && !$medium && !$full) {
             return null;
         }
 
         $srcset = collect([
-            $photo->thumb_small_url ? "{$photo->thumb_small_url} 600w" : null,
-            $photo->thumb_medium_url ? "{$photo->thumb_medium_url} 1200w" : null,
+            $thumbSmallUrl ? "{$thumbSmallUrl} 600w" : null,
+            $thumbMediumUrl ? "{$thumbMediumUrl} 1200w" : null,
             $stableUrl ? "{$stableUrl} 1920w" : null,
         ])->filter()->implode(', ');
+
+        if (env('TRAE_DEBUG_FRONT_GALLERY_TMP_URLS')) {
+            // #region debug-point A:serialize-responsive-photo-srcset
+            rescue(function () use ($photo, $srcset): void {
+                Http::timeout(1)->post('http://127.0.0.1:7777/event', [
+                    'sessionId' => 'front-gallery-tmp-urls',
+                    'runId' => 'pre-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'app/Http/Controllers/HomeController.php:serializeResponsivePhoto:srcset',
+                    'msg' => '[DEBUG] Public gallery srcset prepared',
+                    'data' => [
+                        'photo_id' => $photo->id,
+                        'property_id' => $photo->property_id,
+                        'srcset' => $srcset,
+                        'contains_tmp' => str_contains($srcset, '/tmp/property-images/'),
+                    ],
+                    'ts' => (int) round(microtime(true) * 1000),
+                ]);
+            }, report: false);
+            // #endregion
+        }
 
         return [
             'src' => $thumb ?: $medium ?: $full,
@@ -1169,7 +1227,20 @@ class HomeController extends Controller
     private function propertyPhotoUsesStagingUrl(string $url): bool
     {
         return str_contains($url, '/storage/tmp/property-images/')
-            || str_contains($url, '/storage/property-uploads/originals/');
+            || str_contains($url, '/media/tmp/property-images/')
+            || str_contains($url, '/storage/property-uploads/originals/')
+            || str_contains($url, '/media/property-uploads/originals/');
+    }
+
+    private function propertyPhotoValidPublicUrl(?string $url): ?string
+    {
+        $normalized = trim((string) ($url ?? ''));
+
+        if ($normalized === '' || $this->propertyPhotoUsesStagingUrl($normalized)) {
+            return null;
+        }
+
+        return $normalized;
     }
 
     private function propertyPhotoXmlUrl(PropertyPhoto $photo): ?string
