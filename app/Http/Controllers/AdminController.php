@@ -2716,6 +2716,8 @@ class AdminController extends Controller
             'telefone' => ['nullable', 'string', 'max:100'],
             'email_contato' => ['nullable', 'string', 'max:255'],
             'whatsapp' => ['nullable', 'string', 'max:100'],
+            'whatsapp_number' => ['nullable', 'string', 'max:100'],
+            'whatsapp_message' => ['nullable', 'string', 'max:500'],
             'endereco' => ['nullable', 'string', 'max:255'],
             'instagram_url' => ['nullable', 'string', 'max:255'],
             'facebook_url' => ['nullable', 'string', 'max:255'],
@@ -2776,6 +2778,10 @@ class AdminController extends Controller
 
         if (!$isAdmin) {
             unset($validated['admin_path'], $validated['login_path']);
+        }
+
+        if (!empty($validated['whatsapp_number']) && empty($validated['whatsapp'] ?? null)) {
+            $validated['whatsapp'] = $validated['whatsapp_number'];
         }
 
         if ($isAdmin && !empty($validated['admin_path']) && !empty($validated['login_path']) && $validated['admin_path'] === $validated['login_path']) {

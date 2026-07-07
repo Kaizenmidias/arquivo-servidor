@@ -14,6 +14,8 @@ class SettingSeeder extends Seeder
             ['chave' => 'email_contato', 'valor' => 'contato@minhaimobiliaria.com.br'],
             ['chave' => 'telefone', 'valor' => '(11) 99999-9999'],
             ['chave' => 'whatsapp', 'valor' => '5511999999999'],
+            ['chave' => 'whatsapp_number', 'valor' => '5511999999999'],
+            ['chave' => 'whatsapp_message', 'valor' => 'Olá! Vim do site e tenho interesse em um imóvel'],
             ['chave' => 'endereco', 'valor' => 'Rua Exemplo, 123 - São Paulo/SP'],
             ['chave' => 'script_head', 'valor' => ''],
             ['chave' => 'script_body_top', 'valor' => ''],

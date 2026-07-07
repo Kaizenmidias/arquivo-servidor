@@ -22,9 +22,15 @@
             <div v-if="form.errors.email_contato" class="text-sm text-red-600 mt-1">{{ form.errors.email_contato }}</div>
           </div>
           <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">WhatsApp</label>
-            <input v-model="form.whatsapp" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="(00) 00000-0000" />
-            <div v-if="form.errors.whatsapp" class="text-sm text-red-600 mt-1">{{ form.errors.whatsapp }}</div>
+            <label class="block text-gray-700 mb-2 text-sm font-medium">WhatsApp do site</label>
+            <input v-model="form.whatsapp_number" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="5511999999999" />
+            <p class="text-xs text-gray-500 mt-2">Use apenas o número com DDI e DDD. Esse valor alimenta o botão flutuante do site.</p>
+            <div v-if="form.errors.whatsapp_number" class="text-sm text-red-600 mt-1">{{ form.errors.whatsapp_number }}</div>
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-2 text-sm font-medium">Mensagem do WhatsApp</label>
+            <textarea v-model="form.whatsapp_message" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Olá! Vim do site e tenho interesse em um imóvel"></textarea>
+            <div v-if="form.errors.whatsapp_message" class="text-sm text-red-600 mt-1">{{ form.errors.whatsapp_message }}</div>
           </div>
           <div>
             <label class="block text-gray-700 mb-2 text-sm font-medium">Endereço</label>
@@ -105,7 +111,8 @@ const form = useForm({
   nome_empresa: props.settings?.nome_empresa || '',
   telefone: props.settings?.telefone || '',
   email_contato: props.settings?.email_contato || '',
-  whatsapp: props.settings?.whatsapp || '',
+  whatsapp_number: props.settings?.whatsapp_number || props.settings?.whatsapp || '',
+  whatsapp_message: props.settings?.whatsapp_message || 'Olá! Vim do site e tenho interesse em um imóvel',
   endereco: props.settings?.endereco || '',
   instagram_url: props.settings?.instagram_url || '',
   facebook_url: props.settings?.facebook_url || '',
