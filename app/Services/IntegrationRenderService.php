@@ -16,30 +16,37 @@ class IntegrationRenderService
     ) {
     }
 
-    public function renderHeadEarly(Request $request): HtmlString
+    public function renderHead(?Request $request = null): HtmlString
     {
+        $request = $request ?: request();
+
         if ($this->isAdminRoute($request)) {
             return new HtmlString('');
         }
 
-        $html = [];
-        $integrations = $this->cache->activeIntegrations();
-
-        $gtm = $integrations->get(Integration::KEY_GTM);
-        if ($gtm?->is_active && filled($gtm->external_id)) {
-            $html[] = $this->renderGoogleTagManagerHead($gtm->external_id);
-        }
-
-        $meta = $integrations->get(Integration::KEY_META_PIXEL);
-        if ($meta?->is_active && filled($meta->external_id)) {
-            $html[] = $this->renderMetaPixelHead($meta->external_id);
-        }
+        $html = array_merge(
+            $this->renderHeadIntegrations(),
+            $this->renderCustomScripts($request, CustomScript::LOCATION_HEAD),
+        );
 
         return new HtmlString(implode("\n", array_filter($html)));
     }
 
-    public function renderHeadLate(Request $request): HtmlString
+    public function renderHeadEarly(?Request $request = null): HtmlString
     {
+        $request = $request ?: request();
+
+        if ($this->isAdminRoute($request)) {
+            return new HtmlString('');
+        }
+
+        return new HtmlString(implode("\n", array_filter($this->renderHeadIntegrations())));
+    }
+
+    public function renderHeadLate(?Request $request = null): HtmlString
+    {
+        $request = $request ?: request();
+
         if ($this->isAdminRoute($request)) {
             return new HtmlString('');
         }
@@ -47,8 +54,10 @@ class IntegrationRenderService
         return new HtmlString(implode("\n", $this->renderCustomScripts($request, CustomScript::LOCATION_HEAD)));
     }
 
-    public function renderBodyStart(Request $request): HtmlString
+    public function renderBodyStart(?Request $request = null): HtmlString
     {
+        $request = $request ?: request();
+
         if ($this->isAdminRoute($request)) {
             return new HtmlString('');
         }
@@ -66,8 +75,10 @@ class IntegrationRenderService
         return new HtmlString(implode("\n", array_filter($html)));
     }
 
-    public function renderBodyEnd(Request $request): HtmlString
+    public function renderBodyEnd(?Request $request = null): HtmlString
     {
+        $request = $request ?: request();
+
         if ($this->isAdminRoute($request)) {
             return new HtmlString('');
         }
@@ -134,6 +145,24 @@ class IntegrationRenderService
             ->map(fn (CustomScript $script) => $script->code)
             ->values()
             ->all();
+    }
+
+    private function renderHeadIntegrations(): array
+    {
+        $html = [];
+        $integrations = $this->cache->activeIntegrations();
+
+        $gtm = $integrations->get(Integration::KEY_GTM);
+        if ($gtm?->is_active && filled($gtm->external_id)) {
+            $html[] = $this->renderGoogleTagManagerHead($gtm->external_id);
+        }
+
+        $meta = $integrations->get(Integration::KEY_META_PIXEL);
+        if ($meta?->is_active && filled($meta->external_id)) {
+            $html[] = $this->renderMetaPixelHead($meta->external_id);
+        }
+
+        return $html;
     }
 
     private function scriptMatchesContext(CustomScript $script, array $context): bool

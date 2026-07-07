@@ -1,3 +1,18 @@
+@php
+    $integrationRenderer = app(\App\Services\IntegrationRenderService::class);
+    $isAdminSurface = request()->routeIs('admin.*') || request()->routeIs('login') || request()->routeIs('login.store') || request()->routeIs('logout');
+    $settings = \App\Models\Setting::query()->pluck('valor', 'chave');
+    $primary = $settings['primary_color'] ?? '#1e3a8a';
+    $secondary = $settings['secondary_color'] ?? '#f97316';
+    $button = $settings['button_color'] ?? $secondary;
+    $footerBg = $settings['footer_bg_color'] ?? '#111827';
+    $fontFamily = $settings['font_family'] ?? "Instrument Sans, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+    $fontSizeText = is_numeric($settings['font_size_text'] ?? null) ? (int) $settings['font_size_text'] : 16;
+    $fontSizeTitle = is_numeric($settings['font_size_title'] ?? null) ? (int) $settings['font_size_title'] : 40;
+    $homeOverlayColor = $settings['home_hero_overlay_color'] ?? '#0f172a';
+    $homeOverlayOpacity = is_numeric($settings['home_hero_overlay_opacity'] ?? null) ? (int) $settings['home_hero_overlay_opacity'] : 70;
+    $faviconUrl = $settings['favicon_url'] ?? null;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -5,26 +20,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title inertia>{{ config('app.name', 'Laravel') }}</title>
-    @inject('integrationRenderer', \App\Services\IntegrationRenderService::class)
-    @php($isAdminSurface = request()->routeIs('admin.*') || request()->routeIs('login') || request()->routeIs('login.store') || request()->routeIs('logout'))
-    @php
-        $settings = \App\Models\Setting::query()->pluck('valor', 'chave');
-        $primary = $settings['primary_color'] ?? '#1e3a8a';
-        $secondary = $settings['secondary_color'] ?? '#f97316';
-        $button = $settings['button_color'] ?? $secondary;
-        $footerBg = $settings['footer_bg_color'] ?? '#111827';
-        $fontFamily = $settings['font_family'] ?? "Instrument Sans, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
-        $fontSizeText = is_numeric($settings['font_size_text'] ?? null) ? (int) $settings['font_size_text'] : 16;
-        $fontSizeTitle = is_numeric($settings['font_size_title'] ?? null) ? (int) $settings['font_size_title'] : 40;
-        $homeOverlayColor = $settings['home_hero_overlay_color'] ?? '#0f172a';
-        $homeOverlayOpacity = is_numeric($settings['home_hero_overlay_opacity'] ?? null) ? (int) $settings['home_hero_overlay_opacity'] : 70;
-        $faviconUrl = $settings['favicon_url'] ?? null;
-    @endphp
     @if (!empty($faviconUrl))
         <link rel="icon" href="{{ $faviconUrl }}">
-    @endif
-    @if (! $isAdminSurface)
-        {!! $integrationRenderer->renderHeadEarly(request()) !!}
     @endif
     <style>
         :root {
@@ -42,17 +39,11 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @if (! $isAdminSurface)
-        {!! $integrationRenderer->renderHeadLate(request()) !!}
-    @endif
+    {!! $integrationRenderer->renderHead() !!}
 </head>
 <body class="antialiased {{ $isAdminSurface ? 'is-admin' : 'is-site' }}" style="font-family: var(--site-font-family);">
-    @if (! $isAdminSurface)
-        {!! $integrationRenderer->renderBodyStart(request()) !!}
-    @endif
+    {!! $integrationRenderer->renderBodyStart() !!}
     @inertia
-    @if (! $isAdminSurface)
-        {!! $integrationRenderer->renderBodyEnd(request()) !!}
-    @endif
+    {!! $integrationRenderer->renderBodyEnd() !!}
 </body>
 </html>
