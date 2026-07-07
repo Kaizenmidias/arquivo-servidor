@@ -103,6 +103,24 @@
           <span>Configurações</span>
         </Link>
 
+        <details v-if="isAdmin" class="group" open>
+          <summary class="flex items-center gap-3 px-6 py-3 hover:bg-gray-900 transition cursor-pointer select-none">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.25 3.75h1.5a.75.75 0 01.75.75v1.008c0 .263.153.501.392.614l.96.456a.75.75 0 00.829-.133l.714-.714a.75.75 0 011.06 0l1.061 1.06a.75.75 0 010 1.061l-.714.714a.75.75 0 00-.133.829l.456.96c.113.239.351.392.614.392h1.008a.75.75 0 01.75.75v1.5a.75.75 0 01-.75.75h-1.008a.75.75 0 00-.614.392l-.456.96a.75.75 0 00.133.829l.714.714a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 01-1.061 0l-.714-.714a.75.75 0 00-.829-.133l-.96.456a.75.75 0 00-.392.614v1.008a.75.75 0 01-.75.75h-1.5a.75.75 0 01-.75-.75v-1.008a.75.75 0 00-.392-.614l-.96-.456a.75.75 0 00-.829.133l-.714.714a.75.75 0 01-1.06 0l-1.061-1.06a.75.75 0 010-1.061l.714-.714a.75.75 0 00.133-.829l-.456-.96a.75.75 0 00-.614-.392H3.75a.75.75 0 01-.75-.75v-1.5a.75.75 0 01.75-.75h1.008c.263 0 .501-.153.614-.392l.456-.96a.75.75 0 00-.133-.829l-.714-.714a.75.75 0 010-1.06l1.06-1.061a.75.75 0 011.061 0l.714.714a.75.75 0 00.829.133l.96-.456a.75.75 0 00.392-.614V4.5a.75.75 0 01.75-.75z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span>Integrações</span>
+          </summary>
+          <div class="pl-14">
+            <Link :href="`${adminBase}/integracoes/pixels-tags`" class="block px-6 py-2 text-gray-300 hover:text-white hover:bg-gray-900 transition rounded-r">
+              Pixels e Tags
+            </Link>
+            <Link :href="`${adminBase}/integracoes/codigo-personalizado`" class="block px-6 py-2 text-gray-300 hover:text-white hover:bg-gray-900 transition rounded-r">
+              Código Personalizado
+            </Link>
+          </div>
+        </details>
+
         <Link v-if="can('instagram')" :href="`${adminBase}/instagram`" class="flex items-center gap-3 px-6 py-3 hover:bg-gray-900 transition">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7c2.761 0 5 2.239 5 5s-2.239 5-5 5-5-2.239-5-5 2.239-5 5-5z"></path>

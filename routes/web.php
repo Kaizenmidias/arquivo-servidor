@@ -6,6 +6,8 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\CustomScriptController;
+use App\Http\Controllers\Admin\IntegrationController;
 use App\Http\Middleware\EnsureAdminRole;
 use App\Http\Middleware\EnsureCanAccessAdmin;
 use App\Models\Setting;
@@ -110,6 +112,19 @@ Route::prefix($adminPath)->name('admin.')->middleware(['auth', EnsureCanAccessAd
     Route::get('/instagram', [AdminController::class, 'instagram'])->name('instagram');
     Route::put('/instagram', [AdminController::class, 'updateInstagram'])->name('instagram.update');
     Route::post('/instagram/refresh', [AdminController::class, 'refreshInstagramFeed'])->name('instagram.refresh');
+    Route::middleware(EnsureAdminRole::class)->prefix('/integracoes')->name('integrations.')->group(function () {
+        Route::get('/pixels-tags', [IntegrationController::class, 'index'])->name('pixels-tags');
+        Route::put('/pixels-tags/{provider}', [IntegrationController::class, 'update'])->name('pixels-tags.update');
+
+        Route::get('/codigo-personalizado', [CustomScriptController::class, 'index'])->name('custom-scripts.index');
+        Route::get('/codigo-personalizado/criar', [CustomScriptController::class, 'create'])->name('custom-scripts.create');
+        Route::post('/codigo-personalizado', [CustomScriptController::class, 'store'])->name('custom-scripts.store');
+        Route::get('/codigo-personalizado/{customScript}/editar', [CustomScriptController::class, 'edit'])->name('custom-scripts.edit');
+        Route::put('/codigo-personalizado/{customScript}', [CustomScriptController::class, 'update'])->name('custom-scripts.update');
+        Route::delete('/codigo-personalizado/{customScript}', [CustomScriptController::class, 'destroy'])->name('custom-scripts.destroy');
+        Route::post('/codigo-personalizado/{customScript}/duplicar', [CustomScriptController::class, 'duplicate'])->name('custom-scripts.duplicate');
+        Route::patch('/codigo-personalizado/{customScript}/toggle', [CustomScriptController::class, 'toggle'])->name('custom-scripts.toggle');
+    });
     Route::middleware(EnsureAdminRole::class)->group(function () {
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::get('/users/create', [AdminController::class, 'createUser'])->name('users.create');
