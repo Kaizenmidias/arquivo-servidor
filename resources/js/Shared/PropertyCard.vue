@@ -36,7 +36,7 @@
       </button>
 
       <button
-        v-if="photoList.length > 1"
+        v-if="showPhotoControls && photoList.length > 1"
         type="button"
         class="absolute left-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm hover:bg-white"
         @click.stop.prevent="prevPhoto"
@@ -46,7 +46,7 @@
         </svg>
       </button>
       <button
-        v-if="photoList.length > 1"
+        v-if="showPhotoControls && photoList.length > 1"
         type="button"
         class="absolute right-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm hover:bg-white"
         @click.stop.prevent="nextPhoto"
@@ -56,7 +56,7 @@
         </svg>
       </button>
 
-      <div v-if="photoList.length > 1" class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+      <div v-if="showPhotoControls && photoList.length > 1" class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
         <button
           v-for="(_, idx) in photoList"
           :key="idx"
@@ -126,7 +126,10 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   </svg>`
 )}`;
 
-const props = defineProps({ property: { type: Object, required: true } });
+const props = defineProps({
+  property: { type: Object, required: true },
+  showPhotoControls: { type: Boolean, default: true },
+});
 
 const { hydrateFavorites, isFavorite, toggleFavorite } = useFavorites();
 

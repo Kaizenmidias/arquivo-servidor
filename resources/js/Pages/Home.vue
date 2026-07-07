@@ -186,7 +186,7 @@
         <h2 class="mb-6 text-2xl font-bold text-gray-800">Seleção Especial</h2>
         <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
             <a v-for="property in selecaoEspecial" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
-              <PropertyCard :property="property" />
+              <PropertyCard :property="property" :show-photo-controls="false" />
             </a>
         </DraggableScroller>
       </div>
@@ -198,7 +198,7 @@
         <h2 class="mb-6 text-2xl font-bold text-gray-800">Mais Procurados</h2>
         <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
             <a v-for="property in maisProcurados" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
-              <PropertyCard :property="property" />
+              <PropertyCard :property="property" :show-photo-controls="false" />
             </a>
         </DraggableScroller>
       </div>
@@ -210,7 +210,7 @@
         <h2 class="mb-6 text-2xl font-bold text-gray-800">Visto Recentemente</h2>
         <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
             <a v-for="property in vistoRecentemente" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
-              <PropertyCard :property="property" />
+              <PropertyCard :property="property" :show-photo-controls="false" />
             </a>
         </DraggableScroller>
       </div>
