@@ -6,11 +6,14 @@ use App\Models\CustomScript;
 use App\Models\Integration;
 use App\Models\Page;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class IntegrationRenderService
 {
+    private const CONSENT_COOKIE = 'cookie_consent_v1';
+
     public function __construct(
         private readonly IntegrationCacheService $cache,
     ) {
@@ -64,9 +67,10 @@ class IntegrationRenderService
 
         $html = [];
         $integrations = $this->cache->activeIntegrations();
+        $consent = $this->cookieConsent();
 
         $gtm = $integrations->get(Integration::KEY_GTM);
-        if ($gtm?->is_active && filled($gtm->external_id)) {
+        if ($gtm?->is_active && filled($gtm->external_id) && $this->allowsAnalyticsTracking($consent)) {
             $html[] = $this->renderGoogleTagManagerNoscript($gtm->external_id);
         }
 
@@ -151,14 +155,15 @@ class IntegrationRenderService
     {
         $html = [];
         $integrations = $this->cache->activeIntegrations();
+        $consent = $this->cookieConsent();
 
         $gtm = $integrations->get(Integration::KEY_GTM);
-        if ($gtm?->is_active && filled($gtm->external_id)) {
+        if ($gtm?->is_active && filled($gtm->external_id) && $this->allowsAnalyticsTracking($consent)) {
             $html[] = $this->renderGoogleTagManagerHead($gtm->external_id);
         }
 
         $meta = $integrations->get(Integration::KEY_META_PIXEL);
-        if ($meta?->is_active && filled($meta->external_id)) {
+        if ($meta?->is_active && filled($meta->external_id) && $this->allowsMarketingTracking($consent)) {
             $html[] = $this->renderMetaPixelHead($meta->external_id);
         }
 
@@ -271,5 +276,28 @@ src="https://www.facebook.com/tr?id={$pixelId}&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
 HTML;
+    }
+
+    private function cookieConsent(): array
+    {
+        $raw = request()->cookie(self::CONSENT_COOKIE);
+
+        if (!is_string($raw) || trim($raw) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    private function allowsAnalyticsTracking(array $consent): bool
+    {
+        return (bool) Arr::get($consent, 'analytics', false);
+    }
+
+    private function allowsMarketingTracking(array $consent): bool
+    {
+        return (bool) Arr::get($consent, 'marketing', false);
     }
 }

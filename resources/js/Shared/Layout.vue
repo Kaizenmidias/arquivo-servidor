@@ -169,6 +169,7 @@ const whatsappAriaLabel = computed(() => {
 });
 
 const STORAGE_KEY = 'cookie_consent_v1';
+const CONSENT_COOKIE_KEY = 'cookie_consent_v1';
 
 const showCookieBanner = ref(false);
 const showCookieModal = ref(false);
@@ -191,8 +192,38 @@ const readConsent = () => {
   }
 };
 
+const readConsentCookie = () => {
+  try {
+    const prefix = `${CONSENT_COOKIE_KEY}=`;
+    const cookie = document.cookie
+      .split(';')
+      .map((item) => item.trim())
+      .find((item) => item.startsWith(prefix));
+
+    if (!cookie) return null;
+
+    const parsed = JSON.parse(decodeURIComponent(cookie.slice(prefix.length)));
+
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeConsentCookie = (value) => {
+  const payload = encodeURIComponent(JSON.stringify({
+    ...value,
+    essential: true,
+    savedAt: new Date().toISOString(),
+  }));
+
+  document.cookie = `${CONSENT_COOKIE_KEY}=${payload}; path=/; max-age=31536000; samesite=lax`;
+};
+
 const writeConsent = (value) => {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...value, essential: true, savedAt: new Date().toISOString() }));
+  const payload = { ...value, essential: true, savedAt: new Date().toISOString() };
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  writeConsentCookie(payload);
 };
 
 const applyConsent = (value) => {
@@ -201,29 +232,38 @@ const applyConsent = (value) => {
   consentDraft.functional = !!value.functional;
 };
 
+const shouldReloadForConsentChange = (previousValue, nextValue) => {
+  return ['analytics', 'marketing', 'functional'].some((key) => !!previousValue?.[key] !== !!nextValue?.[key]);
+};
+
+const persistConsent = (value) => {
+  const previous = readConsent() || readConsentCookie();
+  applyConsent(value);
+  writeConsent(value);
+  showCookieBanner.value = false;
+  showCookieModal.value = false;
+
+  if (shouldReloadForConsentChange(previous, value)) {
+    window.location.reload();
+  }
+};
+
 onMounted(() => {
-  const existing = readConsent();
+  const existing = readConsent() || readConsentCookie();
   if (!existing) {
     showCookieBanner.value = true;
     return;
   }
   applyConsent(existing);
+  writeConsent(existing);
 });
 
 const acceptAll = () => {
-  const value = { essential: true, analytics: true, marketing: true, functional: true };
-  applyConsent(value);
-  writeConsent(value);
-  showCookieBanner.value = false;
-  showCookieModal.value = false;
+  persistConsent({ essential: true, analytics: true, marketing: true, functional: true });
 };
 
 const rejectAll = () => {
-  const value = { essential: true, analytics: false, marketing: false, functional: false };
-  applyConsent(value);
-  writeConsent(value);
-  showCookieBanner.value = false;
-  showCookieModal.value = false;
+  persistConsent({ essential: true, analytics: false, marketing: false, functional: false });
 };
 
 const openCookieModal = () => {
@@ -234,15 +274,12 @@ const closeCookieModal = () => {
 };
 
 const saveDraft = () => {
-  const value = {
+  persistConsent({
     essential: true,
     analytics: consentDraft.analytics,
     marketing: consentDraft.marketing,
     functional: consentDraft.functional,
-  };
-  writeConsent(value);
-  showCookieBanner.value = false;
-  showCookieModal.value = false;
+  });
 };
 
 const optionCardStyle = (enabled) => {

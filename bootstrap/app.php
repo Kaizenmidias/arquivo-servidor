@@ -32,6 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
             '*/properties/*/images/*/reprocess',
         ]);
 
+        $middleware->encryptCookies(except: [
+            'cookie_consent_v1',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
