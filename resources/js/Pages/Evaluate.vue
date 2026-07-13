@@ -51,6 +51,13 @@
               <label class="block text-gray-700 mb-2 font-medium">Mensagem</label>
               <textarea v-model="form.mensagem" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-3"></textarea>
             </div>
+            <RecaptchaField
+              v-if="captchaEnabled"
+              ref="recaptchaRef"
+              v-model="form.recaptcha_token"
+              :site-key="recaptchaSiteKey"
+              :error="form.errors.recaptcha_token"
+            />
             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed" :disabled="form.processing">
               Enviar Avaliação
             </button>
@@ -61,8 +68,15 @@
   </Layout>
 </template>
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
 import Layout from '@/Shared/Layout.vue';
+import RecaptchaField from '@/Shared/RecaptchaField.vue';
+
+const page = usePage();
+const recaptchaRef = ref(null);
+const recaptchaSiteKey = computed(() => String(page.props.settings?.recaptcha_site_key || '').trim());
+const captchaEnabled = computed(() => recaptchaSiteKey.value !== '');
 
 const form = useForm({
   nome: '',
@@ -73,16 +87,24 @@ const form = useForm({
   bairro: '',
   valor_estimado: '',
   mensagem: '',
+  recaptcha_token: '',
 });
 
 function submit() {
+  if (captchaEnabled.value && !form.recaptcha_token) {
+    form.setError('recaptcha_token', 'Confirme o captcha para continuar.');
+    return;
+  }
+
   form.post('/avalie-seu-imovel/send', {
     preserveScroll: true,
     onSuccess: () => {
       alert('Obrigado! Entraremos em contato para realizar a avaliação do seu imóvel.');
       form.reset();
       form.clearErrors();
+      recaptchaRef.value?.reset?.();
     },
+    onError: () => recaptchaRef.value?.reset?.(),
   });
 }
 </script>

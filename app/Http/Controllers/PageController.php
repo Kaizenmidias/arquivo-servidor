@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Lead;
 use App\Models\Page;
+use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -43,7 +46,10 @@ class PageController extends Controller
             'bairro' => ['nullable', 'string', 'max:255'],
             'valor_estimado' => ['nullable', 'string', 'max:255'],
             'mensagem' => ['nullable', 'string'],
+            'recaptcha_token' => [$this->captchaEnabled() ? 'required' : 'nullable', 'string'],
         ]);
+
+        $this->validateRecaptcha($request, $validated['recaptcha_token'] ?? null);
 
         $parts = [];
         if (!empty($validated['tipo_imovel'])) $parts[] = 'Tipo: ' . $validated['tipo_imovel'];
@@ -75,7 +81,10 @@ class PageController extends Controller
             'creci' => ['nullable', 'string', 'max:255'],
             'cidade' => ['nullable', 'string', 'max:255'],
             'mensagem' => ['nullable', 'string'],
+            'recaptcha_token' => [$this->captchaEnabled() ? 'required' : 'nullable', 'string'],
         ]);
+
+        $this->validateRecaptcha($request, $validated['recaptcha_token'] ?? null);
 
         $parts = [];
         if (!empty($validated['creci'])) $parts[] = 'CRECI: ' . $validated['creci'];
@@ -103,5 +112,33 @@ class PageController extends Controller
         }
 
         return Inertia::render('PageShow', ['page' => $page]);
+    }
+
+    private function captchaEnabled(): bool
+    {
+        $settings = Setting::query()->pluck('valor', 'chave');
+
+        return !empty($settings['recaptcha_site_key']) && !empty($settings['recaptcha_secret_key']);
+    }
+
+    private function validateRecaptcha(Request $request, ?string $token): void
+    {
+        $settings = Setting::query()->pluck('valor', 'chave');
+
+        if (empty($settings['recaptcha_site_key']) || empty($settings['recaptcha_secret_key'])) {
+            return;
+        }
+
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => $settings['recaptcha_secret_key'],
+            'response' => (string) ($token ?? ''),
+            'remoteip' => $request->ip(),
+        ]);
+
+        if ($response->failed() || !$response->json('success')) {
+            throw ValidationException::withMessages([
+                'recaptcha_token' => 'Falha na verificacao do captcha. Tente novamente.',
+            ]);
+        }
     }
 }

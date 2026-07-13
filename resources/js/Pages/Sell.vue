@@ -80,8 +80,14 @@
             <div>
               <label class="block text-gray-700 font-medium mb-2">Mensagem</label>
               <textarea v-model="form.mensagem" rows="4" placeholder="Descreva seu imóvel..." class="w-full border border-gray-300 rounded-lg px-4 py-3"></textarea>
-              <div v-if="form.errors.recaptcha_token" class="text-sm text-red-600 mt-1">{{ form.errors.recaptcha_token }}</div>
             </div>
+            <RecaptchaField
+              v-if="captchaEnabled"
+              ref="recaptchaRef"
+              v-model="form.recaptcha_token"
+              :site-key="recaptchaSiteKey"
+              :error="form.errors.recaptcha_token"
+            />
             <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed" :disabled="form.processing">
               Enviar
             </button>
@@ -94,8 +100,9 @@
 
 <script setup>
 import { useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import Layout from '@/Shared/Layout.vue';
+import RecaptchaField from '@/Shared/RecaptchaField.vue';
 
 const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="800" viewBox="0 0 1920 800">
@@ -111,7 +118,9 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
 )}`;
 
 const page = usePage();
-const recaptchaSiteKey = computed(() => page.props.settings?.recaptcha_site_key || '');
+const recaptchaRef = ref(null);
+const recaptchaSiteKey = computed(() => String(page.props.settings?.recaptcha_site_key || '').trim());
+const captchaEnabled = computed(() => recaptchaSiteKey.value !== '');
 
 const form = useForm({
   nome: '',
@@ -129,16 +138,23 @@ const form = useForm({
 });
 
 async function submitForm() {
-  if (recaptchaSiteKey.value && window.grecaptcha) {
-    const token = await window.grecaptcha.execute(recaptchaSiteKey.value, { action: 'submit' });
-    form.recaptcha_token = token;
+  if (captchaEnabled.value && !form.recaptcha_token) {
+    form.setError('recaptcha_token', 'Confirme o captcha para continuar.');
+    return;
   }
+
   form.post('/venda-seu-imovel/send', {
     preserveScroll: true,
     onSuccess: () => {
       alert('Dados enviados! Entraremos em contato em breve.');
       form.reset();
       form.clearErrors();
+      recaptchaRef.value?.reset?.();
+    },
+    onError: () => {
+      if (captchaEnabled.value) {
+        recaptchaRef.value?.reset?.();
+      }
     },
   });
 }

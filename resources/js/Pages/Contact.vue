@@ -111,8 +111,14 @@
                   class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 ></textarea>
-                <div v-if="form.errors.recaptcha_token" class="text-sm text-red-600 mt-1">{{ form.errors.recaptcha_token }}</div>
               </div>
+              <RecaptchaField
+                v-if="captchaEnabled"
+                ref="recaptchaRef"
+                v-model="form.recaptcha_token"
+                :site-key="recaptchaSiteKey"
+                :error="form.errors.recaptcha_token"
+              />
               <button 
                 type="submit" 
                 class="w-full site-button font-semibold py-3 px-6 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed"
@@ -129,9 +135,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import Layout from '@/Shared/Layout.vue';
+import RecaptchaField from '@/Shared/RecaptchaField.vue';
 
 const props = defineProps({
   page: {
@@ -169,7 +176,9 @@ const bannerOverlayOpacity = computed(() => {
 });
 
 const page = usePage();
-const recaptchaSiteKey = computed(() => page.props.settings?.recaptcha_site_key || '');
+const recaptchaRef = ref(null);
+const recaptchaSiteKey = computed(() => String(page.props.settings?.recaptcha_site_key || '').trim());
+const captchaEnabled = computed(() => recaptchaSiteKey.value !== '');
 
 const form = useForm({
   nome: '',
@@ -181,16 +190,23 @@ const form = useForm({
 });
 
 async function submitForm() {
-  if (recaptchaSiteKey.value && window.grecaptcha) {
-    const token = await window.grecaptcha.execute(recaptchaSiteKey.value, { action: 'submit' });
-    form.recaptcha_token = token;
+  if (captchaEnabled.value && !form.recaptcha_token) {
+    form.setError('recaptcha_token', 'Confirme o captcha para continuar.');
+    return;
   }
+
   form.post('/contato/send', {
     preserveScroll: true,
     onSuccess: () => {
       alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
       form.reset('nome', 'telefone', 'email', 'mensagem');
       form.clearErrors();
+      recaptchaRef.value?.reset?.();
+    },
+    onError: () => {
+      if (captchaEnabled.value) {
+        recaptchaRef.value?.reset?.();
+      }
     },
   });
 }

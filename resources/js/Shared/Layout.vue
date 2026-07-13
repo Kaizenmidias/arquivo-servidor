@@ -146,29 +146,10 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import Header from './Header.vue';
 import Footer from './Footer.vue';
-
-const recaptchaSiteKey = computed(() => page.props.settings?.recaptcha_site_key || '');
-
-watch(recaptchaSiteKey, (newVal) => {
-  if (newVal) {
-    loadRecaptchaScript();
-  }
-}, { immediate: true });
-
-function loadRecaptchaScript() {
-  if (document.querySelector(`script[src^="https://www.google.com/recaptcha/api.js"]`)) {
-    return;
-  }
-  const script = document.createElement('script');
-  script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey.value}`;
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
-}
 
 const page = usePage();
 const isHome = computed(() => page.component === 'Home' || page.url === '/');

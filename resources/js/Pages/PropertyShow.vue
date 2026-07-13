@@ -126,6 +126,13 @@
                     class="w-full resize-none rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3 focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10"
                   ></textarea>
                 </div>
+                <RecaptchaField
+                  v-if="captchaEnabled"
+                  ref="contactRecaptchaRef"
+                  v-model="contactForm.recaptcha_token"
+                  :site-key="recaptchaSiteKey"
+                  :error="contactForm.errors.recaptcha_token"
+                />
                 <button
                   type="submit"
                   class="w-full rounded-2xl bg-slate-900 px-6 py-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
@@ -259,6 +266,16 @@
                     class="w-full resize-none rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
                   ></textarea>
                 </div>
+
+                <div class="sm:col-span-2">
+                  <RecaptchaField
+                    v-if="captchaEnabled"
+                    ref="visitRecaptchaRef"
+                    v-model="visitForm.recaptcha_token"
+                    :site-key="recaptchaSiteKey"
+                    :error="visitForm.errors.recaptcha_token"
+                  />
+                </div>
               </div>
 
               <div class="sticky bottom-0 flex flex-col-reverse gap-3 border-t border-slate-100 bg-white pt-4 sm:flex-row sm:justify-end">
@@ -287,9 +304,10 @@
 
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import PropertyGallery from '@/Components/PropertyGallery.vue';
 import Layout from '@/Shared/Layout.vue';
+import RecaptchaField from '@/Shared/RecaptchaField.vue';
 
 const props = defineProps({
   property: {
@@ -297,6 +315,12 @@ const props = defineProps({
     required: true,
   },
 });
+
+const page = usePage();
+const recaptchaSiteKey = computed(() => String(page.props.settings?.recaptcha_site_key || '').trim());
+const captchaEnabled = computed(() => recaptchaSiteKey.value !== '');
+const contactRecaptchaRef = ref(null);
+const visitRecaptchaRef = ref(null);
 
 const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
@@ -451,6 +475,7 @@ const contactForm = useForm({
   email: '',
   mensagem: 'Olá, estou interessado nesse imóvel que encontrei no site.',
   origem: 'Site - Interesse no Imóvel',
+  recaptcha_token: '',
 });
 
 const isVisitModalOpen = ref(false);
@@ -479,6 +504,7 @@ const visitForm = useForm({
   observacoes: '',
   mensagem: '',
   origem: 'Site - Agendamento de Visita',
+  recaptcha_token: '',
 });
 
 function formatInteger(value) {
@@ -499,6 +525,11 @@ function formatCurrencyBRL(value, digits = 2) {
 }
 
 function submitContact() {
+  if (captchaEnabled.value && !contactForm.recaptcha_token) {
+    contactForm.setError('recaptcha_token', 'Confirme o captcha para continuar.');
+    return;
+  }
+
   contactForm.post('/contato/send', {
     preserveScroll: true,
     onSuccess: () => {
@@ -506,7 +537,9 @@ function submitContact() {
       contactForm.reset('nome', 'telefone', 'email');
       contactForm.mensagem = 'Olá, estou interessado nesse imóvel que encontrei no site.';
       contactForm.clearErrors();
+      contactRecaptchaRef.value?.reset?.();
     },
+    onError: () => contactRecaptchaRef.value?.reset?.(),
   });
 }
 
@@ -527,6 +560,7 @@ function resetVisitForm() {
   visitForm.origem = 'Site - Agendamento de Visita';
   visitForm.property_id = props.property?.id ?? null;
   visitForm.clearErrors();
+  visitRecaptchaRef.value?.reset?.();
 }
 
 function formatVisitDate(date) {
@@ -562,6 +596,11 @@ function buildVisitMessage() {
 }
 
 function submitVisitRequest() {
+  if (captchaEnabled.value && !visitForm.recaptcha_token) {
+    visitForm.setError('recaptcha_token', 'Confirme o captcha para continuar.');
+    return;
+  }
+
   visitForm.mensagem = buildVisitMessage();
 
   visitForm.post('/contato/send', {
@@ -571,6 +610,7 @@ function submitVisitRequest() {
       closeVisitModal();
       resetVisitForm();
     },
+    onError: () => visitRecaptchaRef.value?.reset?.(),
   });
 }
 

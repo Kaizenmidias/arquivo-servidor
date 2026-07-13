@@ -21,7 +21,7 @@
               <label class="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Negócio</label>
               <select v-model="search.business_type_id" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-gray-700 transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10">
                 <option value="">Todos</option>
-                <option v-for="bt in businessTypes" :key="bt.id" :value="bt.id">{{ bt.name }}</option>
+                <option v-for="bt in businessTypeOptions" :key="bt.id" :value="bt.id">{{ bt.name }}</option>
               </select>
             </div>
             <div>
@@ -109,7 +109,7 @@
                 <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Condomínio</span>
                 <select v-model="search.condominium_id" class="w-full mt-2 px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                   <option value="">Todos</option>
-                  <option v-for="item in condominiums" :key="item.id" :value="item.id">{{ item.name }}</option>
+                  <option v-for="item in condominiumOptions" :key="item.id" :value="item.id">{{ item.name }}</option>
                 </select>
               </div>
             </div>
@@ -125,11 +125,11 @@
               </div>
             </div>
 
-            <div v-if="specialCategories.length > 0" class="mt-4 pt-4 border-t border-gray-200">
+            <div v-if="specialCategoryList.length > 0" class="mt-4 pt-4 border-t border-gray-200">
               <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Diferenciais</span>
               <div class="flex flex-wrap gap-2 mt-2 max-h-[200px] overflow-y-auto">
                 <button
-                  v-for="sc in specialCategories"
+                  v-for="sc in specialCategoryList"
                   :key="sc.id"
                   type="button"
                   class="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
@@ -145,7 +145,7 @@
       </div>
     </section>
 
-    <section v-if="specialCategories.length > 0" class="py-16">
+    <section v-if="specialCategoryList.length > 0" class="py-16">
       <div class="ui-shell">
         <div class="mb-6 flex items-center justify-between gap-4">
           <div>
@@ -156,7 +156,7 @@
         </div>
         <DraggableScroller viewport-class="pb-2" content-class="flex gap-4 pr-4">
             <a
-              v-for="category in specialCategories"
+              v-for="category in specialCategoryList"
               :key="category.id"
               :href="category.url"
               class="group flex-shrink-0 w-72"
@@ -184,24 +184,15 @@
     <section class="py-16">
       <div class="ui-shell">
         <h2 class="mb-6 text-2xl font-bold text-gray-800">Melhores Oportunidades</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            <a v-for="property in selecaoEspecial.data" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-full">
+        <div v-if="featuredProperties.length > 0" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <a v-for="property in featuredProperties" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-full">
               <PropertyCard :property="property" :show-photo-controls="false" />
             </a>
         </div>
-        <Pagination v-if="selecaoEspecial.links.length > 3" :links="selecaoEspecial.links" class="mt-6 flex justify-center" />
-      </div>
-    </section>
-
-    <!-- Mais Procurados -->
-    <section class="bg-gray-50 py-16">
-      <div class="ui-shell">
-        <h2 class="mb-6 text-2xl font-bold text-gray-800">Mais Procurados</h2>
-        <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
-            <a v-for="property in maisProcurados" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
-              <PropertyCard :property="property" :show-photo-controls="false" />
-            </a>
-        </DraggableScroller>
+        <div v-else class="rounded-2xl border border-dashed border-slate-300 px-6 py-10 text-center text-slate-500">
+          Nenhum imóvel disponível no momento.
+        </div>
+        <Pagination v-if="featuredLinks.length > 3" :links="featuredLinks" class="mt-6 flex justify-center" />
       </div>
     </section>
 
@@ -303,6 +294,7 @@ import { router } from '@inertiajs/vue3';
 import Layout from '@/Shared/Layout.vue';
 import PropertyCard from '@/Shared/PropertyCard.vue';
 import DraggableScroller from '@/Shared/DraggableScroller.vue';
+import Pagination from '@/Shared/Pagination.vue';
 
 const props = defineProps({
   homePage: {
@@ -382,11 +374,17 @@ const homeHeroOverlayOpacity = computed(() => {
   return Math.max(0, Math.min(100, raw)) / 100;
 });
 
-const businessTypes = computed(() => props.businessTypes || []);
-const condominiums = computed(() => props.condominiums || []);
+const businessTypeOptions = computed(() => (
+  Array.isArray(props.businessTypes) ? props.businessTypes.filter((item) => item && item.id != null) : []
+));
+const condominiumOptions = computed(() => (
+  Array.isArray(props.condominiums) ? props.condominiums.filter((item) => item && item.id != null) : []
+));
 const propertyTypeGroups = computed(() => props.propertyTypeGroups || {});
 const propertyTypeGroupNames = computed(() => Object.keys(propertyTypeGroups.value || {}));
-const specialCategories = computed(() => props.specialCategories || []);
+const specialCategoryList = computed(() => (
+  Array.isArray(props.specialCategories) ? props.specialCategories.filter((item) => item && item.id != null) : []
+));
 
 const showAdvanced = ref(false);
 const search = reactive({
@@ -464,9 +462,21 @@ const goSearch = () => {
   router.get('/imoveis', params, { preserveScroll: true });
 };
 
-const selecaoEspecial = computed(() => props.selecaoEspecial || []);
-const maisProcurados = computed(() => props.maisProcurados || []);
-const vistoRecentemente = computed(() => props.vistoRecentemente || []);
+const featuredProperties = computed(() => {
+  if (Array.isArray(props.selecaoEspecial?.data)) {
+    return props.selecaoEspecial.data.filter((item) => item && item.id != null);
+  }
+
+  if (Array.isArray(props.selecaoEspecial)) {
+    return props.selecaoEspecial.filter((item) => item && item.id != null);
+  }
+
+  return [];
+});
+
+const featuredLinks = computed(() => (
+  Array.isArray(props.selecaoEspecial?.links) ? props.selecaoEspecial.links.filter((item) => item && 'label' in item) : []
+));
 
 const instagramProfileUrl = computed(() => props.instagramUrl || (props.instagramUsername ? `https://instagram.com/${props.instagramUsername}` : ''));
 const instagramHandle = computed(() => props.instagramUsername || 'instagram');

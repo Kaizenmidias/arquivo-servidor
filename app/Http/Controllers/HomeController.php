@@ -480,22 +480,10 @@ class HomeController extends Controller
             'banheiros' => ['nullable', 'string', 'max:255'],
             'area' => ['nullable', 'string', 'max:255'],
             'mensagem' => ['nullable', 'string'],
-            'recaptcha_token' => ['required', 'string'],
+            'recaptcha_token' => [$this->captchaEnabled() ? 'required' : 'nullable', 'string'],
         ]);
 
-        if (!empty($this->settings['recaptcha_site_key']) && !empty($this->settings['recaptcha_secret_key'])) {
-            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-                'secret' => $this->settings['recaptcha_secret_key'],
-                'response' => $validated['recaptcha_token'],
-                'remoteip' => $request->ip(),
-            ]);
-
-            if ($response->failed() || !$response->json('success')) {
-                throw ValidationException::withMessages([
-                    'recaptcha_token' => 'Falha na verificação do reCAPTCHA. Tente novamente.',
-                ]);
-            }
-        }
+        $this->validateRecaptcha($request, $validated['recaptcha_token'] ?? null);
 
         $parts = [];
         if (!empty($validated['tipo_negocio'])) $parts[] = 'Tipo de Negócio: ' . $validated['tipo_negocio']; // Novo campo
@@ -1059,6 +1047,30 @@ class HomeController extends Controller
         $text = trim((string) ($value ?? ''));
 
         return $text !== '' ? $text : null;
+    }
+
+    private function captchaEnabled(): bool
+    {
+        return !empty($this->settings['recaptcha_site_key']) && !empty($this->settings['recaptcha_secret_key']);
+    }
+
+    private function validateRecaptcha(Request $request, ?string $token): void
+    {
+        if (!$this->captchaEnabled()) {
+            return;
+        }
+
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => $this->settings['recaptcha_secret_key'],
+            'response' => (string) ($token ?? ''),
+            'remoteip' => $request->ip(),
+        ]);
+
+        if ($response->failed() || !$response->json('success')) {
+            throw ValidationException::withMessages([
+                'recaptcha_token' => 'Falha na verificacao do captcha. Tente novamente.',
+            ]);
+        }
     }
 
     private function propertyCardInteger(mixed $value): ?int
