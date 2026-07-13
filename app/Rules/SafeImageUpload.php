@@ -36,7 +36,7 @@ class SafeImageUpload implements ValidationRule
         }
         $allowedMimes = config('image_uploads.allowed_mime_types', []);
         $mimeIsAllowed = in_array($realMime, $allowedMimes, true)
-            || ($realMime === 'application/octet-stream' && in_array($extension, ['heic', 'heif'], true));
+            || $this->isCompatibleImageMime($realMime, $extension);
 
         if (!$mimeIsAllowed) {
             $fail('Mime type de imagem invalido.');
@@ -72,6 +72,18 @@ class SafeImageUpload implements ValidationRule
         return false;
     }
 
+    private function isCompatibleImageMime(string $mimeType, string $extension): bool
+    {
+        $normalizedMime = strtolower(trim($mimeType));
+        $normalizedExtension = strtolower(trim($extension));
+
+        if ($normalizedMime === 'application/octet-stream') {
+            return in_array($normalizedExtension, ['avif', 'heic', 'heif'], true);
+        }
+
+        return str_starts_with($normalizedMime, 'image/');
+    }
+
     private function matchesKnownSignature(string $binary, string $extension): bool
     {
         $header = substr($binary, 0, 64);
@@ -80,6 +92,10 @@ class SafeImageUpload implements ValidationRule
             'jpg', 'jpeg' => str_starts_with($header, "\xFF\xD8\xFF"),
             'png' => str_starts_with($header, "\x89PNG\x0D\x0A\x1A\x0A"),
             'webp' => str_starts_with($header, 'RIFF') && substr($header, 8, 4) === 'WEBP',
+            'avif' => str_contains($header, 'ftypavif')
+                || str_contains($header, 'ftypavis')
+                || str_contains($header, 'ftypmif1')
+                || str_contains($header, 'ftypmsf1'),
             'heic', 'heif' => str_contains($header, 'ftypheic')
                 || str_contains($header, 'ftypheix')
                 || str_contains($header, 'ftyphevc')

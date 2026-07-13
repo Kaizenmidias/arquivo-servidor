@@ -358,6 +358,8 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
             'image/png',
             'image/x-png',
             'image/webp',
+            'image/avif',
+            'image/avif-sequence',
             'image/gif',
         ], true);
     }

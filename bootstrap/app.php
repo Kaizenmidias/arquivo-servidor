@@ -23,6 +23,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_AWS_ELB,
         );
 
+        $middleware->validateCsrfTokens(except: [
+            'admin/properties/uploads',
+            'admin/properties/uploads/*',
+            'admin/properties/*/images/*/reprocess',
+            '*/properties/uploads',
+            '*/properties/uploads/*',
+            '*/properties/*/images/*/reprocess',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);

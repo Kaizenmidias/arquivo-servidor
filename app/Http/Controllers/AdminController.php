@@ -1022,7 +1022,7 @@ class AdminController extends Controller
                         'status' => $upload->status,
                         'mime_type' => $upload->mime_type,
                         'temp_path' => $upload->temp_path,
-                        'preview_url' => in_array($upload->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)
+                        'preview_url' => $this->isBrowserRenderableImageMime($upload->mime_type)
                             ? $this->publicMediaUrl($upload->temp_path)
                             : null,
                     ],
@@ -1038,7 +1038,7 @@ class AdminController extends Controller
             'mime_type' => $upload->mime_type,
             'size' => $upload->size,
             'status' => $upload->status,
-            'preview_url' => in_array($upload->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)
+            'preview_url' => $this->isBrowserRenderableImageMime($upload->mime_type)
                 ? $this->publicMediaUrl($upload->temp_path)
                 : null,
             'uploaded' => true,
@@ -3579,7 +3579,7 @@ class AdminController extends Controller
 
         $extension = strtolower((string) pathinfo($normalizedPath, PATHINFO_EXTENSION));
 
-        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true);
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'], true);
     }
 
     private function isBrowserRenderableImageMime(?string $mimeType): bool
@@ -3591,6 +3591,8 @@ class AdminController extends Controller
             'image/png',
             'image/x-png',
             'image/webp',
+            'image/avif',
+            'image/avif-sequence',
             'image/gif',
         ], true);
     }

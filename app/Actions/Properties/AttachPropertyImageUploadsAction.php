@@ -198,10 +198,16 @@ class AttachPropertyImageUploadsAction
 
     private function isBrowserRenderableMime(?string $mimeType): bool
     {
-        return in_array((string) $mimeType, [
+        return in_array(strtolower(trim((string) ($mimeType ?? ''))), [
             'image/jpeg',
+            'image/jpg',
+            'image/pjpeg',
             'image/png',
+            'image/x-png',
             'image/webp',
+            'image/avif',
+            'image/avif-sequence',
+            'image/gif',
         ], true);
     }
 

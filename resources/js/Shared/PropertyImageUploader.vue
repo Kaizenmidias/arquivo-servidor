@@ -21,7 +21,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         <p class="text-gray-700 font-medium">Arraste ou clique para enviar a imagem de destaque</p>
-        <p class="text-xs text-gray-500 mt-2">Upload assíncrono com Uppy. Formatos: JPG, JPEG, PNG, WEBP, HEIC e HEIF. Máximo {{ maxSizeLabel }} por arquivo.</p>
+        <p class="text-xs text-gray-500 mt-2">Upload assíncrono com Uppy. Formatos: JPG, JPEG, PNG, WEBP, AVIF, HEIC e HEIF. Máximo {{ maxSizeLabel }} por arquivo.</p>
       </div>
 
       <div v-if="featuredItem" class="mt-4 border border-gray-200 rounded-xl overflow-hidden bg-white">
@@ -200,7 +200,7 @@ const props = defineProps({
   },
 });
 
-const acceptAttr = '.jpg,.jpeg,.png,.webp,.heic,.heif';
+const acceptAttr = '.jpg,.jpeg,.png,.webp,.avif,.heic,.heif';
 const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
     <rect width="800" height="600" fill="#0f172a"/>
@@ -243,6 +243,8 @@ function isBrowserRenderableMime(mimeType) {
     'image/png',
     'image/x-png',
     'image/webp',
+    'image/avif',
+    'image/avif-sequence',
     'image/gif',
   ].includes(normalized);
 }
@@ -709,7 +711,7 @@ function createUppy(kind) {
     allowMultipleUploadBatches: true,
     retryDelays: [0, 1000, 3000, 5000],
     restrictions: {
-      allowedFileTypes: ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'],
+      allowedFileTypes: ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.heic', '.heif'],
       maxFileSize: props.maxFileSizeBytes,
       maxNumberOfFiles: kind === 'featured' ? 1 : Number(props.maxFiles || 200),
     },
