@@ -202,13 +202,21 @@
               <div class="text-gray-900 font-semibold">
                 {{ totalLabel }}
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-500">Ordenar</span>
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-500">Exibir</span>
+                  <select v-model="form.per_page" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" @change="apply">
+                    <option v-for="option in perPageOptions" :key="option" :value="String(option)">{{ option }}</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-500">Ordenar</span>
                 <select v-model="form.sort" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition focus:border-slate-300 focus:ring-2 focus:ring-slate-900/10" @change="apply">
                   <option value="newest">Mais recentes</option>
                   <option value="price_asc">Menor preço</option>
                   <option value="price_desc">Maior preço</option>
                 </select>
+                </div>
               </div>
             </div>
 
@@ -230,7 +238,7 @@
                   :href="link.url || '#'"
                   class="px-3 py-2 text-sm rounded-full"
                   :class="link.active ? 'bg-slate-900 text-white' : (link.url ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed')"
-                  v-html="link.label"
+                  v-html="translatePaginationLabel(link.label)"
                   preserve-scroll
                   preserve-state
                 />
@@ -306,6 +314,7 @@ const propertiesBannerOverlayOpacity = computed(() => {
 const items = computed(() => props.properties?.data || []);
 const meta = computed(() => props.properties?.meta || null);
 const paginationLinks = computed(() => props.properties?.links || []);
+const perPageOptions = [12, 18, 24, 36];
 const totalLabel = computed(() => {
   const total = meta.value?.total;
   const value = typeof total === 'number' ? total : items.value.length;
@@ -352,6 +361,7 @@ const form = reactive({
   lot_area_min: normalizeString(props.filters?.lot_area_min),
   lot_area_max: normalizeString(props.filters?.lot_area_max),
   sort: normalizeString(props.filters?.sort || 'newest'),
+  per_page: normalizeString(props.filters?.per_page || '18'),
 });
 
 const cleanFilters = (raw) => {
@@ -435,8 +445,17 @@ const clearAll = () => {
   form.lot_area_min = '';
   form.lot_area_max = '';
   form.sort = 'newest';
+  form.per_page = '18';
   apply();
 };
+
+function translatePaginationLabel(label) {
+  return String(label || '')
+    .replace(/&laquo;\s*Previous/gi, '&laquo; Anterior')
+    .replace(/Next\s*&raquo;/gi, 'Próximo &raquo;')
+    .replace(/Previous/gi, 'Anterior')
+    .replace(/Next/gi, 'Próximo');
+}
 
 const openMobileFilters = () => {
   if (isDesktopViewport()) {

@@ -56,16 +56,6 @@
         </svg>
       </button>
 
-      <div v-if="showPhotoControls && photoList.length > 1" class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-        <button
-          v-for="(_, idx) in photoList"
-          :key="idx"
-          type="button"
-          class="h-2 w-2 rounded-full"
-          :class="idx === activePhotoIndex ? 'bg-white' : 'bg-white/50'"
-          @click.stop.prevent="setPhoto(idx)"
-        ></button>
-      </div>
     </div>
     <div class="flex h-full flex-col p-4">
       <div v-if="displayLocation" class="flex items-center gap-1.5 text-[13px] leading-none text-gray-500">

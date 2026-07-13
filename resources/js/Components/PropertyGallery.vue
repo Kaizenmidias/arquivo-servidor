@@ -1,77 +1,37 @@
 <template>
   <div class="space-y-4">
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
-      <button
-        type="button"
-        class="group relative overflow-hidden rounded-[28px] bg-slate-950 shadow-2xl"
-        @click="openModal(activeIndex)"
-      >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-80"></div>
-        <component
-          :is="activeItem.kind === 'video' ? 'video' : 'img'"
-          :src="activeItem.kind === 'video' ? activeItem.src : activeItem.medium"
-          :srcset="activeItem.kind === 'image' ? (activeItem.srcset || undefined) : undefined"
-          :sizes="activeItem.kind === 'image' ? (activeItem.sizes || undefined) : undefined"
-          :poster="activeItem.kind === 'video' ? activeItem.poster : undefined"
-          :alt="activeItem.alt"
-          :autoplay="false"
-          :controls="false"
-          :muted="true"
-          :playsinline="true"
-          class="h-[320px] w-full object-cover transition duration-500 group-hover:scale-[1.02] sm:h-[420px] lg:h-[560px]"
-          :fetchpriority="activeIndex === 0 ? 'high' : 'auto'"
-        />
-        <div class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 p-4 text-left text-white sm:p-6">
-          <div class="min-w-0">
-            <div class="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">Galeria</div>
-            <div class="mt-1 text-sm text-white/90 sm:text-base">
-              Clique para ampliar e navegar pelas imagens
-            </div>
-          </div>
-          <div class="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold backdrop-blur-md">
-            {{ activeIndex + 1 }} / {{ totalItems }}
+    <button
+      type="button"
+      class="group relative block w-full overflow-hidden rounded-[28px] bg-slate-950 shadow-2xl"
+      @click="openModal(activeIndex)"
+    >
+      <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-80"></div>
+      <component
+        :is="activeItem.kind === 'video' ? 'video' : 'img'"
+        :src="activeItem.kind === 'video' ? activeItem.src : activeItem.full"
+        :srcset="activeItem.kind === 'image' ? (activeItem.srcset || undefined) : undefined"
+        :sizes="activeItem.kind === 'image' ? (activeItem.fullSizes || undefined) : undefined"
+        :poster="activeItem.kind === 'video' ? activeItem.poster : undefined"
+        :alt="activeItem.alt"
+        :autoplay="false"
+        :controls="false"
+        :muted="true"
+        :playsinline="true"
+        class="h-[320px] w-full object-cover transition duration-500 group-hover:scale-[1.02] sm:h-[420px] lg:h-[640px]"
+        :fetchpriority="activeIndex === 0 ? 'high' : 'auto'"
+      />
+      <div class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 p-4 text-left text-white sm:p-6">
+        <div class="min-w-0">
+          <div class="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">Galeria</div>
+          <div class="mt-1 text-sm text-white/90 sm:text-base">
+            Clique para ampliar e navegar pelas imagens
           </div>
         </div>
-      </button>
-
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2">
-        <button
-          v-for="(item, index) in previewItems"
-          :key="item.id"
-          type="button"
-          class="group relative aspect-[4/3] overflow-hidden rounded-[22px] bg-slate-100 shadow-lg ring-1 ring-black/5 transition duration-300"
-          @click="openModal(index)"
-        >
-          <component
-            :is="item.kind === 'video' ? 'video' : 'img'"
-            :src="item.kind === 'video' ? item.src : item.thumb"
-            :srcset="item.kind === 'image' ? (item.srcset || undefined) : undefined"
-            :sizes="item.kind === 'image' ? '(max-width: 768px) 50vw, 600px' : undefined"
-            :poster="item.kind === 'video' ? item.poster : undefined"
-            :alt="item.alt"
-            :autoplay="false"
-            :controls="false"
-            :muted="true"
-            :playsinline="true"
-            class="absolute inset-0 block h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-          <div
-            :class="index === activeIndex ? 'ring-2 ring-white/90 ring-offset-2 ring-offset-slate-900' : ''"
-            class="absolute inset-0 rounded-[22px]"
-          ></div>
-          <div v-if="item.kind === 'video'" class="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white backdrop-blur">
-            Video
-          </div>
-          <div
-            v-if="index === previewItems.length - 1 && totalItems > previewItems.length"
-            class="absolute inset-0 flex items-center justify-center bg-black/60 text-2xl font-bold text-white backdrop-blur-sm"
-          >
-            +{{ totalItems - previewItems.length }}
-          </div>
-        </button>
+        <div class="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold backdrop-blur-md">
+          {{ activeIndex + 1 }} / {{ totalItems }}
+        </div>
       </div>
-    </div>
+    </button>
 
     <DraggableScroller v-if="totalItems > 1" viewport-class="pb-2" content-class="flex gap-3 pr-3">
       <button
@@ -96,6 +56,12 @@
           class="h-full w-full object-cover"
           loading="lazy"
         />
+        <div
+          v-if="index === items.length - 1 && totalItems > items.length"
+          class="absolute inset-0 flex items-center justify-center bg-black/60 text-xl font-bold text-white backdrop-blur-sm"
+        >
+          +{{ totalItems - items.length }}
+        </div>
       </button>
     </DraggableScroller>
 
@@ -349,7 +315,6 @@ const items = computed(() => {
   });
 });
 
-const previewItems = computed(() => items.value.slice(0, Math.min(items.value.length, 4)));
 const totalItems = computed(() => items.value.length);
 const activeIndex = ref(clampIndex(props.initialIndex, totalItems.value));
 const isModalOpen = ref(false);

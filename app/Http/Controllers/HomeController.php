@@ -295,8 +295,15 @@ class HomeController extends Controller
             $filters['sort'] = 'newest';
         }
 
+        $perPage = (int) $request->integer('per_page', 18);
+        if (!in_array($perPage, [12, 18, 24, 36], true)) {
+            $perPage = 18;
+        }
+
+        $filters['per_page'] = (string) $perPage;
+
         $properties = $query
-            ->paginate(18)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Property $property) => $this->serializePropertyCard($property));
 
@@ -1132,7 +1139,7 @@ class HomeController extends Controller
         $thumbMediumUrl = $this->propertyPhotoValidPublicUrl($photo->thumb_medium_url);
         $thumb = $thumbSmallUrl ?: $thumbMediumUrl ?: $stableUrl ?: $renderableOriginalUrl;
         $medium = $thumbMediumUrl ?: $thumbSmallUrl ?: $stableUrl ?: $renderableOriginalUrl;
-        $full = $stableUrl ?: $thumbMediumUrl ?: $thumbSmallUrl ?: $renderableOriginalUrl;
+        $full = $renderableOriginalUrl ?: $stableUrl ?: $thumbMediumUrl ?: $thumbSmallUrl;
 
         if (env('TRAE_DEBUG_FRONT_IMAGES_IMAGICK')) {
             // #region debug-point A:serialize-responsive-photo
@@ -1208,6 +1215,7 @@ class HomeController extends Controller
             $thumbSmallUrl ? "{$thumbSmallUrl} 600w" : null,
             $thumbMediumUrl ? "{$thumbMediumUrl} 1200w" : null,
             $stableUrl ? "{$stableUrl} 1920w" : null,
+            $renderableOriginalUrl && $renderableOriginalUrl !== $stableUrl ? "{$renderableOriginalUrl} 2400w" : null,
         ])->filter()->implode(', ');
 
         if (env('TRAE_DEBUG_FRONT_GALLERY_TMP_URLS')) {
@@ -1238,7 +1246,7 @@ class HomeController extends Controller
             'full' => $full ?: $medium ?: $thumb,
             'srcset' => $srcset !== '' ? $srcset : null,
             'sizes' => '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 600px',
-            'full_sizes' => '(max-width: 768px) 100vw, 1200px',
+            'full_sizes' => '(max-width: 768px) 100vw, 1600px',
         ];
     }
 
