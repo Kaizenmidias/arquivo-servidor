@@ -39,7 +39,28 @@
                   <option value="">Selecione</option>
                   <option value="casa">Casa</option>
                   <option value="apartamento">Apartamento</option>
+                  <option value="terreno">Terreno</option>
+                  <option value="comercial">Comercial</option>
+                  <option value="outro">Outro</option>
                 </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label class="block text-gray-700 font-medium mb-2">Tipo de Negócio</label>
+                <select v-model="form.tipo_negocio" class="w-full border border-gray-300 rounded-lg px-4 py-3" required>
+                  <option value="">Selecione</option>
+                  <option value="venda">Venda</option>
+                  <option value="locacao">Locação</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-gray-700 font-medium mb-2">Região / Condomínio</label>
+                <input type="text" v-model="form.regiao_condominio" placeholder="Ex: Centro, Alphaville" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
+              </div>
+              <div>
+                <label class="block text-gray-700 font-medium mb-2">Valor do Imóvel (R$)</label>
+                <input type="text" v-model="form.valor_imovel" placeholder="Ex: 500.000" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -59,6 +80,7 @@
             <div>
               <label class="block text-gray-700 font-medium mb-2">Mensagem</label>
               <textarea v-model="form.mensagem" rows="4" placeholder="Descreva seu imóvel..." class="w-full border border-gray-300 rounded-lg px-4 py-3"></textarea>
+              <div v-if="form.errors.recaptcha_token" class="text-sm text-red-600 mt-1">{{ form.errors.recaptcha_token }}</div>
             </div>
             <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed" :disabled="form.processing">
               Enviar
@@ -71,7 +93,8 @@
 </template>
 
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Layout from '@/Shared/Layout.vue';
 
 const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
@@ -87,18 +110,29 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   </svg>`
 )}`;
 
+const page = usePage();
+const recaptchaSiteKey = computed(() => page.props.settings?.recaptcha_site_key || '');
+
 const form = useForm({
   nome: '',
   telefone: '',
   email: '',
+  tipo_negocio: '', // Novo campo
+  regiao_condominio: '', // Novo campo
+  valor_imovel: '', // Novo campo
   tipo_imovel: '',
   quartos: '',
   banheiros: '',
   area: '',
   mensagem: '',
+  recaptcha_token: '',
 });
 
-function submitForm() {
+async function submitForm() {
+  if (recaptchaSiteKey.value && window.grecaptcha) {
+    const token = await window.grecaptcha.execute(recaptchaSiteKey.value, { action: 'submit' });
+    form.recaptcha_token = token;
+  }
   form.post('/venda-seu-imovel/send', {
     preserveScroll: true,
     onSuccess: () => {

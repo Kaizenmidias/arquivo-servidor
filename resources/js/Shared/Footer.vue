@@ -58,7 +58,7 @@ const settings = computed(() => page.props.settings || {});
 
 const siteName = computed(() => settings.value.nome_empresa || 'Imobiliária');
 const logoUrl = computed(() => settings.value.logo_url || '');
-const slogan = computed(() => settings.value.slogan || 'Seu novo lar está aqui.');
+const slogan = computed(() => settings.value.slogan || 'As melhores opções de imóveis comerciais e residenciais você encontrará aqui.');
 const telefone = computed(() => settings.value.telefone || '');
 const email = computed(() => settings.value.email_contato || '');
 const endereco = computed(() => settings.value.endereco || '');

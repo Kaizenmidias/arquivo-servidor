@@ -180,15 +180,16 @@
       </div>
     </section>
 
-    <!-- Seleção Especial -->
+    <!-- Melhores Oportunidades -->
     <section class="py-16">
       <div class="ui-shell">
-        <h2 class="mb-6 text-2xl font-bold text-gray-800">Seleção Especial</h2>
-        <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
-            <a v-for="property in selecaoEspecial" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
+        <h2 class="mb-6 text-2xl font-bold text-gray-800">Melhores Oportunidades</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <a v-for="property in selecaoEspecial.data" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-full">
               <PropertyCard :property="property" :show-photo-controls="false" />
             </a>
-        </DraggableScroller>
+        </div>
+        <Pagination v-if="selecaoEspecial.links.length > 3" :links="selecaoEspecial.links" class="mt-6 flex justify-center" />
       </div>
     </section>
 
@@ -204,17 +205,7 @@
       </div>
     </section>
 
-    <!-- Visto Recentemente -->
-    <section class="py-16">
-      <div class="ui-shell">
-        <h2 class="mb-6 text-2xl font-bold text-gray-800">Visto Recentemente</h2>
-        <DraggableScroller viewport-class="pb-2" content-class="flex gap-5 pr-4">
-            <a v-for="property in vistoRecentemente" :key="property.id" :href="property.url || ('/imoveis/' + property.slug)" class="group flex-shrink-0 w-80">
-              <PropertyCard :property="property" :show-photo-controls="false" />
-            </a>
-        </DraggableScroller>
-      </div>
-    </section>
+
 
     <!-- Instagram Section -->
     <section v-if="showInstagramSection" class="py-16 bg-gray-50">
@@ -319,8 +310,11 @@ const props = defineProps({
     default: null,
   },
   selecaoEspecial: {
-    type: Array,
-    default: () => [],
+    type: Object,
+    default: () => ({
+      data: [],
+      links: [],
+    }),
   },
   maisProcurados: {
     type: Array,

@@ -69,6 +69,27 @@
     </div>
 
     <div v-if="isAdmin" class="bg-white rounded-xl shadow border border-gray-200 p-6 mt-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Integrações</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-gray-700 mb-2 text-sm font-medium">reCAPTCHA Site Key</label>
+          <input v-model="form.recaptcha_site_key" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Chave do site reCAPTCHA" />
+          <div v-if="form.errors.recaptcha_site_key" class="text-sm text-red-600 mt-1">{{ form.errors.recaptcha_site_key }}</div>
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-2 text-sm font-medium">reCAPTCHA Secret Key</label>
+          <input v-model="form.recaptcha_secret_key" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Chave secreta reCAPTCHA" />
+          <div v-if="form.errors.recaptcha_secret_key" class="text-sm text-red-600 mt-1">{{ form.errors.recaptcha_secret_key }}</div>
+        </div>
+      </div>
+      <div class="pt-4">
+        <button type="button" :disabled="form.processing" class="bg-blue-900 hover:bg-blue-800 disabled:opacity-60 text-white px-6 py-2 rounded-lg font-semibold transition" @click="save">
+          Salvar Alterações
+        </button>
+      </div>
+    </div>
+
+    <div v-if="isAdmin" class="bg-white rounded-xl shadow border border-gray-200 p-6 mt-6">
       <h3 class="text-lg font-semibold text-gray-800 mb-4">Links do Painel</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -119,6 +140,8 @@ const form = useForm({
   linkedin_url: props.settings?.linkedin_url || '',
   admin_path: props.settings?.admin_path || 'admin',
   login_path: props.settings?.login_path || 'login',
+  recaptcha_site_key: props.settings?.recaptcha_site_key || '',
+  recaptcha_secret_key: props.settings?.recaptcha_secret_key || '',
 });
 
 const page = usePage();

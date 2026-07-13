@@ -2736,6 +2736,8 @@ class AdminController extends Controller
                 'regex:/^[A-Za-z0-9][A-Za-z0-9\\-]*$/',
                 Rule::notIn(['/', 'storage', 'feed', 'imoveis', 'blog', 'contato']),
             ],
+            'recaptcha_site_key' => ['nullable', 'string', 'max:255'],
+            'recaptcha_secret_key' => ['nullable', 'string', 'max:255'],
             'about_hero_title_primary' => ['nullable', 'string', 'max:255'],
             'about_hero_title_secondary' => ['nullable', 'string', 'max:255'],
             'about_hero_subtitle' => ['nullable', 'string', 'max:500'],
@@ -2812,7 +2814,13 @@ class AdminController extends Controller
             if (array_key_exists($key, $fileMap)) {
                 continue;
             }
-
+            if ($key === 'recaptcha_site_key' || $key === 'recaptcha_secret_key') {
+                Setting::updateOrCreate(
+                    ['chave' => $key],
+                    ['valor' => $value ?? '']
+                );
+                continue;
+            }
             Setting::updateOrCreate(
                 ['chave' => $key],
                 ['valor' => (string) ($value ?? '')]

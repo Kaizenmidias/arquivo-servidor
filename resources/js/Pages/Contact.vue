@@ -111,6 +111,7 @@
                   class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 ></textarea>
+                <div v-if="form.errors.recaptcha_token" class="text-sm text-red-600 mt-1">{{ form.errors.recaptcha_token }}</div>
               </div>
               <button 
                 type="submit" 
@@ -129,7 +130,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import Layout from '@/Shared/Layout.vue';
 
 const props = defineProps({
@@ -167,15 +168,23 @@ const bannerOverlayOpacity = computed(() => {
   return Math.max(0, Math.min(100, raw)) / 100;
 });
 
+const page = usePage();
+const recaptchaSiteKey = computed(() => page.props.settings?.recaptcha_site_key || '');
+
 const form = useForm({
   nome: '',
   telefone: '',
   email: '',
   mensagem: '',
   origem: 'Site - Contato',
+  recaptcha_token: '',
 });
 
-function submitForm() {
+async function submitForm() {
+  if (recaptchaSiteKey.value && window.grecaptcha) {
+    const token = await window.grecaptcha.execute(recaptchaSiteKey.value, { action: 'submit' });
+    form.recaptcha_token = token;
+  }
   form.post('/contato/send', {
     preserveScroll: true,
     onSuccess: () => {

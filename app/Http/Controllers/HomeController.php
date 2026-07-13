@@ -20,9 +20,16 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Illuminate\Validation\ValidationException;
 
 class HomeController extends Controller
 {
+    private array $settings;
+
+    public function __construct()
+    {
+        $this->settings = Setting::query()->pluck('valor', 'chave')->all();
+    }
     public function index(): Response
     {
         $homePage = Page::firstOrCreate(
@@ -47,10 +54,8 @@ class HomeController extends Controller
 
         $selecaoEspecial = (clone $baseQuery)
             ->where('show_in_home_selecao_especial', true)
-            ->limit(12)
-            ->get()
-            ->map(fn (Property $property) => $this->serializePropertyCard($property))
-            ->values();
+            ->paginate(16)
+            ->through(fn (Property $property) => $this->serializePropertyCard($property));
 
         $maisProcurados = (clone $baseQuery)
             ->where('show_in_home_mais_procurados', true)
@@ -467,14 +472,35 @@ class HomeController extends Controller
             'nome' => ['required', 'string', 'max:255'],
             'telefone' => ['required', 'string', 'max:50'],
             'email' => ['nullable', 'string', 'max:255'],
+            'tipo_negocio' => ['nullable', 'string', 'max:255'], // Novo campo
+            'regiao_condominio' => ['nullable', 'string', 'max:255'], // Novo campo
+            'valor_imovel' => ['nullable', 'string', 'max:255'], // Novo campo
             'tipo_imovel' => ['nullable', 'string', 'max:255'],
             'quartos' => ['nullable', 'string', 'max:255'],
             'banheiros' => ['nullable', 'string', 'max:255'],
             'area' => ['nullable', 'string', 'max:255'],
             'mensagem' => ['nullable', 'string'],
+            'recaptcha_token' => ['required', 'string'],
         ]);
 
+        if (!empty($this->settings['recaptcha_site_key']) && !empty($this->settings['recaptcha_secret_key'])) {
+            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => $this->settings['recaptcha_secret_key'],
+                'response' => $validated['recaptcha_token'],
+                'remoteip' => $request->ip(),
+            ]);
+
+            if ($response->failed() || !$response->json('success')) {
+                throw ValidationException::withMessages([
+                    'recaptcha_token' => 'Falha na verificação do reCAPTCHA. Tente novamente.',
+                ]);
+            }
+        }
+
         $parts = [];
+        if (!empty($validated['tipo_negocio'])) $parts[] = 'Tipo de Negócio: ' . $validated['tipo_negocio']; // Novo campo
+        if (!empty($validated['regiao_condominio'])) $parts[] = 'Região/Condomínio: ' . $validated['regiao_condominio']; // Novo campo
+        if (!empty($validated['valor_imovel'])) $parts[] = 'Valor do Imóvel: ' . $validated['valor_imovel']; // Novo campo
         if (!empty($validated['tipo_imovel'])) $parts[] = 'Tipo: ' . $validated['tipo_imovel'];
         if (!empty($validated['quartos'])) $parts[] = 'Quartos: ' . $validated['quartos'];
         if (!empty($validated['banheiros'])) $parts[] = 'Banheiros: ' . $validated['banheiros'];
