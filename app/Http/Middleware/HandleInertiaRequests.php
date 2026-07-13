@@ -9,6 +9,13 @@ use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
+    private const HIDDEN_MENU_URLS = [
+        '/gestao-exclusiva',
+        '/calculadora',
+        '/avalie-seu-imovel',
+        '/corretor-parceiro',
+    ];
+
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -64,6 +71,7 @@ class HandleInertiaRequests extends Middleware
             'menuItems' => fn () => MenuItem::query()
                 ->where('is_active', true)
                 ->where('url', '!=', '/off-market')
+                ->whereNotIn('url', self::HIDDEN_MENU_URLS)
                 ->orderBy('order')
                 ->get(['id', 'label', 'icon', 'url', 'order', 'is_active']),
             'settings' => fn () => Setting::query()->pluck('valor', 'chave'),

@@ -284,20 +284,11 @@
 
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700">Exibir na Home</label>
-              <div class="grid grid-cols-1 gap-3">
-                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
-                  <input v-model="form.show_in_home_selecao_especial" type="checkbox" class="rounded border-gray-300">
-                  Seleção especial
-                </label>
-                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
-                  <input v-model="form.show_in_home_mais_procurados" type="checkbox" class="rounded border-gray-300">
-                  Mais procurados
-                </label>
-                <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">
-                  <input v-model="form.show_in_home_visto_recentemente" type="checkbox" class="rounded border-gray-300">
-                  Visto recentemente
-                </label>
-              </div>
+              <select v-model="showInHomeValue" class="w-full rounded-lg border border-gray-300 px-4 py-3 bg-white">
+                <option value="0">Não</option>
+                <option value="1">Sim</option>
+              </select>
+              <p class="mt-2 text-sm text-gray-500">Controla a exibição do imóvel na seção Melhores Oportunidades.</p>
             </div>
           </div>
         </section>
@@ -466,6 +457,20 @@ const selectedSpecialCategoryId = computed({
   },
   set: (value) => {
     form.special_category_ids = value ? [Number(value)] : [];
+  },
+});
+
+const showInHomeValue = computed({
+  get: () => (
+    form.show_in_home_selecao_especial
+    || form.show_in_home_mais_procurados
+    || form.show_in_home_visto_recentemente
+  ) ? '1' : '0',
+  set: (value) => {
+    const shouldShow = value === '1';
+    form.show_in_home_selecao_especial = shouldShow;
+    form.show_in_home_mais_procurados = false;
+    form.show_in_home_visto_recentemente = false;
   },
 });
 

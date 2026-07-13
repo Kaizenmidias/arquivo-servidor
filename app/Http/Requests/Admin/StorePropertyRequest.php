@@ -19,11 +19,20 @@ class StorePropertyRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $showInHome = $this->input('show_in_home');
+        $showInHomeEnabled = $showInHome !== null
+            ? filter_var($showInHome, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+            : (
+                $this->boolean('show_in_home_selecao_especial')
+                || $this->boolean('show_in_home_mais_procurados')
+                || $this->boolean('show_in_home_visto_recentemente')
+            );
+
         $this->merge([
             'is_exclusive' => $this->boolean('is_exclusive'),
-            'show_in_home_selecao_especial' => $this->boolean('show_in_home_selecao_especial'),
-            'show_in_home_mais_procurados' => $this->boolean('show_in_home_mais_procurados'),
-            'show_in_home_visto_recentemente' => $this->boolean('show_in_home_visto_recentemente'),
+            'show_in_home_selecao_especial' => (bool) $showInHomeEnabled,
+            'show_in_home_mais_procurados' => false,
+            'show_in_home_visto_recentemente' => false,
             'aceita_permuta' => $this->boolean('aceita_permuta'),
             'mobiliado' => $this->boolean('mobiliado'),
             'aceita_financiamento' => $this->boolean('aceita_financiamento'),
