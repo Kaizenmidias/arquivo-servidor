@@ -139,6 +139,10 @@ class HomeController extends Controller
 
     public function propertiesWithFilters(Request $request): Response
     {
+        $sitePropertiesCount = Property::query()
+            ->where('ativo', true)
+            ->count();
+
         $businessTypes = BusinessType::query()
             ->where('is_active', true)
             ->orderBy('sort_order')
@@ -309,6 +313,7 @@ class HomeController extends Controller
 
         return Inertia::render('Properties', [
             'properties' => $properties,
+            'sitePropertiesCount' => $sitePropertiesCount,
             'filters' => $filters,
             'businessTypes' => $businessTypes,
             'propertyTypeGroups' => $propertyTypeGroups,

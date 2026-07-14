@@ -262,6 +262,10 @@ const props = defineProps({
     type: Object,
     default: () => ({ data: [] }),
   },
+  sitePropertiesCount: {
+    type: Number,
+    default: 0,
+  },
   filters: {
     type: Object,
     default: () => ({}),
@@ -316,8 +320,11 @@ const meta = computed(() => props.properties?.meta || null);
 const paginationLinks = computed(() => props.properties?.links || []);
 const perPageOptions = [12, 18, 24, 36];
 const totalLabel = computed(() => {
-  const total = meta.value?.total;
-  const value = typeof total === 'number' ? total : items.value.length;
+  const total = Number(props.sitePropertiesCount ?? 0);
+  const fallback = meta.value?.total;
+  const value = Number.isFinite(total) && total > 0
+    ? total
+    : (typeof fallback === 'number' ? fallback : items.value.length);
   return `${value} ${value === 1 ? 'imóvel' : 'imóveis'}`;
 });
 const isMobileFiltersOpen = ref(false);
