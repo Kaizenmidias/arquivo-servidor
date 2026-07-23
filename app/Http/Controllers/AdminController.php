@@ -14,6 +14,7 @@ use App\Jobs\ProcessPropertyImageJob;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -216,11 +217,9 @@ class AdminController extends Controller
 
         DB::transaction(function () use ($user, $validated): void {
             $user->update([
-                'password' => $validated['password'],
+                'password' => Hash::make($validated['password']),
             ]);
         });
-
-        Auth::logoutOtherDevices($validated['current_password']);
 
         return response()->json([
             'message' => 'Senha atualizada com sucesso.',

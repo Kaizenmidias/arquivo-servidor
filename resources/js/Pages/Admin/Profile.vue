@@ -125,17 +125,86 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Senha atual</label>
-                  <input v-model="passwordForm.current_password" type="password" autocomplete="current-password" class="w-full rounded-2xl border border-gray-300 px-4 py-3.5 bg-gray-50/60 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+                  <div class="relative">
+                    <input
+                      v-model="passwordForm.current_password"
+                      :type="passwordFieldType('current_password')"
+                      autocomplete="current-password"
+                      class="w-full rounded-2xl border border-gray-300 px-4 py-3.5 pr-14 bg-gray-50/60 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                    <button
+                      type="button"
+                      class="absolute inset-y-0 right-0 inline-flex items-center justify-center px-4 text-gray-500 transition hover:text-gray-700"
+                      :aria-label="passwordVisibility.current_password ? 'Ocultar senha atual' : 'Mostrar senha atual'"
+                      @click="togglePasswordVisibility('current_password')"
+                    >
+                      <svg v-if="passwordVisibility.current_password" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.584 10.587A2 2 0 0012 15a2 2 0 001.414-.586"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.88 5.09A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.965 9.965 0 01-4.132 5.411M6.228 6.228A9.956 9.956 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.131-.38 4.478-1.056"></path>
+                      </svg>
+                      <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                    </button>
+                  </div>
                   <div v-if="passwordErrors.current_password" class="text-sm text-red-600 mt-2">{{ passwordErrors.current_password }}</div>
                 </div>
                 <div>
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Nova senha</label>
-                  <input v-model="passwordForm.password" type="password" autocomplete="new-password" class="w-full rounded-2xl border border-gray-300 px-4 py-3.5 bg-gray-50/60 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+                  <div class="relative">
+                    <input
+                      v-model="passwordForm.password"
+                      :type="passwordFieldType('password')"
+                      autocomplete="new-password"
+                      class="w-full rounded-2xl border border-gray-300 px-4 py-3.5 pr-14 bg-gray-50/60 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                    <button
+                      type="button"
+                      class="absolute inset-y-0 right-0 inline-flex items-center justify-center px-4 text-gray-500 transition hover:text-gray-700"
+                      :aria-label="passwordVisibility.password ? 'Ocultar nova senha' : 'Mostrar nova senha'"
+                      @click="togglePasswordVisibility('password')"
+                    >
+                      <svg v-if="passwordVisibility.password" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.584 10.587A2 2 0 0012 15a2 2 0 001.414-.586"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.88 5.09A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.965 9.965 0 01-4.132 5.411M6.228 6.228A9.956 9.956 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.131-.38 4.478-1.056"></path>
+                      </svg>
+                      <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                    </button>
+                  </div>
                   <div v-if="passwordErrors.password" class="text-sm text-red-600 mt-2">{{ passwordErrors.password }}</div>
                 </div>
                 <div>
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Confirmar nova senha</label>
-                  <input v-model="passwordForm.password_confirmation" type="password" autocomplete="new-password" class="w-full rounded-2xl border border-gray-300 px-4 py-3.5 bg-gray-50/60 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+                  <div class="relative">
+                    <input
+                      v-model="passwordForm.password_confirmation"
+                      :type="passwordFieldType('password_confirmation')"
+                      autocomplete="new-password"
+                      class="w-full rounded-2xl border border-gray-300 px-4 py-3.5 pr-14 bg-gray-50/60 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                    <button
+                      type="button"
+                      class="absolute inset-y-0 right-0 inline-flex items-center justify-center px-4 text-gray-500 transition hover:text-gray-700"
+                      :aria-label="passwordVisibility.password_confirmation ? 'Ocultar confirmacao de senha' : 'Mostrar confirmacao de senha'"
+                      @click="togglePasswordVisibility('password_confirmation')"
+                    >
+                      <svg v-if="passwordVisibility.password_confirmation" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.584 10.587A2 2 0 0012 15a2 2 0 001.414-.586"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.88 5.09A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.965 9.965 0 01-4.132 5.411M6.228 6.228A9.956 9.956 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.131-.38 4.478-1.056"></path>
+                      </svg>
+                      <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -195,6 +264,11 @@ const passwordForm = reactive({
   current_password: '',
   password: '',
   password_confirmation: '',
+});
+const passwordVisibility = reactive({
+  current_password: false,
+  password: false,
+  password_confirmation: false,
 });
 
 const infoErrors = reactive({});
@@ -281,8 +355,19 @@ function resetPasswordForm() {
   passwordForm.current_password = '';
   passwordForm.password = '';
   passwordForm.password_confirmation = '';
+  passwordVisibility.current_password = false;
+  passwordVisibility.password = false;
+  passwordVisibility.password_confirmation = false;
   clearObject(passwordErrors);
   setState(passwordState);
+}
+
+function togglePasswordVisibility(field) {
+  passwordVisibility[field] = !passwordVisibility[field];
+}
+
+function passwordFieldType(field) {
+  return passwordVisibility[field] ? 'text' : 'password';
 }
 
 function resetAvatarForm() {
