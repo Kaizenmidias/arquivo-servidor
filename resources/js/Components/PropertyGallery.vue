@@ -17,7 +17,7 @@
         :controls="false"
         :muted="true"
         :playsinline="true"
-        class="h-[320px] w-full object-cover transition duration-500 group-hover:scale-[1.02] sm:h-[420px] lg:h-[640px]"
+        class="h-[320px] w-full object-contain transition duration-500 group-hover:scale-[1.02] sm:h-[420px] lg:h-[640px]"
         :fetchpriority="activeIndex === 0 ? 'high' : 'auto'"
       />
       <div class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 p-4 text-left text-white sm:p-6">
@@ -121,7 +121,7 @@
                     :controls="activeItem.kind === 'video'"
                     :muted="false"
                     :playsinline="true"
-                    class="gallery-stage-media h-full w-full bg-black object-cover"
+                    class="gallery-stage-media h-full w-full bg-black object-contain"
                     :class="activeItem.kind === 'image' ? (isZoomed ? 'is-zoomed cursor-zoom-out' : 'cursor-zoom-in') : ''"
                     :loading="activeIndex <= 1 ? 'eager' : 'lazy'"
                     @click.stop="toggleZoom"
