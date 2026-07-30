@@ -16,6 +16,7 @@ use App\Models\Page;
 use App\Models\Lead;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
@@ -96,11 +97,16 @@ class HomeController extends Controller
             ->groupBy('nome_tipo')
             ->map(fn ($items) => $items->pluck('nome_subtipo')->filter()->values());
 
-        $specialCategories = SpecialCategory::query()
+        $specialCategoryQuery = SpecialCategory::query()
             ->where('is_active', true)
-            ->with('propertyTypes')
             ->orderBy('sort_order')
-            ->orderBy('name')
+            ->orderBy('name');
+
+        if (Schema::hasTable('property_type_special_category')) {
+            $specialCategoryQuery->with('propertyTypes');
+        }
+
+        $specialCategories = $specialCategoryQuery
             ->get()
             ->map(fn (SpecialCategory $category) => [
                 'id' => $category->id,
@@ -108,7 +114,9 @@ class HomeController extends Controller
                 'description' => $category->description,
                 'cover_url' => $category->cover_url,
                 'url' => '/imoveis?special_category_ids[]=' . $category->id,
-                'property_type_ids' => $category->propertyTypes->pluck('id')->values(),
+                'property_type_ids' => $category->relationLoaded('propertyTypes')
+                    ? $category->propertyTypes->pluck('id')->values()
+                    : [],
             ])
             ->values();
 
