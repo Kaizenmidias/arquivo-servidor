@@ -3252,10 +3252,12 @@ class AdminController extends Controller
 
     public function specialCategories(): Response
     {
-        $items = SpecialCategory::orderBy('sort_order')->orderBy('name')->get();
+        $items = SpecialCategory::with('propertyTypes')->orderBy('sort_order')->orderBy('name')->get();
+        $propertyTypes = PropertyType::orderBy('nome_tipo')->orderBy('nome_subtipo')->get(['id', 'nome_tipo', 'nome_subtipo']);
 
         return Inertia::render('Admin/SpecialCategories', [
             'items' => $items,
+            'propertyTypes' => $propertyTypes,
         ]);
     }
 
@@ -3267,6 +3269,8 @@ class AdminController extends Controller
             'cover' => ['nullable', 'image', 'max:10240'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'property_type_ids' => ['nullable', 'array'],
+            'property_type_ids.*' => ['integer', 'exists:property_types,id'],
         ]);
 
         $slug = $this->uniqueSlug($validated['name'], SpecialCategory::class);
@@ -3276,7 +3280,7 @@ class AdminController extends Controller
             $coverPath = Storage::disk('public')->putFile('special-categories', $request->file('cover'));
         }
 
-        SpecialCategory::create([
+        $specialCategory = SpecialCategory::create([
             'name' => $validated['name'],
             'slug' => $slug,
             'description' => $validated['description'] ?? null,
@@ -3284,6 +3288,8 @@ class AdminController extends Controller
             'is_active' => $validated['is_active'] ?? true,
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);
+
+        $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
 
         return Redirect::route('admin.special-categories');
     }
@@ -3296,6 +3302,8 @@ class AdminController extends Controller
             'cover' => ['nullable', 'image', 'max:10240'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'property_type_ids' => ['nullable', 'array'],
+            'property_type_ids.*' => ['integer', 'exists:property_types,id'],
         ]);
 
         $slug = $this->uniqueSlug($validated['name'], SpecialCategory::class, $specialCategory->id);
@@ -3316,6 +3324,8 @@ class AdminController extends Controller
             'is_active' => $validated['is_active'] ?? $specialCategory->is_active,
             'sort_order' => $validated['sort_order'] ?? $specialCategory->sort_order,
         ]);
+
+        $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
 
         return Redirect::route('admin.special-categories');
     }

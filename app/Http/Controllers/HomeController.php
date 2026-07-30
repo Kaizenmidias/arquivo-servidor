@@ -98,6 +98,7 @@ class HomeController extends Controller
 
         $specialCategories = SpecialCategory::query()
             ->where('is_active', true)
+            ->with('propertyTypes')
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
@@ -107,6 +108,7 @@ class HomeController extends Controller
                 'description' => $category->description,
                 'cover_url' => $category->cover_url,
                 'url' => '/imoveis?special_category_ids[]=' . $category->id,
+                'property_type_ids' => $category->propertyTypes->pluck('id')->values(),
             ])
             ->values();
 
@@ -243,7 +245,7 @@ class HomeController extends Controller
             ->all();
 
         if (count($specialCategoryIds) > 0) {
-            $query->whereHas('specialCategories', fn ($sub) => $sub->whereIn('special_categories.id', $specialCategoryIds));
+            $query->whereHas('propertyType.specialCategories', fn ($sub) => $sub->whereIn('special_categories.id', $specialCategoryIds));
         }
 
         $priceMin = $this->parseBrlCurrencyNullable($filters['price_min'] ?? null);

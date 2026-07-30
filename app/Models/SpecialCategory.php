@@ -31,6 +31,11 @@ class SpecialCategory extends Model
         return $this->belongsToMany(Property::class, 'property_special_category', 'special_category_id', 'property_id');
     }
 
+    public function propertyTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(PropertyType::class, 'property_type_special_category', 'special_category_id', 'property_type_id');
+    }
+
     public function getCoverUrlAttribute(): ?string
     {
         if (empty($this->cover_path)) {
