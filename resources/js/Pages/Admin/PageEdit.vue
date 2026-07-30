@@ -28,23 +28,64 @@
           </div>
 
           <div v-if="isHome" class="border-t border-gray-200 pt-6">
-            <h4 class="text-base font-semibold text-gray-800 mb-4">Overlay do Hero (Home)</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
-              <div>
-                <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do Overlay</label>
-                <div class="flex items-center gap-3">
-                  <input type="color" v-model="form.home_hero_overlay_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
-                  <span class="text-gray-700 font-mono text-sm">{{ form.home_hero_overlay_color }}</span>
+            <h4 class="text-base font-semibold text-gray-800 mb-4">Banner da página de imóveis</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="space-y-5">
+                <div>
+                  <label class="block text-gray-700 mb-2 text-sm font-medium">Título</label>
+                  <input v-model="form.banner_title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-2 text-sm font-medium">Subtítulo</label>
+                  <input v-model="form.banner_subtitle" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
+                  <div>
+                    <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do Título</label>
+                    <div class="flex items-center gap-3">
+                      <input type="color" v-model="form.banner_title_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+                      <span class="text-gray-700 font-mono text-sm">{{ form.banner_title_color }}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do Subtítulo</label>
+                    <div class="flex items-center gap-3">
+                      <input type="color" v-model="form.banner_subtitle_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+                      <span class="text-gray-700 font-mono text-sm">{{ form.banner_subtitle_color }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
+                  <div>
+                    <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do Overlay</label>
+                    <div class="flex items-center gap-3">
+                      <input type="color" v-model="form.banner_overlay_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+                      <span class="text-gray-700 font-mono text-sm">{{ form.banner_overlay_color }}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 mb-2 text-sm font-medium">Opacidade do Overlay (%)</label>
+                    <input v-model.number="form.banner_overlay_opacity" type="number" min="0" max="100" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
+                  </div>
                 </div>
               </div>
+
               <div>
-                <label class="block text-gray-700 mb-2 text-sm font-medium">Opacidade do Overlay (%)</label>
-                <input v-model.number="form.home_hero_overlay_opacity" type="number" min="0" max="100" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
+                <label class="block text-gray-700 mb-2 text-sm font-medium">Imagem do Banner</label>
+                <input ref="bannerInputRef" type="file" accept="image/*" class="hidden" @change="onBannerSelected">
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="bannerInputRef?.click()">
+                  <p class="text-gray-600">Clique para enviar</p>
+                </div>
+                <div v-if="bannerPreviewUrl" class="mt-4">
+                  <img :src="bannerPreviewUrl" class="w-full h-48 object-cover rounded-xl border border-gray-200">
+                  <button type="button" class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium" @click="clearBanner">Remover imagem</button>
+                </div>
+                <div v-if="form.errors.banner_image_file" class="text-sm text-red-600 mt-1">{{ form.errors.banner_image_file }}</div>
               </div>
             </div>
           </div>
 
-          <div v-if="isHome || isProperties" class="border-t border-gray-200 pt-6">
+          <div v-if="isProperties" class="border-t border-gray-200 pt-6">
             <h4 class="text-base font-semibold text-gray-800 mb-4">Banner da página de imóveis</h4>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div class="space-y-5">
@@ -523,8 +564,6 @@ const form = useForm({
   banner_subtitle_color: props.page?.banner_subtitle_color || '#ffffff',
   banner_overlay_color: props.page?.banner_overlay_color || '#0f172a',
   banner_overlay_opacity: Number(props.page?.banner_overlay_opacity ?? 70),
-  home_hero_overlay_color: props.settings?.home_hero_overlay_color || '#0f172a',
-  home_hero_overlay_opacity: Number(props.settings?.home_hero_overlay_opacity ?? 70),
   banner_image_file: null,
   meta_title: props.page?.meta_title || '',
   meta_description: props.page?.meta_description || '',

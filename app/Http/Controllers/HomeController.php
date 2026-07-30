@@ -306,6 +306,8 @@ class HomeController extends Controller
 
         $filters['per_page'] = (string) $perPage;
 
+        $propertiesPage = Page::where('slug', 'imoveis')->first();
+
         $properties = $query
             ->paginate($perPage)
             ->withQueryString()
@@ -313,6 +315,15 @@ class HomeController extends Controller
 
         return Inertia::render('Properties', [
             'properties' => $properties,
+            'propertiesPage' => $propertiesPage ? [
+                'banner_title' => $propertiesPage->banner_title,
+                'banner_subtitle' => $propertiesPage->banner_subtitle,
+                'banner_image' => $propertiesPage->banner_image,
+                'banner_title_color' => $propertiesPage->banner_title_color,
+                'banner_subtitle_color' => $propertiesPage->banner_subtitle_color,
+                'banner_overlay_color' => $propertiesPage->banner_overlay_color,
+                'banner_overlay_opacity' => $propertiesPage->banner_overlay_opacity,
+            ] : null,
             'sitePropertiesCount' => $sitePropertiesCount,
             'filters' => $filters,
             'businessTypes' => $businessTypes,
