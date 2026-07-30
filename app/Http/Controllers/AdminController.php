@@ -2176,6 +2176,29 @@ class AdminController extends Controller
         }
         $home->save();
 
+        $properties = Page::firstOrNew(['slug' => 'imoveis']);
+        if (!$properties->exists) {
+            $properties->fill([
+                'titulo' => 'Imóveis',
+                'template' => 'properties',
+                'conteudo' => '',
+                'banner_title' => 'Imóveis',
+                'banner_subtitle' => '',
+                'banner_title_color' => '#ffffff',
+                'banner_subtitle_color' => '#ffffff',
+                'banner_overlay_color' => '#0f172a',
+                'banner_overlay_opacity' => 70,
+                'ativo' => true,
+            ]);
+        } else {
+            $properties->template = 'properties';
+            $properties->titulo = $properties->titulo ?: 'Imóveis';
+            if ($properties->banner_title === null || $properties->banner_title === '') {
+                $properties->banner_title = 'Imóveis';
+            }
+        }
+        $properties->save();
+
         $about = Page::where('slug', 'quem-somos')->first();
         if (!$about) {
             $legacyAbout = Page::where('slug', 'sobre')->first();
@@ -3020,6 +3043,9 @@ class AdminController extends Controller
     {
         if ($slug === 'home') {
             return '/';
+        }
+        if ($slug === 'imoveis') {
+            return '/imoveis';
         }
         if ($slug === 'sobre' || $slug === 'quem-somos') {
             return '/quem-somos';
