@@ -106,6 +106,9 @@ const primaryLinks = computed(() => {
   const candidates = [
     { label: 'Início', url: '/', icon: 'home' },
     { label: 'Imóveis', url: '/imoveis', icon: 'tag' },
+    { label: 'ImÃ³veis Residenciais', url: '/imoveis?property_type_group=residencial', icon: 'tag' },
+    { label: 'ImÃ³veis Comerciais', url: '/imoveis?property_type_group=comercial', icon: 'tag' },
+    { label: 'ImÃ³veis Rurais', url: '/imoveis?property_type_group=rural', icon: 'tag' },
     { label: 'Venda seu Imóvel', url: '/venda-seu-imovel', icon: 'key' },
   ];
 

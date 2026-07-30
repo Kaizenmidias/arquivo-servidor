@@ -177,6 +177,7 @@ class HomeController extends Controller
             'business_type_id' => $request->input('business_type_id'),
             'condominium_id' => $request->input('condominium_id'),
             'property_type' => $request->string('property_type')->toString(),
+            'property_type_group' => $request->string('property_type_group')->toString(),
             'special_category_ids' => $request->input('special_category_ids', []),
             'price_min' => $request->input('price_min'),
             'price_max' => $request->input('price_max'),
@@ -222,6 +223,16 @@ class HomeController extends Controller
         $propertyType = trim((string) ($filters['property_type'] ?? ''));
         if ($propertyType !== '') {
             $query->whereHas('propertyType', fn ($sub) => $sub->where('nome_tipo', $propertyType));
+        }
+
+        $propertyTypeGroup = trim((string) ($filters['property_type_group'] ?? ''));
+        $propertyTypeGroupMap = [
+            'residencial' => ['Casa', 'Apartamento', 'Cobertura', 'Terreno'],
+            'comercial' => ['Comercial / Sala Comercial', 'Galpão'],
+            'rural' => ['Chácara', 'Fazenda'],
+        ];
+        if ($propertyTypeGroup !== '' && isset($propertyTypeGroupMap[$propertyTypeGroup])) {
+            $query->whereHas('propertyType', fn ($sub) => $sub->whereIn('nome_tipo', $propertyTypeGroupMap[$propertyTypeGroup]));
         }
 
         $specialCategoryIds = collect($filters['special_category_ids'] ?? [])

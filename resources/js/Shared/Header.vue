@@ -95,6 +95,9 @@ const isSolid = computed(() => !usesTransparentHeader.value || isScrolled.value 
 const primaryLinks = [
   { label: 'Início', url: '/' },
   { label: 'Imóveis', url: '/imoveis' },
+  { label: 'Imóveis Residenciais', url: '/imoveis?property_type_group=residencial' },
+  { label: 'Imóveis Comerciais', url: '/imoveis?property_type_group=comercial' },
+  { label: 'Imóveis Rurais', url: '/imoveis?property_type_group=rural' },
   { label: 'Venda seu Imóvel', url: '/venda-seu-imovel' },
 ];
 
