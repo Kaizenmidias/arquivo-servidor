@@ -44,7 +44,7 @@
             </div>
           </div>
 
-          <div v-if="isProperties" class="border-t border-gray-200 pt-6">
+          <div v-if="isHome || isProperties" class="border-t border-gray-200 pt-6">
             <h4 class="text-base font-semibold text-gray-800 mb-4">Banner da página de imóveis</h4>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div class="space-y-5">
