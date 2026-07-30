@@ -11,15 +11,41 @@
         </a>
 
         <nav class="hidden xl:flex items-center gap-1">
-          <a
+          <div
             v-for="item in primaryLinks"
-            :key="item.url"
-            :href="item.url"
-            class="rounded-full px-4 py-2 text-sm font-medium transition"
-            :class="navItemClass(item.url)"
+            :key="item.label"
+            class="relative"
+            @mouseenter="openDesktopSubmenu(item.key)"
+            @mouseleave="closeDesktopSubmenu(item.key)"
           >
-            {{ item.label }}
-          </a>
+            <a
+              :href="item.url"
+              class="rounded-full px-4 py-2 text-sm font-medium transition inline-flex items-center gap-1"
+              :class="navItemClass(item.url, item.key)"
+            >
+              <span>{{ item.label }}</span>
+              <svg v-if="item.children?.length" class="h-3.5 w-3.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 9l-7 7-7-7" />
+              </svg>
+            </a>
+
+            <transition name="fade">
+              <div
+                v-if="item.children?.length && openDesktopMenuKey === item.key"
+                class="absolute left-0 top-full mt-3 min-w-[280px] rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_60px_rgba(15,23,42,0.16)]"
+              >
+                <a
+                  v-for="child in item.children"
+                  :key="child.url"
+                  :href="child.url"
+                  class="block rounded-xl px-4 py-3 text-sm font-medium transition"
+                  :class="navItemClass(child.url, child.key, true)"
+                >
+                  {{ child.label }}
+                </a>
+              </div>
+            </transition>
+          </div>
         </nav>
 
         <div class="flex items-center gap-2">
@@ -81,6 +107,7 @@ import { useFavorites } from '@/composables/useFavorites';
 const isMenuOpen = ref(false);
 const isFavoritesOpen = ref(false);
 const isScrolled = ref(false);
+const openDesktopMenuKey = ref('');
 
 const page = usePage();
 const { favoriteCount, favoriteItems, hydrateFavorites, removeFavorite } = useFavorites();
@@ -92,13 +119,16 @@ const currentPath = computed(() => normalizeUrl(page.url || '/'));
 const usesTransparentHeader = computed(() => page.component === 'Home' || currentPath.value === '/');
 const isSolid = computed(() => !usesTransparentHeader.value || isScrolled.value || isMenuOpen.value);
 
+const propertyGroupLinks = [
+  { key: 'residencial', label: 'Imóveis Residenciais', url: '/imoveis?property_type_group=residencial' },
+  { key: 'comercial', label: 'Imóveis Comerciais', url: '/imoveis?property_type_group=comercial' },
+  { key: 'rural', label: 'Imóveis Rurais', url: '/imoveis?property_type_group=rural' },
+];
+
 const primaryLinks = [
-  { label: 'Início', url: '/' },
-  { label: 'Imóveis', url: '/imoveis' },
-  { label: 'Imóveis Residenciais', url: '/imoveis?property_type_group=residencial' },
-  { label: 'Imóveis Comerciais', url: '/imoveis?property_type_group=comercial' },
-  { label: 'Imóveis Rurais', url: '/imoveis?property_type_group=rural' },
-  { label: 'Venda seu Imóvel', url: '/venda-seu-imovel' },
+  { key: 'home', label: 'Início', url: '/' },
+  { key: 'imoveis', label: 'Imóveis', url: '/imoveis', children: propertyGroupLinks },
+  { key: 'venda', label: 'Venda seu Imóvel', url: '/venda-seu-imovel' },
 ];
 
 const headerSurfaceClass = computed(() => {
@@ -123,8 +153,11 @@ const secondaryActionClass = computed(() => (
 ));
 const isOverlayOpen = computed(() => isMenuOpen.value || isFavoritesOpen.value);
 
-function navItemClass(url) {
-  const active = currentPath.value === normalizeUrl(url);
+function navItemClass(url, key, isChild = false) {
+  const activePath = currentPath.value === normalizeUrl(url);
+  const currentGroup = new URLSearchParams((page.url || '').split('?')[1] || '').get('property_type_group') || '';
+  const activeGroup = key && ['residencial', 'comercial', 'rural'].includes(key) ? currentGroup === key : false;
+  const active = isChild ? activeGroup : activePath || (key === 'imoveis' && currentPath.value === '/imoveis');
 
   if (isSolid.value) {
     return active
@@ -140,6 +173,18 @@ function navItemClass(url) {
 function normalizeUrl(value) {
   const path = String(value || '').split('?')[0].replace(/\/+$/, '');
   return path === '' ? '/' : path;
+}
+
+function openDesktopSubmenu(key) {
+  if (key === 'imoveis') {
+    openDesktopMenuKey.value = key;
+  }
+}
+
+function closeDesktopSubmenu(key) {
+  if (openDesktopMenuKey.value === key) {
+    openDesktopMenuKey.value = '';
+  }
 }
 
 const getScrollTop = () => {
