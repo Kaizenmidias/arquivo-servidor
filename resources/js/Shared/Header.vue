@@ -109,6 +109,12 @@ function navItemClass(url, key, isChild = false) {
   const activeSpecialIds = [...query.getAll('special_category_ids[]'), ...query.getAll('special_category_ids')];
   const active = isChild ? activeSpecialIds.includes(String(key)) : activePath || (key === 'imoveis' && currentPath.value === '/imoveis');
 
+  if (isChild) {
+    return active
+      ? 'bg-slate-900 text-white'
+      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900';
+  }
+
   if (isSolid.value) {
     return active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900';
   }
