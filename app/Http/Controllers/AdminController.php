@@ -13,6 +13,7 @@ use App\Http\Requests\Admin\UpdatePropertyRequest;
 use App\Jobs\ProcessPropertyImageJob;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
@@ -3294,9 +3295,8 @@ class AdminController extends Controller
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);
 
-        if (Schema::hasTable('property_type_special_category')) {
-            $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
-        }
+        $this->ensureSpecialCategoryPropertyTypePivotTable();
+        $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
 
         return Redirect::route('admin.special-categories');
     }
@@ -3332,11 +3332,25 @@ class AdminController extends Controller
             'sort_order' => $validated['sort_order'] ?? $specialCategory->sort_order,
         ]);
 
-        if (Schema::hasTable('property_type_special_category')) {
-            $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
-        }
+        $this->ensureSpecialCategoryPropertyTypePivotTable();
+        $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
 
         return Redirect::route('admin.special-categories');
+    }
+
+    private function ensureSpecialCategoryPropertyTypePivotTable(): void
+    {
+        if (Schema::hasTable('property_type_special_category')) {
+            return;
+        }
+
+        Schema::create('property_type_special_category', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('special_category_id')->constrained('special_categories')->cascadeOnDelete();
+            $table->foreignId('property_type_id')->constrained('property_types')->cascadeOnDelete();
+            $table->timestamps();
+            $table->unique(['special_category_id', 'property_type_id']);
+        });
     }
 
     public function destroySpecialCategory(SpecialCategory $specialCategory)
