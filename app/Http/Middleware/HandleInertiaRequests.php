@@ -76,7 +76,7 @@ class HandleInertiaRequests extends Middleware
                 ->whereNotIn('url', self::HIDDEN_MENU_URLS)
                 ->orderBy('order')
                 ->get(['id', 'label', 'icon', 'url', 'order', 'is_active']),
-            'specialCategories' => fn () => {
+            'specialCategories' => function () {
                 $query = SpecialCategory::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name');
 
                 if (Schema::hasTable('property_type_special_category')) {
