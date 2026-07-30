@@ -85,6 +85,23 @@
             </div>
           </div>
 
+          <div v-if="isHome" class="border-t border-gray-200 pt-6">
+            <h4 class="text-base font-semibold text-gray-800 mb-4">Overlay do Hero (Home)</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
+              <div>
+                <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do Overlay</label>
+                <div class="flex items-center gap-3">
+                  <input type="color" v-model="form.home_hero_overlay_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+                  <span class="text-gray-700 font-mono text-sm">{{ form.home_hero_overlay_color }}</span>
+                </div>
+              </div>
+              <div>
+                <label class="block text-gray-700 mb-2 text-sm font-medium">Opacidade do Overlay (%)</label>
+                <input v-model.number="form.home_hero_overlay_opacity" type="number" min="0" max="100" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
+              </div>
+            </div>
+          </div>
+
           <div v-if="isAbout" class="border-t border-gray-200 pt-6">
             <h4 class="text-base font-semibold text-gray-800 mb-4">Quem Somos</h4>
             <div class="grid grid-cols-1 gap-6">
@@ -360,6 +377,10 @@ const props = defineProps({
   page: {
     type: Object,
     default: () => ({})
+  },
+  settings: {
+    type: Object,
+    default: () => ({})
   }
 });
 
@@ -500,6 +521,8 @@ const form = useForm({
   banner_subtitle_color: props.page?.banner_subtitle_color || '#ffffff',
   banner_overlay_color: props.page?.banner_overlay_color || '#0f172a',
   banner_overlay_opacity: Number(props.page?.banner_overlay_opacity ?? 70),
+  home_hero_overlay_color: props.settings?.home_hero_overlay_color || '#0f172a',
+  home_hero_overlay_opacity: Number(props.settings?.home_hero_overlay_opacity ?? 70),
   banner_image_file: null,
   meta_title: props.page?.meta_title || '',
   meta_description: props.page?.meta_description || '',

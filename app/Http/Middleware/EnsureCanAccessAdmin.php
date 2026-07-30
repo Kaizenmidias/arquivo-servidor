@@ -52,7 +52,6 @@ class EnsureCanAccessAdmin
         if (str_starts_with($routeName, 'admin.pages')) return 'pages';
         if (str_starts_with($routeName, 'admin.blog.')) return 'pages';
 
-        if (str_starts_with($routeName, 'admin.appearance')) return 'appearance';
         if (str_starts_with($routeName, 'admin.leads')) return 'leads';
         if (str_starts_with($routeName, 'admin.settings')) return 'settings';
         if (str_starts_with($routeName, 'admin.instagram')) return 'instagram';

@@ -96,9 +96,6 @@ Route::prefix($adminPath)->name('admin.')->middleware(['auth', EnsureCanAccessAd
     Route::put('/profile', [AdminController::class, 'updateProfileInfo'])->name('profile.update');
     Route::put('/profile/password', [AdminController::class, 'updateProfilePassword'])->name('profile.password.update');
     Route::post('/profile/avatar', [AdminController::class, 'updateProfileAvatar'])->name('profile.avatar.update');
-    Route::get('/appearance', [AdminController::class, 'appearance'])->name('appearance');
-    Route::post('/appearance', [AdminController::class, 'updateAppearance']);
-    Route::put('/appearance', [AdminController::class, 'updateAppearance'])->name('appearance.update');
     Route::get('/pages', [AdminController::class, 'pages'])->name('pages');
     Route::get('/pages/create', [AdminController::class, 'createPage'])->name('pages.create');
     Route::post('/pages', [AdminController::class, 'storePage'])->name('pages.store');

@@ -2145,83 +2145,6 @@ class AdminController extends Controller
         return Redirect::back();
     }
     
-    public function appearance(): Response
-    {
-        $settings = Setting::all()->pluck('valor', 'chave');
-        return Inertia::render('Admin/Appearance', ['settings' => $settings]);
-    }
-
-    public function updateAppearance(Request $request)
-    {
-        $validated = $request->validate([
-            'primary_color' => ['nullable', 'string', 'max:20'],
-            'secondary_color' => ['nullable', 'string', 'max:20'],
-            'button_color' => ['nullable', 'string', 'max:20'],
-            'footer_bg_color' => ['nullable', 'string', 'max:20'],
-            'font_family' => ['nullable', 'string', 'max:255'],
-            'font_size_text' => ['nullable', 'integer', 'min:10', 'max:24'],
-            'font_size_title' => ['nullable', 'integer', 'min:18', 'max:72'],
-            'home_hero_overlay_color' => ['nullable', 'string', 'max:20'],
-            'home_hero_overlay_opacity' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'properties_banner_title' => ['nullable', 'string', 'max:255'],
-            'properties_banner_subtitle' => ['nullable', 'string', 'max:500'],
-            'properties_banner_title_color' => ['nullable', 'string', 'max:20'],
-            'properties_banner_subtitle_color' => ['nullable', 'string', 'max:20'],
-            'properties_banner_overlay_color' => ['nullable', 'string', 'max:20'],
-            'properties_banner_overlay_opacity' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'properties_banner_image_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:5120'],
-            'logo_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:4096'],
-            'favicon_file' => ['nullable', 'file', 'mimes:ico,png,jpg,jpeg,svg,webp', 'max:2048'],
-        ]);
-
-        foreach ([
-            'primary_color',
-            'secondary_color',
-            'button_color',
-            'footer_bg_color',
-            'font_family',
-            'font_size_text',
-            'font_size_title',
-            'home_hero_overlay_color',
-            'home_hero_overlay_opacity',
-            'properties_banner_title',
-            'properties_banner_subtitle',
-            'properties_banner_title_color',
-            'properties_banner_subtitle_color',
-            'properties_banner_overlay_color',
-            'properties_banner_overlay_opacity',
-        ] as $key) {
-            if (!array_key_exists($key, $validated)) {
-                continue;
-            }
-
-            Setting::updateOrCreate(
-                ['chave' => $key],
-                ['valor' => (string) ($validated[$key] ?? '')]
-            );
-        }
-
-        if ($request->hasFile('logo_file')) {
-            $file = $request->file('logo_file');
-            $path = Storage::disk('public')->putFile('branding/logo', $file);
-            Setting::updateOrCreate(['chave' => 'logo_url'], ['valor' => url('/storage/' . $path)]);
-        }
-
-        if ($request->hasFile('properties_banner_image_file')) {
-            $file = $request->file('properties_banner_image_file');
-            $path = Storage::disk('public')->putFile('branding/banners', $file);
-            Setting::updateOrCreate(['chave' => 'properties_banner_image_url'], ['valor' => url('/storage/' . $path)]);
-        }
-
-        if ($request->hasFile('favicon_file')) {
-            $file = $request->file('favicon_file');
-            $path = Storage::disk('public')->putFile('branding/favicon', $file);
-            Setting::updateOrCreate(['chave' => 'favicon_url'], ['valor' => url('/storage/' . $path)]);
-        }
-
-        return Redirect::route('admin.appearance');
-    }
-    
     public function layout(): Response
     {
         $settings = Setting::all()->pluck('valor', 'chave');
@@ -2579,7 +2502,13 @@ class AdminController extends Controller
     
     public function editPage(Page $page): Response
     {
-        return Inertia::render('Admin/PageEdit', ['page' => $page]);
+        $props = ['page' => $page];
+
+        if ($page->slug === 'home') {
+            $props['settings'] = Setting::all()->pluck('valor', 'chave');
+        }
+
+        return Inertia::render('Admin/PageEdit', $props);
     }
 
     public function updatePage(Request $request, Page $page)
@@ -2592,6 +2521,8 @@ class AdminController extends Controller
             'template' => ['nullable', 'string', 'max:50'],
             'conteudo' => ['nullable', 'string'],
             'data' => ['nullable', 'array'],
+            'home_hero_overlay_color' => ['nullable', 'string', 'max:20'],
+            'home_hero_overlay_opacity' => ['nullable', 'integer', 'min:0', 'max:100'],
             'banner_title' => ['nullable', 'string', 'max:255'],
             'banner_subtitle' => ['nullable', 'string', 'max:500'],
             'banner_image' => ['nullable', 'string', 'max:500'],
@@ -2633,6 +2564,16 @@ class AdminController extends Controller
             $file = $request->file('banner_image_file');
             $path = Storage::disk('public')->putFile("pages/{$page->id}", $file);
             $page->update(['banner_image' => url('/storage/' . $path)]);
+        }
+
+        if ($page->slug === 'home') {
+            if (array_key_exists('home_hero_overlay_color', $validated)) {
+                Setting::updateOrCreate(['chave' => 'home_hero_overlay_color'], ['valor' => (string) ($validated['home_hero_overlay_color'] ?? '')]);
+            }
+
+            if (array_key_exists('home_hero_overlay_opacity', $validated)) {
+                Setting::updateOrCreate(['chave' => 'home_hero_overlay_opacity'], ['valor' => (string) ($validated['home_hero_overlay_opacity'] ?? '')]);
+            }
         }
 
         $this->syncMenuItemForPage($page);
@@ -2951,7 +2892,6 @@ class AdminController extends Controller
             'properties',
             'business_types',
             'pages',
-            'appearance',
             'leads',
             'settings',
             'instagram',
