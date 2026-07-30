@@ -39,13 +39,56 @@
         </div>
 
         <div class="md:col-span-4">
-          <label class="block text-gray-700 mb-2 text-sm font-medium">Tipos de imóvel vinculados</label>
-          <select v-model="createForm.property_type_ids" multiple class="w-full min-h-40 border border-gray-300 rounded-lg px-4 py-3 bg-white">
-            <option v-for="type in propertyTypes" :key="type.id" :value="type.id">
-              {{ formatPropertyType(type) }}
-            </option>
-          </select>
-          <div class="mt-2 text-xs text-gray-500">Segure Ctrl/Cmd para selecionar mais de um tipo.</div>
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-4">
+            <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <label class="block text-slate-800 text-sm font-semibold">Vínculos</label>
+                <p class="mt-1 text-xs text-slate-500">Escolha uma ou mais categorias de imóveis para agrupar nesta Categoria Especial.</p>
+              </div>
+              <button
+                type="button"
+                class="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                @click="toggleCreatePicker"
+              >
+                <span>{{ showCreatePicker ? 'Fechar seletor' : 'Adicionar Categoria' }}</span>
+              </button>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+              <div v-if="selectedCreateTypes.length > 0" class="flex flex-wrap gap-2">
+                <span
+                  v-for="type in selectedCreateTypes"
+                  :key="type.id"
+                  class="inline-flex items-center gap-2 rounded-full bg-slate-100 border border-slate-200 px-3 py-1.5 text-sm text-slate-700"
+                >
+                  <span>{{ formatPropertyType(type) }}</span>
+                  <button type="button" class="text-slate-400 hover:text-red-600" @click="removeCreateType(type.id)">×</button>
+                </span>
+              </div>
+              <div v-else class="text-sm text-slate-500">Nenhum vínculo adicionado ainda.</div>
+
+              <transition name="fade">
+                <div v-if="showCreatePicker" class="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                  <div class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Selecione uma ou mais categorias</div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                    <button
+                      v-for="type in availableCreateTypes"
+                      :key="type.id"
+                      type="button"
+                      class="text-left rounded-lg border px-3 py-2 text-sm transition"
+                      :class="selectedCreateIds.includes(type.id) ? 'border-slate-900 bg-slate-900 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'"
+                      @click="toggleCreateType(type.id)"
+                    >
+                      {{ formatPropertyType(type) }}
+                    </button>
+                    <div v-if="availableCreateTypes.length === 0" class="col-span-full text-sm text-slate-500">
+                      Todas as categorias já foram selecionadas.
+                    </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+          </div>
         </div>
 
         <div class="md:col-span-4">
@@ -96,11 +139,56 @@
             <td class="px-6 py-4 text-gray-600 align-top">{{ item.slug }}</td>
             <td class="px-6 py-4 align-top">
               <template v-if="editingId === item.id">
-                <select v-model="editForm.property_type_ids" multiple class="w-full min-h-40 border border-gray-300 rounded-lg px-3 py-2 bg-white">
-                  <option v-for="type in propertyTypes" :key="type.id" :value="type.id">
-                    {{ formatPropertyType(type) }}
-                  </option>
-                </select>
+                <div class="space-y-3">
+                  <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <label class="block text-slate-800 text-sm font-semibold">Vínculos</label>
+                      <p class="mt-1 text-xs text-slate-500">Adicione ou remova categorias vinculadas a esta Categoria Especial.</p>
+                    </div>
+                    <button
+                      type="button"
+                      class="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                      @click="toggleEditPicker(item.id)"
+                    >
+                      {{ openPickerId === item.id ? 'Fechar seletor' : 'Adicionar Categoria' }}
+                    </button>
+                  </div>
+
+                  <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div v-if="selectedEditTypes.length > 0" class="flex flex-wrap gap-2">
+                      <span
+                        v-for="type in selectedEditTypes"
+                        :key="type.id"
+                        class="inline-flex items-center gap-2 rounded-full bg-slate-100 border border-slate-200 px-3 py-1.5 text-sm text-slate-700"
+                      >
+                        <span>{{ formatPropertyType(type) }}</span>
+                        <button type="button" class="text-slate-400 hover:text-red-600" @click="removeEditType(type.id)">×</button>
+                      </span>
+                    </div>
+                    <div v-else class="text-sm text-slate-500">Nenhum vínculo adicionado ainda.</div>
+
+                    <transition name="fade">
+                      <div v-if="openPickerId === item.id" class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Selecione uma ou mais categorias</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                          <button
+                            v-for="type in availableEditTypes"
+                            :key="type.id"
+                            type="button"
+                            class="text-left rounded-lg border px-3 py-2 text-sm transition"
+                            :class="editForm.property_type_ids.includes(type.id) ? 'border-slate-900 bg-slate-900 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'"
+                            @click="toggleEditType(type.id)"
+                          >
+                            {{ formatPropertyType(type) }}
+                          </button>
+                          <div v-if="availableEditTypes.length === 0" class="col-span-full text-sm text-slate-500">
+                            Todas as categorias já foram selecionadas.
+                          </div>
+                        </div>
+                      </div>
+                    </transition>
+                  </div>
+                </div>
               </template>
               <template v-else>
                 <div class="flex flex-wrap gap-2">
@@ -165,12 +253,15 @@ const props = defineProps({
   items: { type: Array, default: () => [] },
   propertyTypes: { type: Array, default: () => [] },
 });
+const propertyTypes = computed(() => props.propertyTypes || []);
 
 const showCreate = ref(false);
 const createNameRef = ref(null);
 const createCoverPreview = ref('');
 const editingId = ref(null);
 const editCoverPreview = ref('');
+const showCreatePicker = ref(false);
+const openPickerId = ref(null);
 
 const createForm = useForm({
   name: '',
@@ -190,6 +281,13 @@ const editForm = useForm({
   property_type_ids: [],
 });
 
+const selectedCreateIds = computed(() => Array.isArray(createForm.property_type_ids) ? createForm.property_type_ids.map((id) => Number(id)) : []);
+const selectedCreateTypes = computed(() => propertyTypes.value.filter((type) => selectedCreateIds.value.includes(Number(type.id))));
+const availableCreateTypes = computed(() => propertyTypes.value.filter((type) => !selectedCreateIds.value.includes(Number(type.id))));
+const selectedEditIds = computed(() => Array.isArray(editForm.property_type_ids) ? editForm.property_type_ids.map((id) => Number(id)) : []);
+const selectedEditTypes = computed(() => propertyTypes.value.filter((type) => selectedEditIds.value.includes(Number(type.id))));
+const availableEditTypes = computed(() => propertyTypes.value.filter((type) => !selectedEditIds.value.includes(Number(type.id))));
+
 const formatPropertyType = (type) => {
   if (!type) return '-';
   return type.nome_subtipo ? `${type.nome_tipo} / ${type.nome_subtipo}` : type.nome_tipo;
@@ -203,10 +301,28 @@ const toggleCreate = async () => {
   }
 };
 
+const toggleCreatePicker = () => {
+  showCreatePicker.value = !showCreatePicker.value;
+};
+
+const toggleCreateType = (id) => {
+  const value = Number(id);
+  const current = new Set(selectedCreateIds.value);
+  if (current.has(value)) current.delete(value);
+  else current.add(value);
+  createForm.property_type_ids = [...current];
+};
+
+const removeCreateType = (id) => {
+  const value = Number(id);
+  createForm.property_type_ids = selectedCreateIds.value.filter((current) => Number(current) !== value);
+};
+
 const cancelCreate = () => {
   createForm.reset();
   createForm.clearErrors();
   createCoverPreview.value = '';
+  showCreatePicker.value = false;
   showCreate.value = false;
 };
 
@@ -257,6 +373,7 @@ const startEdit = (item) => {
   editForm.reset();
   editForm.clearErrors();
   editCoverPreview.value = item.cover_url || '';
+  openPickerId.value = null;
 };
 
 const cancelEdit = () => {
@@ -264,6 +381,24 @@ const cancelEdit = () => {
   editForm.reset();
   editForm.clearErrors();
   editCoverPreview.value = '';
+  openPickerId.value = null;
+};
+
+const toggleEditPicker = (id) => {
+  openPickerId.value = openPickerId.value === id ? null : id;
+};
+
+const toggleEditType = (id) => {
+  const value = Number(id);
+  const current = new Set(selectedEditIds.value);
+  if (current.has(value)) current.delete(value);
+  else current.add(value);
+  editForm.property_type_ids = [...current];
+};
+
+const removeEditType = (id) => {
+  const value = Number(id);
+  editForm.property_type_ids = selectedEditIds.value.filter((current) => Number(current) !== value);
 };
 
 const saveEdit = () => {
