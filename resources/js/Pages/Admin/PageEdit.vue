@@ -144,205 +144,132 @@
           </div>
 
           <div v-if="isAbout" class="border-t border-gray-200 pt-6">
-            <h4 class="text-base font-semibold text-gray-800 mb-4">Quem Somos</h4>
-            <div class="grid grid-cols-1 gap-6">
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Título (linha 1)</label>
-                  <input v-model="form.page_data.hero_title_primary" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
-                </div>
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Título (linha 2)</label>
-                  <input v-model="form.page_data.hero_title_secondary" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
-                </div>
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Subtítulo</label>
-                  <textarea v-model="form.page_data.hero_subtitle" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3"></textarea>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-gray-700 mb-2 text-sm font-medium">Botão (texto)</label>
-                    <input v-model="form.page_data.hero_button_label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
+            <h4 class="text-base font-semibold text-gray-800 mb-4">Sobre Nós</h4>
+
+            <div class="space-y-8">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-5">
+                  <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Hero</div>
+                  <input v-model="form.page_data.hero.subtitle" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Subtítulo" />
+                  <input v-model="form.page_data.hero.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título" />
+                  <textarea v-model="form.page_data.hero.text" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto"></textarea>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input v-model="form.page_data.hero.button_label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto do botão" />
+                    <input v-model="form.page_data.hero.button_url" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Link do botão" />
                   </div>
-                  <div>
-                    <label class="block text-gray-700 mb-2 text-sm font-medium">Botão (link)</label>
-                    <input v-model="form.page_data.hero_button_url" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Imagem de fundo (upload)</label>
                   <input ref="aboutHeroBgInputRef" type="file" accept="image/*" class="hidden" @change="onAboutHeroBgSelected" />
                   <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="aboutHeroBgInputRef?.click()">
-                    <p class="text-gray-600">Clique para enviar</p>
+                    <p class="text-gray-600">Imagem do Hero</p>
                   </div>
-                  <div v-if="aboutHeroBgPreview" class="mt-3">
-                    <img :src="aboutHeroBgPreview" class="w-full h-40 object-cover rounded-lg border border-gray-200" />
-                    <button type="button" class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium" @click="clearAboutHeroBg">Remover imagem</button>
+                  <img v-if="aboutHeroBgPreview" :src="aboutHeroBgPreview" class="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                </div>
+
+                <div class="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-5">
+                  <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Nossa História</div>
+                  <input v-model="form.page_data.history.subtitle" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Subtítulo" />
+                  <input v-model="form.page_data.history.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título" />
+                  <textarea v-model="form.page_data.history.text" rows="7" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto"></textarea>
+                  <input ref="aboutEssenceImgInputRef" type="file" accept="image/*" class="hidden" @change="onAboutEssenceImgSelected" />
+                  <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="aboutEssenceImgInputRef?.click()">
+                    <p class="text-gray-600">Imagem da História</p>
+                  </div>
+                  <img v-if="aboutEssenceImgPreview" :src="aboutEssenceImgPreview" class="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-gray-200 bg-gray-50 p-5">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                  <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Números</div>
+                  <button type="button" class="text-sm text-blue-700 hover:text-blue-900 font-medium" @click="addAboutNumber">Adicionar número</button>
+                </div>
+                <div class="space-y-4">
+                  <div v-for="(item, idx) in form.page_data.numbers" :key="idx" class="rounded-lg border border-gray-200 bg-white p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <input v-model="item.number" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Número" />
+                      <input v-model="item.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3 md:col-span-1" placeholder="Título" />
+                      <input v-model="item.icon" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ícone (opcional)" />
+                    </div>
+                    <div class="mt-3 text-right">
+                      <button type="button" class="text-sm text-red-600 hover:text-red-800 font-medium" @click="removeAboutNumber(idx)">Remover</button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Estatísticas</label>
-                  <div class="grid grid-cols-2 gap-4">
-                  <div v-for="(s, idx) in form.page_data.stats" :key="idx">
-                      <input v-model="s.value" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Valor" />
-                      <input v-model="s.label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3 mt-2" placeholder="Label" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Essência</label>
-                  <div class="space-y-3">
-                    <input v-model="form.page_data.essence.kicker" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Kicker" />
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input v-model="form.page_data.essence.title_primary" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título 1" />
-                      <input v-model="form.page_data.essence.title_highlight" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título 2" />
-                    </div>
-                    <textarea v-model="form.page_data.essence.text_1" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto 1"></textarea>
-                    <textarea v-model="form.page_data.essence.text_2" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto 2"></textarea>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <input v-model="form.page_data.essence.bullets[0]" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Bullet 1" />
-                      <input v-model="form.page_data.essence.bullets[1]" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Bullet 2" />
-                      <input v-model="form.page_data.essence.bullets[2]" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Bullet 3" />
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input v-model="form.page_data.essence.badge_value" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Badge valor" />
-                      <input v-model="form.page_data.essence.badge_label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Badge label" />
-                    </div>
-                    <div>
-                      <label class="block text-gray-700 mb-2 text-sm font-medium">Imagem da essência (upload)</label>
-                      <input ref="aboutEssenceImgInputRef" type="file" accept="image/*" class="hidden" @change="onAboutEssenceImgSelected" />
-                      <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="aboutEssenceImgInputRef?.click()">
-                        <p class="text-gray-600">Clique para enviar</p>
-                      </div>
-                      <div v-if="aboutEssenceImgPreview" class="mt-3">
-                        <img :src="aboutEssenceImgPreview" class="w-full h-40 object-cover rounded-lg border border-gray-200" />
-                        <button type="button" class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium" @click="clearAboutEssenceImg">Remover imagem</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Nosso Time</label>
-                  <div class="space-y-3">
-                    <input v-model="form.page_data.team.kicker" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Kicker" />
-                    <input v-model="form.page_data.team.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título" />
-                    <input v-model="form.page_data.team.subtitle" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Subtítulo" />
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div class="space-y-2">
-                        <input v-model="form.page_data.team.members[0].name" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Nome (1)" />
-                        <input v-model="form.page_data.team.members[0].role" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Cargo (1)" />
-                        <input ref="team1InputRef" type="file" accept="image/*" class="hidden" @change="onTeam1Selected" />
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition cursor-pointer" @click="team1InputRef?.click()">
-                          <p class="text-gray-600 text-sm">Foto (upload)</p>
-                        </div>
-                        <img v-if="team1Preview" :src="team1Preview" class="w-full h-28 object-cover rounded-lg border border-gray-200" />
-                        <button v-if="team1Preview" type="button" class="text-sm text-red-600 hover:text-red-800 font-medium" @click="clearTeam1">Remover foto</button>
-                      </div>
-                      <div class="space-y-2">
-                        <input v-model="form.page_data.team.members[1].name" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Nome (2)" />
-                        <input v-model="form.page_data.team.members[1].role" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Cargo (2)" />
-                        <input ref="team2InputRef" type="file" accept="image/*" class="hidden" @change="onTeam2Selected" />
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition cursor-pointer" @click="team2InputRef?.click()">
-                          <p class="text-gray-600 text-sm">Foto (upload)</p>
-                        </div>
-                        <img v-if="team2Preview" :src="team2Preview" class="w-full h-28 object-cover rounded-lg border border-gray-200" />
-                        <button v-if="team2Preview" type="button" class="text-sm text-red-600 hover:text-red-800 font-medium" @click="clearTeam2">Remover foto</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Citação</label>
-                  <div class="space-y-3">
-                    <textarea v-model="form.page_data.quote.text" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto da citação"></textarea>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input v-model="form.page_data.quote.author" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Autor" />
-                      <input v-model="form.page_data.quote.author_role" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Cargo (opcional)" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Nossos Pilares (4)</label>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-5">
+                  <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Especialista</div>
+                  <input v-model="form.page_data.specialist.subtitle" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Pequeno título" />
+                  <input v-model="form.page_data.specialist.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título principal" />
+                  <textarea v-model="form.page_data.specialist.text" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto"></textarea>
+                  <input v-model="form.page_data.specialist.name" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Nome" />
+                  <input v-model="form.page_data.specialist.role" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Cargo" />
+                  <textarea v-model="form.page_data.specialist.card_description" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Descrição do card"></textarea>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div v-for="(p, idx) in form.page_data.pillars" :key="idx" class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                      <div class="text-xs text-gray-500 font-semibold mb-2">Pilar {{ idx + 1 }}</div>
-                      <input v-model="p.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título" />
-                      <textarea v-model="p.description" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3 mt-2" placeholder="Descrição"></textarea>
-                      <div class="mt-3">
-                        <div class="text-sm text-gray-700 font-medium mb-2">Ícone (upload)</div>
-                        <input
-                          :ref="(el) => (pillarIconInputRefs[idx] = el)"
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.svg,.webp,image/jpeg,image/png,image/svg+xml,image/webp"
-                          class="hidden"
-                          @change="(e) => onPillarIconSelected(idx, e)"
-                        />
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition cursor-pointer" @click="pickPillarIcon(idx)">
-                          <p class="text-gray-600 text-sm">Enviar</p>
-                        </div>
-                        <div v-if="p.icon" class="mt-2 flex items-center gap-3">
-                          <img :src="p.icon" class="w-12 h-12 object-contain rounded border border-gray-200 bg-white" />
-                          <button type="button" class="text-sm text-red-600 hover:text-red-800 font-medium" @click="clearPillarIcon(idx)">
-                            Remover ícone
-                          </button>
-                        </div>
-                      </div>
+                    <input v-model="form.page_data.specialist.button_label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto do botão" />
+                    <input v-model="form.page_data.specialist.button_url" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Link do botão" />
+                  </div>
+                  <input ref="team1InputRef" type="file" accept="image/*" class="hidden" @change="onTeam1Selected" />
+                  <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="team1InputRef?.click()">
+                    <p class="text-gray-600">Foto do especialista</p>
+                  </div>
+                  <img v-if="team1Preview" :src="team1Preview" class="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                </div>
+
+                <div class="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-5">
+                  <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Região</div>
+                  <input v-model="form.page_data.region.subtitle" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Subtítulo" />
+                  <input v-model="form.page_data.region.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título" />
+                  <textarea v-model="form.page_data.region.text" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto"></textarea>
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                      <span class="text-sm font-medium text-gray-700">Lista de regiões</span>
+                      <button type="button" class="text-sm text-blue-700 hover:text-blue-900 font-medium" @click="addRegionItem">Adicionar região</button>
+                    </div>
+                    <input v-for="(item, idx) in form.page_data.region.regions" :key="idx" v-model="form.page_data.region.regions[idx]" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ex.: Alphaville" />
+                  </div>
+                  <input ref="regionImageInputRef" type="file" accept="image/*" class="hidden" @change="onRegionImageSelected" />
+                  <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="regionImageInputRef?.click()">
+                    <p class="text-gray-600">Imagem da região</p>
+                  </div>
+                  <img v-if="regionImagePreview" :src="regionImagePreview" class="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-gray-200 bg-gray-50 p-5">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                  <div class="text-sm font-semibold uppercase tracking-wide text-gray-500">Valores</div>
+                  <button type="button" class="text-sm text-blue-700 hover:text-blue-900 font-medium" @click="addAboutValue">Adicionar card</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div v-for="(item, idx) in form.page_data.values" :key="idx" class="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+                    <input v-model="item.icon" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ícone" />
+                    <input v-model="item.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título" />
+                    <textarea v-model="item.text" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto"></textarea>
+                    <div class="text-right">
+                      <button type="button" class="text-sm text-red-600 hover:text-red-800 font-medium" @click="removeAboutValue(idx)">Remover</button>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Nosso Território</label>
-                  <div class="space-y-3">
-                    <input v-model="form.page_data.territory.kicker" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Kicker (ex.: Nosso território)" />
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input v-model="form.page_data.territory.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título (parte 1)" />
-                      <input v-model="form.page_data.territory.title_highlight" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título (destaque)" />
-                    </div>
-                    <textarea v-model="form.page_data.territory.text_1" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto 1"></textarea>
-                    <textarea v-model="form.page_data.territory.text_2" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto 2"></textarea>
-                    <div>
-                      <div class="text-sm text-gray-700 font-medium mb-2">Regiões de atuação</div>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input v-for="(r, idx) in form.page_data.territory.regions" :key="idx" v-model="form.page_data.territory.regions[idx]" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ex.: Alphaville" />
-                      </div>
-                      <button type="button" class="mt-2 text-sm text-blue-700 hover:text-blue-900 font-medium" @click="addTerritoryRegion">Adicionar região</button>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <div class="text-sm text-gray-700 font-medium mb-2">Imagem principal (vertical)</div>
-                        <input ref="territoryMainInputRef" type="file" accept="image/*" class="hidden" @change="onTerritoryMainSelected" />
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition cursor-pointer" @click="territoryMainInputRef?.click()">
-                          <p class="text-gray-600 text-sm">Enviar</p>
-                        </div>
-                        <img v-if="territoryMainPreview" :src="territoryMainPreview" class="w-full h-28 object-cover rounded-lg border border-gray-200 mt-2" />
-                      </div>
-                      <div>
-                        <div class="text-sm text-gray-700 font-medium mb-2">Imagem quadrada</div>
-                        <input ref="territorySquareInputRef" type="file" accept="image/*" class="hidden" @change="onTerritorySquareSelected" />
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition cursor-pointer" @click="territorySquareInputRef?.click()">
-                          <p class="text-gray-600 text-sm">Enviar</p>
-                        </div>
-                        <img v-if="territorySquarePreview" :src="territorySquarePreview" class="w-full h-28 object-cover rounded-lg border border-gray-200 mt-2" />
-                      </div>
-                      <div>
-                        <div class="text-sm text-gray-700 font-medium mb-2">Imagem horizontal</div>
-                        <input ref="territoryWideInputRef" type="file" accept="image/*" class="hidden" @change="onTerritoryWideSelected" />
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition cursor-pointer" @click="territoryWideInputRef?.click()">
-                          <p class="text-gray-600 text-sm">Enviar</p>
-                        </div>
-                        <img v-if="territoryWidePreview" :src="territoryWidePreview" class="w-full h-28 object-cover rounded-lg border border-gray-200 mt-2" />
-                      </div>
-                    </div>
+              <div class="rounded-xl border border-gray-200 bg-gray-50 p-5">
+                <div class="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-4">CTA Final</div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <input v-model="form.page_data.cta.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título" />
+                  <input v-model="form.page_data.cta.text" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto" />
+                  <input v-model="form.page_data.cta.button_1_label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto botão 1" />
+                  <input v-model="form.page_data.cta.button_1_url" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Link botão 1" />
+                  <input v-model="form.page_data.cta.button_2_label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto botão 2" />
+                  <input v-model="form.page_data.cta.button_2_url" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Link botão 2" />
+                </div>
+                <div class="mt-4">
+                  <label class="block text-gray-700 mb-2 text-sm font-medium">Imagem de fundo</label>
+                  <input ref="ctaImageInputRef" type="file" accept="image/*" class="hidden" @change="onCtaImageSelected" />
+                  <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="ctaImageInputRef?.click()">
+                    <p class="text-gray-600">Enviar imagem</p>
                   </div>
+                  <img v-if="ctaImagePreview" :src="ctaImagePreview" class="w-full h-40 object-cover rounded-lg border border-gray-200 mt-3" />
                 </div>
               </div>
             </div>
@@ -442,67 +369,111 @@ const bannerTitleLabel = computed(() => (isHome.value ? 'Título principal (H1)'
 const bannerSubtitleLabel = computed(() => (isHome.value ? 'Subtítulo' : 'Subtítulo do banner'));
 
 const aboutDefaults = () => ({
+  hero: {
+    subtitle: '',
+    title: '',
+    text: '',
+    button_label: '',
+    button_url: '',
+    image: '',
+  },
+  history: {
+    subtitle: '',
+    title: '',
+    text: '',
+    image: '',
+  },
+  numbers: [
+    { number: '', title: '', icon: '' },
+    { number: '', title: '', icon: '' },
+    { number: '', title: '', icon: '' },
+    { number: '', title: '', icon: '' },
+  ],
+  specialist: {
+    subtitle: '',
+    title: '',
+    text: '',
+    name: '',
+    role: '',
+    card_description: '',
+    image: '',
+    button_label: '',
+    button_url: '',
+  },
+  region: {
+    subtitle: '',
+    title: '',
+    text: '',
+    image: '',
+    regions: [''],
+  },
+  values: [
+    { icon: '', title: '', text: '' },
+    { icon: '', title: '', text: '' },
+    { icon: '', title: '', text: '' },
+    { icon: '', title: '', text: '' },
+  ],
+  cta: {
+    title: '',
+    text: '',
+    background_image: '',
+    button_1_label: '',
+    button_1_url: '',
+    button_2_label: '',
+    button_2_url: '',
+  },
+  // Legacy fields kept for backwards compatibility with older saved payloads.
   hero_title_primary: '',
   hero_title_secondary: '',
   hero_subtitle: '',
   hero_button_label: '',
   hero_button_url: '',
   hero_background_image: '',
-  stats: [
-    { value: '', label: '' },
-    { value: '', label: '' },
-    { value: '', label: '' },
-    { value: '', label: '' },
-  ],
-  essence: {
-    kicker: '',
-    title_primary: '',
-    title_highlight: '',
-    text_1: '',
-    text_2: '',
-    bullets: ['', '', ''],
-    badge_value: '',
-    badge_label: '',
-    image: '',
-  },
-  team: {
-    kicker: '',
-    title: '',
-    subtitle: '',
-    members: [
-      { name: '', role: '', photo: '' },
-      { name: '', role: '', photo: '' },
-    ],
-  },
-  quote: {
-    text: '',
-    author: '',
-    author_role: '',
-  },
-  pillars: [
-    { title: '', description: '', icon: '' },
-    { title: '', description: '', icon: '' },
-    { title: '', description: '', icon: '' },
-    { title: '', description: '', icon: '' },
-  ],
-  territory: {
-    kicker: '',
-    title: '',
-    title_highlight: '',
-    text_1: '',
-    text_2: '',
-    regions: [''],
-    images: {
-      main: '',
-      square: '',
-      wide: '',
-    },
-  },
+  stats: [],
+  essence: {},
+  team: {},
+  quote: {},
+  pillars: [],
+  territory: {},
 });
 
 const mergeAboutData = (incoming) => {
   const base = aboutDefaults();
   const src = incoming && typeof incoming === 'object' ? incoming : {};
+
+  if (src.hero && typeof src.hero === 'object') {
+    base.hero = { ...base.hero, ...src.hero };
+  }
+  if (src.history && typeof src.history === 'object') {
+    base.history = { ...base.history, ...src.history };
+  }
+  if (Array.isArray(src.numbers)) {
+    base.numbers = base.numbers.map((d, i) => ({ ...d, ...(src.numbers[i] || {}) }));
+  }
+  if (src.specialist && typeof src.specialist === 'object') {
+    base.specialist = { ...base.specialist, ...src.specialist };
+  }
+  if (src.region && typeof src.region === 'object') {
+    base.region = { ...base.region, ...src.region };
+    if (Array.isArray(src.region.regions)) {
+      const regs = src.region.regions.filter(Boolean).slice(0, 12);
+      base.region.regions = regs.length > 0 ? regs : base.region.regions;
+    }
+  }
+  if (Array.isArray(src.values)) {
+    base.values = base.values.map((d, i) => ({ ...d, ...(src.values[i] || {}) }));
+  }
+  if (src.cta && typeof src.cta === 'object') {
+    base.cta = { ...base.cta, ...src.cta };
+  }
+
+  if (src.hero_title_primary || src.hero_title_secondary || src.hero_subtitle || src.hero_button_label || src.hero_button_url || src.hero_background_image) {
+    base.hero.title = legacyText(src.hero_title_primary, src.hero_title_secondary) || base.hero.title;
+    base.hero.subtitle = src.hero_subtitle ?? base.hero.subtitle;
+    base.hero.button_label = src.hero_button_label ?? base.hero.button_label;
+    base.hero.button_url = src.hero_button_url ?? base.hero.button_url;
+    base.hero.image = src.hero_background_image ?? base.hero.image;
+  }
 
   base.hero_title_primary = src.hero_title_primary ?? base.hero_title_primary;
   base.hero_title_secondary = src.hero_title_secondary ?? base.hero_title_secondary;
@@ -513,6 +484,7 @@ const mergeAboutData = (incoming) => {
 
   if (Array.isArray(src.stats)) {
     base.stats = base.stats.map((d, i) => ({ ...d, ...(src.stats[i] || {}) }));
+    base.numbers = base.stats.map((item) => ({ number: item.value || '', title: item.label || '', icon: '' }));
   }
 
   if (src.essence && typeof src.essence === 'object') {
@@ -520,6 +492,10 @@ const mergeAboutData = (incoming) => {
     if (Array.isArray(src.essence.bullets)) {
       base.essence.bullets = base.essence.bullets.map((d, i) => src.essence.bullets[i] ?? d);
     }
+    base.history.subtitle = src.essence.kicker ?? base.history.subtitle;
+    base.history.title = legacyText(src.essence.title_primary, src.essence.title_highlight) || base.history.title;
+    base.history.text = legacyText(src.essence.text_1, src.essence.text_2) || base.history.text;
+    base.history.image = src.essence.image ?? base.history.image;
   }
 
   if (src.team && typeof src.team === 'object') {
@@ -527,6 +503,12 @@ const mergeAboutData = (incoming) => {
     if (Array.isArray(src.team.members)) {
       base.team.members = base.team.members.map((d, i) => ({ ...d, ...(src.team.members[i] || {}) }));
     }
+    base.specialist.subtitle = src.team.kicker ?? base.specialist.subtitle;
+    base.specialist.title = src.team.title ?? base.specialist.title;
+    base.specialist.text = src.team.subtitle ?? base.specialist.text;
+    base.specialist.name = src.team.members?.[0]?.name ?? base.specialist.name;
+    base.specialist.role = src.team.members?.[0]?.role ?? base.specialist.role;
+    base.specialist.image = src.team.members?.[0]?.photo ?? base.specialist.image;
   }
 
   if (src.quote && typeof src.quote === 'object') {
@@ -535,6 +517,7 @@ const mergeAboutData = (incoming) => {
 
   if (Array.isArray(src.pillars)) {
     base.pillars = base.pillars.map((d, i) => ({ ...d, ...(src.pillars[i] || {}) }));
+    base.values = base.pillars.map((item) => ({ icon: item.icon || '', title: item.title || '', text: item.description || '' }));
   }
 
   if (src.territory && typeof src.territory === 'object') {
@@ -542,10 +525,16 @@ const mergeAboutData = (incoming) => {
     if (Array.isArray(src.territory.regions)) {
       const regs = src.territory.regions.filter(Boolean).slice(0, 10);
       base.territory.regions = regs.length > 0 ? regs : base.territory.regions;
+      base.region.regions = base.territory.regions;
     }
     if (src.territory.images && typeof src.territory.images === 'object') {
       base.territory.images = { ...base.territory.images, ...src.territory.images };
     }
+    base.region.subtitle = src.territory.kicker ?? base.region.subtitle;
+    base.region.title = legacyText(src.territory.title, src.territory.title_highlight) || base.region.title;
+    base.region.text = legacyText(src.territory.text_1, src.territory.text_2) || base.region.text;
+    base.region.image = src.territory.images?.wide ?? base.region.image;
+    base.cta.background_image = src.territory.images?.square ?? base.cta.background_image;
   }
 
   return base;
@@ -624,11 +613,11 @@ const onContentMediaSelected = async (e) => {
 };
 
 const aboutHeroBgInputRef = ref(null);
-const aboutHeroBgPreview = ref(form.page_data?.hero_background_image || '');
+const aboutHeroBgPreview = ref(form.page_data?.hero?.image || form.page_data?.hero_background_image || '');
 const aboutEssenceImgInputRef = ref(null);
-const aboutEssenceImgPreview = ref(form.page_data?.essence?.image || '');
+const aboutEssenceImgPreview = ref(form.page_data?.history?.image || form.page_data?.essence?.image || '');
 const team1InputRef = ref(null);
-const team1Preview = ref(form.page_data?.team?.members?.[0]?.photo || '');
+const team1Preview = ref(form.page_data?.specialist?.image || form.page_data?.team?.members?.[0]?.photo || '');
 const team2InputRef = ref(null);
 const team2Preview = ref(form.page_data?.team?.members?.[1]?.photo || '');
 const pillarIconInputRefs = [];
@@ -636,8 +625,10 @@ const territoryMainInputRef = ref(null);
 const territorySquareInputRef = ref(null);
 const territoryWideInputRef = ref(null);
 const territoryMainPreview = ref(form.page_data?.territory?.images?.main || '');
-const territorySquarePreview = ref(form.page_data?.territory?.images?.square || '');
-const territoryWidePreview = ref(form.page_data?.territory?.images?.wide || '');
+const ctaImageInputRef = ref(null);
+const ctaImagePreview = ref(form.page_data?.cta?.background_image || '');
+const regionImageInputRef = ref(null);
+const regionImagePreview = ref(form.page_data?.region?.image || '');
 
 const uploadMedia = async (file) => {
   const body = new FormData();
@@ -654,11 +645,13 @@ const onAboutHeroBgSelected = async (e) => {
   if (!file) return;
   const url = await uploadMedia(file);
   if (url) {
+    form.page_data.hero.image = url;
     form.page_data.hero_background_image = url;
     aboutHeroBgPreview.value = url;
   }
 };
 const clearAboutHeroBg = () => {
+  form.page_data.hero.image = '';
   form.page_data.hero_background_image = '';
   aboutHeroBgPreview.value = '';
 };
@@ -669,11 +662,13 @@ const onAboutEssenceImgSelected = async (e) => {
   if (!file) return;
   const url = await uploadMedia(file);
   if (url) {
+    form.page_data.history.image = url;
     form.page_data.essence.image = url;
     aboutEssenceImgPreview.value = url;
   }
 };
 const clearAboutEssenceImg = () => {
+  form.page_data.history.image = '';
   form.page_data.essence.image = '';
   aboutEssenceImgPreview.value = '';
 };
@@ -684,11 +679,13 @@ const onTeam1Selected = async (e) => {
   if (!file) return;
   const url = await uploadMedia(file);
   if (url) {
+    form.page_data.specialist.image = url;
     form.page_data.team.members[0].photo = url;
     team1Preview.value = url;
   }
 };
 const clearTeam1 = () => {
+  form.page_data.specialist.image = '';
   form.page_data.team.members[0].photo = '';
   team1Preview.value = '';
 };
@@ -733,6 +730,54 @@ const addTerritoryRegion = () => {
   }
   if (form.page_data.territory.regions.length >= 10) return;
   form.page_data.territory.regions.push('');
+};
+
+const addAboutNumber = () => {
+  form.page_data.numbers.push({ number: '', title: '', icon: '' });
+};
+
+const removeAboutNumber = (idx) => {
+  form.page_data.numbers.splice(idx, 1);
+  if (form.page_data.numbers.length === 0) {
+    form.page_data.numbers.push({ number: '', title: '', icon: '' });
+  }
+};
+
+const addAboutValue = () => {
+  form.page_data.values.push({ icon: '', title: '', text: '' });
+};
+
+const removeAboutValue = (idx) => {
+  form.page_data.values.splice(idx, 1);
+  if (form.page_data.values.length === 0) {
+    form.page_data.values.push({ icon: '', title: '', text: '' });
+  }
+};
+
+const addRegionItem = () => {
+  form.page_data.region.regions.push('');
+};
+
+const onRegionImageSelected = async (e) => {
+  const file = e.target.files?.[0] || null;
+  if (regionImageInputRef.value) regionImageInputRef.value.value = '';
+  if (!file) return;
+  const url = await uploadMedia(file);
+  if (url) {
+    form.page_data.region.image = url;
+    regionImagePreview.value = url;
+  }
+};
+
+const onCtaImageSelected = async (e) => {
+  const file = e.target.files?.[0] || null;
+  if (ctaImageInputRef.value) ctaImageInputRef.value.value = '';
+  if (!file) return;
+  const url = await uploadMedia(file);
+  if (url) {
+    form.page_data.cta.background_image = url;
+    ctaImagePreview.value = url;
+  }
 };
 
 const onTerritoryMainSelected = async (e) => {
