@@ -16,7 +16,7 @@
               </svg>
             </a>
             <transition name="fade">
-              <div v-if="item.children?.length && openDesktopMenuKey === item.key" class="absolute left-0 top-full mt-3 min-w-[280px] rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
+              <div v-if="item.children?.length && openDesktopMenuKey === item.key" class="absolute left-0 top-full z-50 min-w-[280px] rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
                 <a v-for="child in item.children" :key="child.key" :href="child.url" class="block rounded-xl px-4 py-3 text-sm font-medium transition" :class="navItemClass(child.url, child.key, true)">
                   {{ child.label }}
                 </a>
