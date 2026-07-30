@@ -6,6 +6,7 @@ use App\Models\MenuItem;
 use App\Models\SpecialCategory;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -75,24 +76,30 @@ class HandleInertiaRequests extends Middleware
                 ->whereNotIn('url', self::HIDDEN_MENU_URLS)
                 ->orderBy('order')
                 ->get(['id', 'label', 'icon', 'url', 'order', 'is_active']),
-            'specialCategories' => fn () => SpecialCategory::query()
-                ->where('is_active', true)
-                ->with('propertyTypes:id,nome_tipo,nome_subtipo')
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'description', 'cover_path', 'is_active', 'sort_order'])
-                ->map(fn (SpecialCategory $category) => [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'slug' => $category->slug,
-                    'description' => $category->description,
-                    'cover_url' => $category->cover_url,
-                    'property_types' => $category->propertyTypes->map(fn ($type) => [
-                        'id' => $type->id,
-                        'nome_tipo' => $type->nome_tipo,
-                        'nome_subtipo' => $type->nome_subtipo,
-                    ])->values(),
-                ]),
+            'specialCategories' => fn () => {
+                $query = SpecialCategory::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name');
+
+                if (Schema::hasTable('property_type_special_category')) {
+                    $query->with('propertyTypes:id,nome_tipo,nome_subtipo');
+                }
+
+                return $query
+                    ->get(['id', 'name', 'slug', 'description', 'cover_path', 'is_active', 'sort_order'])
+                    ->map(fn (SpecialCategory $category) => [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'slug' => $category->slug,
+                        'description' => $category->description,
+                        'cover_url' => $category->cover_url,
+                        'property_types' => $category->relationLoaded('propertyTypes')
+                            ? $category->propertyTypes->map(fn ($type) => [
+                                'id' => $type->id,
+                                'nome_tipo' => $type->nome_tipo,
+                                'nome_subtipo' => $type->nome_subtipo,
+                            ])->values()
+                            : [],
+                    ]);
+            },
             'settings' => fn () => Setting::query()->pluck('valor', 'chave'),
             'paths' => fn () => (function () {
                 $settings = Setting::query()->pluck('valor', 'chave');

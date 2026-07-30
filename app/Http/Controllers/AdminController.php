@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -3252,7 +3253,12 @@ class AdminController extends Controller
 
     public function specialCategories(): Response
     {
-        $items = SpecialCategory::with('propertyTypes')->orderBy('sort_order')->orderBy('name')->get();
+        $query = SpecialCategory::query();
+        if (Schema::hasTable('property_type_special_category')) {
+            $query->with('propertyTypes');
+        }
+
+        $items = $query->orderBy('sort_order')->orderBy('name')->get();
         $propertyTypes = PropertyType::orderBy('nome_tipo')->orderBy('nome_subtipo')->get(['id', 'nome_tipo', 'nome_subtipo']);
 
         return Inertia::render('Admin/SpecialCategories', [
@@ -3289,7 +3295,9 @@ class AdminController extends Controller
             'sort_order' => $validated['sort_order'] ?? 0,
         ]);
 
-        $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
+        if (Schema::hasTable('property_type_special_category')) {
+            $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
+        }
 
         return Redirect::route('admin.special-categories');
     }
@@ -3325,7 +3333,9 @@ class AdminController extends Controller
             'sort_order' => $validated['sort_order'] ?? $specialCategory->sort_order,
         ]);
 
-        $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
+        if (Schema::hasTable('property_type_special_category')) {
+            $specialCategory->propertyTypes()->sync($validated['property_type_ids'] ?? []);
+        }
 
         return Redirect::route('admin.special-categories');
     }
