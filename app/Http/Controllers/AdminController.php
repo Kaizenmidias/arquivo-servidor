@@ -2434,7 +2434,12 @@ class AdminController extends Controller
         $this->syncMenuItemForPage($privacy);
 
         $pages = Page::orderBy('titulo')->get();
-        return Inertia::render('Admin/Pages', ['pages' => $pages]);
+        $settings = Setting::all()->pluck('valor', 'chave');
+
+        return Inertia::render('Admin/Pages', [
+            'pages' => $pages,
+            'settings' => $settings,
+        ]);
     }
 
     public function createPage(): Response

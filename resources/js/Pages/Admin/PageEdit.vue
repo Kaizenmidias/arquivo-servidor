@@ -25,67 +25,7 @@
             <label class="block text-gray-700 mb-2 text-sm font-medium">Conteúdo</label>
             <textarea v-model="form.conteudo" rows="15" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Conteúdo da página..."></textarea>
             <div v-if="form.errors.conteudo" class="text-sm text-red-600 mt-1">{{ form.errors.conteudo }}</div>
-          </div>
-
-          <div class="border-t border-gray-200 pt-6">
-            <h4 class="text-base font-semibold text-gray-800 mb-4">{{ bannerSectionTitle }}</h4>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-gray-700 mb-2 text-sm font-medium">{{ bannerTitleLabel }}</label>
-                <input type="text" v-model="form.banner_title" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título">
-                <div v-if="form.errors.banner_title" class="text-sm text-red-600 mt-1">{{ form.errors.banner_title }}</div>
-              </div>
-              <div>
-                <label class="block text-gray-700 mb-2 text-sm font-medium">{{ bannerSubtitleLabel }}</label>
-                <textarea v-model="form.banner_subtitle" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Subtítulo..."></textarea>
-                <div v-if="form.errors.banner_subtitle" class="text-sm text-red-600 mt-1">{{ form.errors.banner_subtitle }}</div>
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do título</label>
-                  <div class="flex items-center gap-3">
-                    <input type="color" v-model="form.banner_title_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
-                    <span class="text-gray-700 font-mono text-sm">{{ form.banner_title_color }}</span>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do subtítulo</label>
-                  <div class="flex items-center gap-3">
-                    <input type="color" v-model="form.banner_subtitle_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
-                    <span class="text-gray-700 font-mono text-sm">{{ form.banner_subtitle_color }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do overlay</label>
-                  <div class="flex items-center gap-3">
-                    <input type="color" v-model="form.banner_overlay_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
-                    <span class="text-gray-700 font-mono text-sm">{{ form.banner_overlay_color }}</span>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Opacidade do overlay</label>
-                  <input type="number" min="0" max="100" v-model.number="form.banner_overlay_opacity" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="70">
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-gray-700 mb-2 text-sm font-medium">Imagem do banner</label>
-                <input ref="bannerInputRef" type="file" accept="image/*" class="hidden" @change="onBannerSelected">
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="bannerInputRef?.click()">
-                  <p class="text-gray-600">Clique para enviar</p>
-                </div>
-                <div v-if="bannerPreviewUrl" class="mt-4">
-                  <img :src="bannerPreviewUrl" class="w-full h-48 object-cover rounded-xl border border-gray-200">
-                  <button type="button" class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium" @click="clearBanner">Remover imagem</button>
-                </div>
-                <div v-if="form.errors.banner_image_file" class="text-sm text-red-600 mt-1">{{ form.errors.banner_image_file }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="isHome" class="border-t border-gray-200 pt-6">
+          </div>`n          <div v-if="isHome" class="border-t border-gray-200 pt-6">
             <h4 class="text-base font-semibold text-gray-800 mb-4">Overlay do Hero (Home)</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
               <div>

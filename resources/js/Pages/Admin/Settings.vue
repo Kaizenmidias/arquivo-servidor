@@ -57,10 +57,34 @@
       <section class="bg-white rounded-xl shadow border border-gray-200 p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Cores do Site</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <ColorField label="Cor Principal" v-model="form.primary_color" />
-          <ColorField label="Cor Secundária" v-model="form.secondary_color" />
-          <ColorField label="Cor dos Botões" v-model="form.button_color" />
-          <ColorField label="Cor do Rodapé" v-model="form.footer_bg_color" />
+          <div>
+            <label class="block text-gray-700 mb-2 text-sm font-medium">Cor Principal</label>
+            <div class="flex items-center gap-3">
+              <input type="color" v-model="form.primary_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+              <span class="text-gray-700 font-mono text-sm">{{ form.primary_color }}</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-2 text-sm font-medium">Cor Secundária</label>
+            <div class="flex items-center gap-3">
+              <input type="color" v-model="form.secondary_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+              <span class="text-gray-700 font-mono text-sm">{{ form.secondary_color }}</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-2 text-sm font-medium">Cor dos Botões</label>
+            <div class="flex items-center gap-3">
+              <input type="color" v-model="form.button_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+              <span class="text-gray-700 font-mono text-sm">{{ form.button_color }}</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do Rodapé</label>
+            <div class="flex items-center gap-3">
+              <input type="color" v-model="form.footer_bg_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+              <span class="text-gray-700 font-mono text-sm">{{ form.footer_bg_color }}</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -111,55 +135,6 @@
           <div>
             <label class="block text-gray-700 mb-2 text-sm font-medium">Tamanho do Título (px)</label>
             <input v-model.number="form.font_size_title" type="number" min="18" max="72" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
-          </div>
-        </div>
-      </section>
-
-      <section class="bg-white rounded-xl shadow border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Overlay do Hero (Home)</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
-          <ColorField label="Cor do Overlay" v-model="form.home_hero_overlay_color" />
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Opacidade do Overlay (%)</label>
-            <input v-model.number="form.home_hero_overlay_opacity" type="number" min="0" max="100" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
-          </div>
-        </div>
-      </section>
-
-      <section class="bg-white rounded-xl shadow border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Banner da página de imóveis</h3>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="space-y-5">
-            <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Título</label>
-              <input v-model="form.properties_banner_title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
-            </div>
-            <div>
-              <label class="block text-gray-700 mb-2 text-sm font-medium">Subtítulo</label>
-              <input v-model="form.properties_banner_subtitle" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
-              <ColorField label="Cor do Título" v-model="form.properties_banner_title_color" />
-              <ColorField label="Cor do Subtítulo" v-model="form.properties_banner_subtitle_color" />
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
-              <ColorField label="Cor do Overlay" v-model="form.properties_banner_overlay_color" />
-              <div>
-                <label class="block text-gray-700 mb-2 text-sm font-medium">Opacidade do Overlay (%)</label>
-                <input v-model.number="form.properties_banner_overlay_opacity" type="number" min="0" max="100" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Imagem do Banner</label>
-            <input ref="propertiesBannerInput" type="file" accept="image/*" class="hidden" @change="onPropertiesBannerChange" />
-            <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="pickPropertiesBanner">
-              <p class="text-gray-600">Clique para enviar imagem do banner</p>
-              <div v-if="propertiesBannerPreviewUrl" class="mt-4 flex items-center justify-center">
-                <img :src="propertiesBannerPreviewUrl" alt="Banner Imóveis" class="h-32 w-full object-cover rounded-lg" />
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -237,15 +212,10 @@ const form = useForm({
 
 const logoInput = ref(null);
 const faviconInput = ref(null);
-const propertiesBannerInput = ref(null);
-
 const logoPreviewUrl = computed(() => (form.logo_file instanceof File ? URL.createObjectURL(form.logo_file) : (props.settings?.logo_url || '')));
 const faviconPreviewUrl = computed(() => (form.favicon_file instanceof File ? URL.createObjectURL(form.favicon_file) : (props.settings?.favicon_url || '')));
-const propertiesBannerPreviewUrl = computed(() => (form.properties_banner_image_file instanceof File ? URL.createObjectURL(form.properties_banner_image_file) : (props.settings?.properties_banner_image_url || '')));
-
 const pickLogo = () => logoInput.value?.click();
 const pickFavicon = () => faviconInput.value?.click();
-const pickPropertiesBanner = () => propertiesBannerInput.value?.click();
 
 const onLogoChange = (event) => {
   form.logo_file = event?.target?.files?.[0] || null;
@@ -255,31 +225,7 @@ const onFaviconChange = (event) => {
   form.favicon_file = event?.target?.files?.[0] || null;
 };
 
-const onPropertiesBannerChange = (event) => {
-  form.properties_banner_image_file = event?.target?.files?.[0] || null;
-};
-
 const save = () => {
   form.post(`${adminBase.value}/settings`, { forceFormData: true, preserveScroll: true });
-};
-</script>
-
-<script>
-export default {
-  components: {
-    ColorField: {
-      props: ['label', 'modelValue'],
-      emits: ['update:modelValue'],
-      template: `
-        <div>
-          <label class="block text-gray-700 mb-2 text-sm font-medium">{{ label }}</label>
-          <div class="flex gap-3 items-center">
-            <input type="color" :value="modelValue" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer" @input="$emit('update:modelValue', $event.target.value)" />
-            <span class="text-gray-700 font-mono">{{ modelValue }}</span>
-          </div>
-        </div>
-      `,
-    },
-  },
 };
 </script>
