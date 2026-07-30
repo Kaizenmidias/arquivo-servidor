@@ -304,14 +304,14 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   </svg>`
 )}`;
 
-const propertiesBannerImage = computed(() => page.props?.propertiesPage?.banner_image || settings.value.properties_banner_image_url || placeholderImage);
-const propertiesBannerTitle = computed(() => page.props?.propertiesPage?.banner_title || settings.value.properties_banner_title || 'Imóveis');
-const propertiesBannerSubtitle = computed(() => page.props?.propertiesPage?.banner_subtitle || settings.value.properties_banner_subtitle || '');
-const propertiesBannerTitleColor = computed(() => page.props?.propertiesPage?.banner_title_color || settings.value.properties_banner_title_color || '#ffffff');
-const propertiesBannerSubtitleColor = computed(() => page.props?.propertiesPage?.banner_subtitle_color || settings.value.properties_banner_subtitle_color || 'rgba(255,255,255,0.85)');
-const propertiesBannerOverlayColor = computed(() => page.props?.propertiesPage?.banner_overlay_color || settings.value.properties_banner_overlay_color || '#0f172a');
+const propertiesBannerImage = computed(() => inertiaPage.props?.propertiesPage?.banner_image || settings.value.properties_banner_image_url || placeholderImage);
+const propertiesBannerTitle = computed(() => inertiaPage.props?.propertiesPage?.banner_title || settings.value.properties_banner_title || 'Imóveis');
+const propertiesBannerSubtitle = computed(() => inertiaPage.props?.propertiesPage?.banner_subtitle || settings.value.properties_banner_subtitle || '');
+const propertiesBannerTitleColor = computed(() => inertiaPage.props?.propertiesPage?.banner_title_color || settings.value.properties_banner_title_color || '#ffffff');
+const propertiesBannerSubtitleColor = computed(() => inertiaPage.props?.propertiesPage?.banner_subtitle_color || settings.value.properties_banner_subtitle_color || 'rgba(255,255,255,0.85)');
+const propertiesBannerOverlayColor = computed(() => inertiaPage.props?.propertiesPage?.banner_overlay_color || settings.value.properties_banner_overlay_color || '#0f172a');
 const propertiesBannerOverlayOpacity = computed(() => {
-  const raw = Number(page.props?.propertiesPage?.banner_overlay_opacity ?? settings.value.properties_banner_overlay_opacity ?? 70);
+  const raw = Number(inertiaPage.props?.propertiesPage?.banner_overlay_opacity ?? settings.value.properties_banner_overlay_opacity ?? 70);
   return Math.max(0, Math.min(100, raw)) / 100;
 });
 
