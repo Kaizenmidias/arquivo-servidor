@@ -385,6 +385,7 @@ class AdminController extends Controller
             'sale' => $businessCount('sale'),
             'rent' => $businessCount('rent'),
             'season' => $businessCount('season'),
+            'published' => $businessCount('sale') + $businessCount('rent'),
             'exclusive' => $hasExclusive ? Property::query()->where('ativo', true)->where('is_exclusive', true)->count() : 0,
             'inactive' => Property::query()->where('ativo', false)->count(),
             'sale_delta' => $this->percentDelta(
@@ -928,10 +929,22 @@ class AdminController extends Controller
         $propertyTypes = PropertyType::orderBy('nome_tipo')->orderBy('nome_subtipo')->get(['id', 'nome_tipo', 'nome_subtipo']);
         $selectedPropertyTypeId = $request->query('property_type_id');
         $selectedPropertyTypeId = is_null($selectedPropertyTypeId) ? null : (int) $selectedPropertyTypeId;
+        $selectedBusinessType = trim((string) $request->query('business_type', ''));
+        if (!in_array($selectedBusinessType, ['sale', 'rent'], true)) {
+            $selectedBusinessType = '';
+        }
 
         $properties = Property::query()
             ->with(['propertyType', 'businessType', 'condominium', 'photos'])
             ->when($selectedPropertyTypeId, fn ($q) => $q->where('tipo_propriedade_id', $selectedPropertyTypeId))
+            ->when($selectedBusinessType === 'sale', fn ($q) => $q->where(function ($sub): void {
+                $sub->where('aceita_venda', true)
+                    ->orWhere('operacao', 'Venda');
+            }))
+            ->when($selectedBusinessType === 'rent', fn ($q) => $q->where(function ($sub): void {
+                $sub->where('aceita_locacao', true)
+                    ->orWhere('operacao', 'Aluguel');
+            }))
             ->orderByDesc('created_at')
             ->get();
 
@@ -939,6 +952,7 @@ class AdminController extends Controller
             'properties' => $properties,
             'propertyTypes' => $propertyTypes,
             'selectedPropertyTypeId' => $selectedPropertyTypeId,
+            'selectedBusinessType' => $selectedBusinessType,
             'isTrash' => false,
         ]);
     }
@@ -948,10 +962,22 @@ class AdminController extends Controller
         $propertyTypes = PropertyType::orderBy('nome_tipo')->orderBy('nome_subtipo')->get(['id', 'nome_tipo', 'nome_subtipo']);
         $selectedPropertyTypeId = $request->query('property_type_id');
         $selectedPropertyTypeId = is_null($selectedPropertyTypeId) ? null : (int) $selectedPropertyTypeId;
+        $selectedBusinessType = trim((string) $request->query('business_type', ''));
+        if (!in_array($selectedBusinessType, ['sale', 'rent'], true)) {
+            $selectedBusinessType = '';
+        }
 
         $properties = Property::onlyTrashed()
             ->with(['propertyType', 'businessType', 'condominium', 'photos'])
             ->when($selectedPropertyTypeId, fn ($q) => $q->where('tipo_propriedade_id', $selectedPropertyTypeId))
+            ->when($selectedBusinessType === 'sale', fn ($q) => $q->where(function ($sub): void {
+                $sub->where('aceita_venda', true)
+                    ->orWhere('operacao', 'Venda');
+            }))
+            ->when($selectedBusinessType === 'rent', fn ($q) => $q->where(function ($sub): void {
+                $sub->where('aceita_locacao', true)
+                    ->orWhere('operacao', 'Aluguel');
+            }))
             ->orderByDesc('deleted_at')
             ->get();
 
@@ -959,6 +985,7 @@ class AdminController extends Controller
             'properties' => $properties,
             'propertyTypes' => $propertyTypes,
             'selectedPropertyTypeId' => $selectedPropertyTypeId,
+            'selectedBusinessType' => $selectedBusinessType,
             'isTrash' => true,
         ]);
     }

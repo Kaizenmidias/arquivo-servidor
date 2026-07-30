@@ -40,6 +40,15 @@
           </select>
         </div>
 
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Negociação</label>
+          <select v-model="filters.business_type" class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white" @change="applyFilters">
+            <option value="">Todos</option>
+            <option value="sale">Venda</option>
+            <option value="rent">Aluguel</option>
+          </select>
+        </div>
+
         <div class="sm:col-span-1 lg:col-span-3 flex items-center justify-end gap-3">
           <button type="button" class="text-gray-700 hover:text-gray-900 font-semibold" @click="clearFilters">
             Limpar filtros
@@ -195,6 +204,10 @@ const props = defineProps({
     type: [Number, String, null],
     default: null,
   },
+  selectedBusinessType: {
+    type: String,
+    default: '',
+  },
   isTrash: {
     type: Boolean,
     default: false,
@@ -206,6 +219,7 @@ const isTrash = computed(() => !!props.isTrash);
 
 const filters = reactive({
   property_type_id: props.selectedPropertyTypeId ? String(props.selectedPropertyTypeId) : '',
+  business_type: props.selectedBusinessType || '',
 });
 
 const selectedIds = ref([]);
@@ -310,11 +324,19 @@ const duplicate = (id) => {
 
 const applyFilters = () => {
   const path = isTrash.value ? `${adminBase.value}/properties/trash` : `${adminBase.value}/properties`;
-  router.get(path, { property_type_id: filters.property_type_id || undefined }, { preserveState: true, replace: true });
+  router.get(
+    path,
+    {
+      property_type_id: filters.property_type_id || undefined,
+      business_type: filters.business_type || undefined,
+    },
+    { preserveState: true, replace: true }
+  );
 };
 
 const clearFilters = () => {
   filters.property_type_id = '';
+  filters.business_type = '';
   applyFilters();
 };
 

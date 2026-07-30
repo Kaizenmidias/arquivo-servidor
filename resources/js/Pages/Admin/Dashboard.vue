@@ -437,7 +437,7 @@ const kpiCards = computed(() => [
   {
     key: 'properties_active',
     title: 'Imóveis Publicados',
-    value: formatNumber(props.kpis?.properties_active),
+    value: formatNumber(props.propertyStatus?.published),
     subtitle: `Publicados ${props.kpis?.range_label || 'no periodo selecionado'}`,
     delta: props.kpis?.properties_active_delta ?? null,
     icon: 'home',
