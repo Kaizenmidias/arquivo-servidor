@@ -54,10 +54,10 @@
     <section class="bg-white">
       <div class="mx-auto max-w-[1120px] px-4 py-10 lg:py-14">
         <div class="rounded-[25px] bg-[linear-gradient(90deg,#0C1321_0%,#172132_100%)] px-6 py-8 text-white shadow-[0_26px_70px_rgba(15,23,42,0.18)] lg:px-10 lg:py-10">
-          <div class="grid gap-0 sm:grid-cols-2 xl:grid-cols-5">
+          <div class="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
             <article v-for="(item, index) in numbers" :key="index" class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
               <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl overflow-hidden" :style="{ color: 'var(--site-secondary)' }">
-                <img v-if="item.icon && /^https?:|^data:image|^\\//.test(String(item.icon))" :src="item.icon" alt="" class="h-6 w-6 object-contain" />
+                <img v-if="isImageIcon(item.icon)" :src="item.icon" alt="" class="h-6 w-6 object-contain" />
                 <span v-else-if="item.icon">{{ item.icon }}</span>
                 <svg v-else class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 6v6l4 2" />
@@ -114,7 +114,7 @@
           <div class="grid gap-4 sm:grid-cols-2">
             <article v-for="(item, index) in values" :key="index" class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900 overflow-hidden" :style="{ color: 'var(--site-secondary)' }">
-                <img v-if="item.icon && /^https?:|^data:image|^\\//.test(String(item.icon))" :src="item.icon" alt="" class="h-6 w-6 object-contain" />
+                <img v-if="isImageIcon(item.icon)" :src="item.icon" alt="" class="h-6 w-6 object-contain" />
                 <span v-else-if="item.icon">{{ item.icon }}</span>
                 <svg v-else class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 2l3 7h7l-5.5 4.1L18 20l-6-4-6 4 1.5-6.9L2 9h7z" />
@@ -192,6 +192,10 @@ const fallbackImage = (label, width = 1600, height = 900) => `data:image/svg+xml
 
 const normalizeList = (value) => Array.isArray(value) ? value : [];
 const legacyText = (...values) => values.map((value) => String(value || '').trim()).filter(Boolean).join(' ');
+const isImageIcon = (value) => {
+  const icon = String(value || '');
+  return /^https?:\/\//.test(icon) || icon.startsWith('data:image') || icon.startsWith('/');
+};
 
 const heroImage = computed(() => data.value.hero?.image || data.value.hero_image || data.value.hero_background_image || fallbackImage('Sobre Nós'));
 const heroSubtitle = computed(() => data.value.hero?.subtitle || data.value.hero_subtitle || 'Sobre Nós');
@@ -218,7 +222,7 @@ const numbers = computed(() => {
     title: item?.title || item?.label || '',
     icon: item?.icon || '',
   }));
-  return normalized.filter((item) => item.number || item.title).slice(0, 5);
+  return normalized.filter((item) => item.number || item.title).slice(0, 4);
 });
 
 const specialistImage = computed(() => data.value.specialist?.image || data.value.specialist_image || data.value.team?.members?.[0]?.photo || fallbackImage('Especialista'));
