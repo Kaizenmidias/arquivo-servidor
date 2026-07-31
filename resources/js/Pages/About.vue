@@ -114,7 +114,7 @@
           <div class="grid gap-[15px] sm:grid-cols-2">
             <article v-for="(item, index) in values" :key="index" class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900 overflow-hidden" :style="{ color: 'var(--site-secondary)' }">
-                <img v-if="isImageIcon(item.icon)" :src="item.icon" alt="" class="h-6 w-6 object-contain" />
+                <img v-if="isImageIcon(item.icon_image || item.icon)" :src="item.icon_image || item.icon" alt="" class="h-6 w-6 object-contain" />
                 <span v-else-if="item.icon">{{ item.icon }}</span>
                 <svg v-else class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 2l3 7h7l-5.5 4.1L18 20l-6-4-6 4 1.5-6.9L2 9h7z" />
@@ -131,7 +131,8 @@
     <section class="relative overflow-hidden">
       <div class="absolute inset-0">
         <img :src="ctaImage" alt="CTA" class="h-full w-full object-cover" />
-        <div class="absolute inset-0 bg-slate-950/78"></div>
+        <div class="absolute inset-0" :style="{ backgroundColor: ctaOverlayColor, opacity: ctaOverlayOpacity }"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent"></div>
       </div>
       <div class="relative mx-auto max-w-[1400px] px-4 pt-20 pb-[6rem] lg:pt-24 lg:pb-[6rem]">
         <div class="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
@@ -242,12 +243,18 @@ const values = computed(() => {
   const list = normalizeList(data.value.values || data.value.pillars);
   return list.map((item) => ({
     icon: item?.icon || '',
+    icon_image: item?.icon_image || '',
     title: item?.title || '',
     text: item?.text || item?.description || '',
   })).filter((item) => item.title || item.text).slice(0, 4);
 });
 
 const ctaImage = computed(() => data.value.cta?.background_image || data.value.cta_background_image || data.value.hero?.image || heroImage.value);
+const ctaOverlayColor = computed(() => data.value.cta?.overlay_color || '#0f172a');
+const ctaOverlayOpacity = computed(() => {
+  const opacity = Number(data.value.cta?.overlay_opacity ?? 78);
+  return Number.isFinite(opacity) ? Math.min(Math.max(opacity, 0), 100) / 100 : 0.78;
+});
 const ctaTitle = computed(() => data.value.cta?.title || 'Vamos encontrar o imóvel ideal para você?');
 const ctaText = computed(() => data.value.cta?.text || 'Nossa equipe está pronta para apresentar oportunidades exclusivas e conduzir sua busca com precisão.');
 const ctaButton1Label = computed(() => data.value.cta?.button_1_label || 'Ver imóveis disponíveis');

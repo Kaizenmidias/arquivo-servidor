@@ -250,7 +250,12 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div v-for="(item, idx) in form.page_data.values" :key="idx" class="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
-                    <input v-model="item.icon" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ícone" />
+                    <input v-model="item.icon" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ícone antigo" />
+                    <input :ref="(el) => setAboutValueIconInputRef(el, idx)" type="file" accept="image/*" class="hidden" @change="(e) => onAboutValueIconSelected(idx, e)" />
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition cursor-pointer" @click="triggerAboutValueIcon(idx)">
+                      <p class="text-sm text-gray-600">Adicionar imagem do ícone</p>
+                    </div>
+                    <img v-if="item.icon_image" :src="item.icon_image" class="h-14 w-14 rounded-lg border border-gray-200 object-cover" alt="" />
                     <input v-model="item.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Título" />
                     <textarea v-model="item.text" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto"></textarea>
                     <div class="text-right">
@@ -270,13 +275,28 @@
                   <input v-model="form.page_data.cta.button_2_label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Texto botão 2" />
                   <input v-model="form.page_data.cta.button_2_url" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Link botão 2" />
                 </div>
-                <div class="mt-4">
-                  <label class="block text-gray-700 mb-2 text-sm font-medium">Imagem de fundo</label>
+                <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-gray-700 mb-2 text-sm font-medium">Imagem de fundo</label>
                   <input ref="ctaImageInputRef" type="file" accept="image/*" class="hidden" @change="onCtaImageSelected" />
                   <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition cursor-pointer" @click="ctaImageInputRef?.click()">
                     <p class="text-gray-600">Enviar imagem</p>
                   </div>
                   <img v-if="ctaImagePreview" :src="ctaImagePreview" class="w-full h-40 object-cover rounded-lg border border-gray-200 mt-3" />
+                  </div>
+                  <div class="space-y-4">
+                    <div>
+                      <label class="block text-gray-700 mb-2 text-sm font-medium">Cor do Overlay</label>
+                      <div class="flex items-center gap-3">
+                        <input type="color" v-model="form.page_data.cta.overlay_color" class="w-12 h-10 border-2 border-gray-300 rounded cursor-pointer">
+                        <span class="text-gray-700 font-mono text-sm">{{ form.page_data.cta.overlay_color }}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-gray-700 mb-2 text-sm font-medium">Opacidade do Overlay (%)</label>
+                      <input v-model.number="form.page_data.cta.overlay_opacity" type="number" min="0" max="100" class="w-full border border-gray-300 rounded-lg px-4 py-3" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -416,15 +436,17 @@ const aboutDefaults = () => ({
     regions: [''],
   },
   values: [
-    { icon: '', title: '', text: '' },
-    { icon: '', title: '', text: '' },
-    { icon: '', title: '', text: '' },
-    { icon: '', title: '', text: '' },
+    { icon: '', icon_image: '', title: '', text: '' },
+    { icon: '', icon_image: '', title: '', text: '' },
+    { icon: '', icon_image: '', title: '', text: '' },
+    { icon: '', icon_image: '', title: '', text: '' },
   ],
   cta: {
     title: '',
     text: '',
     background_image: '',
+    overlay_color: '#0f172a',
+    overlay_opacity: 78,
     button_1_label: '',
     button_1_url: '',
     button_2_label: '',
@@ -628,6 +650,7 @@ const team1InputRef = ref(null);
 const team1Preview = ref(form.page_data?.specialist?.image || form.page_data?.team?.members?.[0]?.photo || '');
 const ctaImageInputRef = ref(null);
 const ctaImagePreview = ref(form.page_data?.cta?.background_image || '');
+const aboutValueIconInputRefs = ref([]);
 const regionImageInputRef = ref(null);
 const regionImagePreview = ref(form.page_data?.region?.image || '');
 const aboutNumberIconInputRefs = ref([]);
@@ -692,13 +715,13 @@ const removeAboutNumber = (idx) => {
 };
 
 const addAboutValue = () => {
-  form.page_data.values.push({ icon: '', title: '', text: '' });
+  form.page_data.values.push({ icon: '', icon_image: '', title: '', text: '' });
 };
 
 const removeAboutValue = (idx) => {
   form.page_data.values.splice(idx, 1);
   if (form.page_data.values.length === 0) {
-    form.page_data.values.push({ icon: '', title: '', text: '' });
+    form.page_data.values.push({ icon: '', icon_image: '', title: '', text: '' });
   }
 };
 
@@ -725,6 +748,28 @@ const onCtaImageSelected = async (e) => {
   if (url) {
     form.page_data.cta.background_image = url;
     ctaImagePreview.value = url;
+  }
+};
+
+const setAboutValueIconInputRef = (el, idx) => {
+  if (el) {
+    aboutValueIconInputRefs.value[idx] = el;
+  }
+};
+
+const triggerAboutValueIcon = (idx) => {
+  aboutValueIconInputRefs.value[idx]?.click();
+};
+
+const onAboutValueIconSelected = async (idx, e) => {
+  const file = e.target.files?.[0] || null;
+  const input = aboutValueIconInputRefs.value[idx];
+  if (input) input.value = '';
+  if (!file) return;
+  const url = await uploadMedia(file);
+  if (url && form.page_data.values[idx]) {
+    form.page_data.values[idx].icon_image = url;
+    form.page_data.values[idx].icon = '';
   }
 };
 
