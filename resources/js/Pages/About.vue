@@ -54,10 +54,10 @@
     <section class="bg-white">
       <div class="mx-auto max-w-[1120px] px-4 py-10 lg:py-14">
         <div class="rounded-[25px] bg-[linear-gradient(90deg,#0C1321_0%,#172132_100%)] px-6 py-8 text-white shadow-[0_26px_70px_rgba(15,23,42,0.18)] lg:px-10 lg:py-10">
-          <div class="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
+              <div class="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
             <article v-for="(item, index) in numbers" :key="index" class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
               <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl overflow-hidden" :style="{ color: 'var(--site-secondary)' }">
-                <img v-if="isImageIcon(item.icon)" :src="item.icon" alt="" class="h-6 w-6 object-contain" />
+                <img v-if="isImageIcon(item.icon_image || item.icon)" :src="item.icon_image || item.icon" alt="" class="h-6 w-6 object-contain" />
                 <span v-else-if="item.icon">{{ item.icon }}</span>
                 <svg v-else class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 6v6l4 2" />
@@ -104,14 +104,14 @@
     <section class="bg-[#f7f4ef]">
       <div class="mx-auto max-w-[1200px] px-4 py-20 lg:py-24">
         <div class="grid items-start gap-10 lg:grid-cols-[0.85fr_1.15fr]">
-          <div class="max-w-xl">
+          <div class="max-w-xl lg:pr-5">
             <div class="text-xs font-semibold uppercase tracking-[0.24em]" :style="{ color: 'var(--site-secondary)' }">{{ valuesSubtitle }}</div>
-            <h2 class="mt-4 text-4xl font-semibold leading-tight text-slate-900 md:text-5xl">
+            <h2 class="mt-4 text-4xl font-semibold leading-tight text-slate-900 md:text-[54px]">
               {{ valuesTitle }}
             </h2>
           </div>
 
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div class="grid gap-[15px] sm:grid-cols-2">
             <article v-for="(item, index) in values" :key="index" class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900 overflow-hidden" :style="{ color: 'var(--site-secondary)' }">
                 <img v-if="isImageIcon(item.icon)" :src="item.icon" alt="" class="h-6 w-6 object-contain" />
@@ -133,7 +133,7 @@
         <img :src="ctaImage" alt="CTA" class="h-full w-full object-cover" />
         <div class="absolute inset-0 bg-slate-950/78"></div>
       </div>
-      <div class="relative mx-auto max-w-[1400px] px-4 pt-20 pb-0 lg:pt-24 lg:pb-0">
+      <div class="relative mx-auto max-w-[1400px] px-4 pt-20 pb-[6rem] lg:pt-24 lg:pb-[6rem]">
         <div class="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div class="max-w-2xl text-white">
             <h2 class="text-4xl font-semibold leading-tight md:text-5xl">

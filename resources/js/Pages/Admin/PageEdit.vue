@@ -187,7 +187,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <input v-model="item.number" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Número" />
                       <input v-model="item.title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3 md:col-span-1" placeholder="Título" />
-                      <input v-model="item.icon" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ícone (opcional)" />
+                      <div class="space-y-3 md:col-span-1">
+                        <input v-model="item.icon" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ícone antigo (opcional)" />
+                        <input :ref="(el) => setAboutNumberIconInputRef(el, idx)" type="file" accept="image/*" class="hidden" @change="(e) => onAboutNumberIconSelected(idx, e)" />
+                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 transition cursor-pointer" @click="triggerAboutNumberIcon(idx)">
+                          <p class="text-sm text-gray-600">Adicionar imagem do ícone</p>
+                        </div>
+                        <img v-if="item.icon_image" :src="item.icon_image" class="h-14 w-14 rounded-lg border border-gray-200 object-cover" alt="" />
+                      </div>
                     </div>
                     <div class="mt-3 text-right">
                       <button type="button" class="text-sm text-red-600 hover:text-red-800 font-medium" @click="removeAboutNumber(idx)">Remover</button>
@@ -385,10 +392,10 @@ const aboutDefaults = () => ({
     image: '',
   },
   numbers: [
-    { number: '', title: '', icon: '' },
-    { number: '', title: '', icon: '' },
-    { number: '', title: '', icon: '' },
-    { number: '', title: '', icon: '' },
+    { number: '', title: '', icon: '', icon_image: '' },
+    { number: '', title: '', icon: '', icon_image: '' },
+    { number: '', title: '', icon: '', icon_image: '' },
+    { number: '', title: '', icon: '', icon_image: '' },
   ],
   specialist: {
     subtitle: '',
@@ -485,7 +492,7 @@ const mergeAboutData = (incoming) => {
 
   if (Array.isArray(src.stats)) {
     base.stats = base.stats.map((d, i) => ({ ...d, ...(src.stats[i] || {}) }));
-    base.numbers = base.stats.map((item) => ({ number: item.value || '', title: item.label || '', icon: '' }));
+    base.numbers = base.stats.map((item) => ({ number: item.value || '', title: item.label || '', icon: '', icon_image: '' }));
   }
 
   if (src.essence && typeof src.essence === 'object') {
@@ -623,6 +630,7 @@ const ctaImageInputRef = ref(null);
 const ctaImagePreview = ref(form.page_data?.cta?.background_image || '');
 const regionImageInputRef = ref(null);
 const regionImagePreview = ref(form.page_data?.region?.image || '');
+const aboutNumberIconInputRefs = ref([]);
 
 const uploadMedia = async (file) => {
   const body = new FormData();
@@ -673,13 +681,13 @@ const clearTeam1 = () => {
 };
 
 const addAboutNumber = () => {
-  form.page_data.numbers.push({ number: '', title: '', icon: '' });
+  form.page_data.numbers.push({ number: '', title: '', icon: '', icon_image: '' });
 };
 
 const removeAboutNumber = (idx) => {
   form.page_data.numbers.splice(idx, 1);
   if (form.page_data.numbers.length === 0) {
-    form.page_data.numbers.push({ number: '', title: '', icon: '' });
+    form.page_data.numbers.push({ number: '', title: '', icon: '', icon_image: '' });
   }
 };
 
@@ -717,6 +725,28 @@ const onCtaImageSelected = async (e) => {
   if (url) {
     form.page_data.cta.background_image = url;
     ctaImagePreview.value = url;
+  }
+};
+
+const setAboutNumberIconInputRef = (el, idx) => {
+  if (el) {
+    aboutNumberIconInputRefs.value[idx] = el;
+  }
+};
+
+const triggerAboutNumberIcon = (idx) => {
+  aboutNumberIconInputRefs.value[idx]?.click();
+};
+
+const onAboutNumberIconSelected = async (idx, e) => {
+  const file = e.target.files?.[0] || null;
+  const input = aboutNumberIconInputRefs.value[idx];
+  if (input) input.value = '';
+  if (!file) return;
+  const url = await uploadMedia(file);
+  if (url && form.page_data.numbers[idx]) {
+    form.page_data.numbers[idx].icon_image = url;
+    form.page_data.numbers[idx].icon = '';
   }
 };
 
