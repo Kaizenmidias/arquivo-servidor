@@ -367,6 +367,7 @@ const showContentMedia = computed(() => showConteudo.value);
 const bannerSectionTitle = computed(() => (isHome.value ? 'Home (Hero)' : 'Banner'));
 const bannerTitleLabel = computed(() => (isHome.value ? 'Título principal (H1)' : 'Título do banner'));
 const bannerSubtitleLabel = computed(() => (isHome.value ? 'Subtítulo' : 'Subtítulo do banner'));
+const legacyText = (...values) => values.map((value) => String(value || '').trim()).filter(Boolean).join(' ');
 
 const aboutDefaults = () => ({
   hero: {
