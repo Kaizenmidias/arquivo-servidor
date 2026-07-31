@@ -618,13 +618,6 @@ const aboutEssenceImgInputRef = ref(null);
 const aboutEssenceImgPreview = ref(form.page_data?.history?.image || form.page_data?.essence?.image || '');
 const team1InputRef = ref(null);
 const team1Preview = ref(form.page_data?.specialist?.image || form.page_data?.team?.members?.[0]?.photo || '');
-const team2InputRef = ref(null);
-const team2Preview = ref(form.page_data?.team?.members?.[1]?.photo || '');
-const pillarIconInputRefs = [];
-const territoryMainInputRef = ref(null);
-const territorySquareInputRef = ref(null);
-const territoryWideInputRef = ref(null);
-const territoryMainPreview = ref(form.page_data?.territory?.images?.main || '');
 const ctaImageInputRef = ref(null);
 const ctaImagePreview = ref(form.page_data?.cta?.background_image || '');
 const regionImageInputRef = ref(null);
@@ -650,12 +643,6 @@ const onAboutHeroBgSelected = async (e) => {
     aboutHeroBgPreview.value = url;
   }
 };
-const clearAboutHeroBg = () => {
-  form.page_data.hero.image = '';
-  form.page_data.hero_background_image = '';
-  aboutHeroBgPreview.value = '';
-};
-
 const onAboutEssenceImgSelected = async (e) => {
   const file = e.target.files?.[0] || null;
   if (aboutEssenceImgInputRef.value) aboutEssenceImgInputRef.value.value = '';
@@ -667,12 +654,6 @@ const onAboutEssenceImgSelected = async (e) => {
     aboutEssenceImgPreview.value = url;
   }
 };
-const clearAboutEssenceImg = () => {
-  form.page_data.history.image = '';
-  form.page_data.essence.image = '';
-  aboutEssenceImgPreview.value = '';
-};
-
 const onTeam1Selected = async (e) => {
   const file = e.target.files?.[0] || null;
   if (team1InputRef.value) team1InputRef.value.value = '';
@@ -688,48 +669,6 @@ const clearTeam1 = () => {
   form.page_data.specialist.image = '';
   form.page_data.team.members[0].photo = '';
   team1Preview.value = '';
-};
-
-const onTeam2Selected = async (e) => {
-  const file = e.target.files?.[0] || null;
-  if (team2InputRef.value) team2InputRef.value.value = '';
-  if (!file) return;
-  const url = await uploadMedia(file);
-  if (url) {
-    form.page_data.team.members[1].photo = url;
-    team2Preview.value = url;
-  }
-};
-const clearTeam2 = () => {
-  form.page_data.team.members[1].photo = '';
-  team2Preview.value = '';
-};
-
-const pickPillarIcon = (idx) => {
-  pillarIconInputRefs[idx]?.click();
-};
-
-const onPillarIconSelected = async (idx, e) => {
-  const file = e?.target?.files?.[0] || null;
-  if (pillarIconInputRefs[idx]) pillarIconInputRefs[idx].value = '';
-  if (!file) return;
-  const url = await uploadMedia(file);
-  if (url) {
-    form.page_data.pillars[idx].icon = url;
-  }
-};
-
-const clearPillarIcon = (idx) => {
-  form.page_data.pillars[idx].icon = '';
-};
-
-const addTerritoryRegion = () => {
-  if (!Array.isArray(form.page_data.territory.regions)) {
-    form.page_data.territory.regions = [''];
-    return;
-  }
-  if (form.page_data.territory.regions.length >= 10) return;
-  form.page_data.territory.regions.push('');
 };
 
 const addAboutNumber = () => {
@@ -777,39 +716,6 @@ const onCtaImageSelected = async (e) => {
   if (url) {
     form.page_data.cta.background_image = url;
     ctaImagePreview.value = url;
-  }
-};
-
-const onTerritoryMainSelected = async (e) => {
-  const file = e.target.files?.[0] || null;
-  if (territoryMainInputRef.value) territoryMainInputRef.value.value = '';
-  if (!file) return;
-  const url = await uploadMedia(file);
-  if (url) {
-    form.page_data.territory.images.main = url;
-    territoryMainPreview.value = url;
-  }
-};
-
-const onTerritorySquareSelected = async (e) => {
-  const file = e.target.files?.[0] || null;
-  if (territorySquareInputRef.value) territorySquareInputRef.value.value = '';
-  if (!file) return;
-  const url = await uploadMedia(file);
-  if (url) {
-    form.page_data.territory.images.square = url;
-    territorySquarePreview.value = url;
-  }
-};
-
-const onTerritoryWideSelected = async (e) => {
-  const file = e.target.files?.[0] || null;
-  if (territoryWideInputRef.value) territoryWideInputRef.value.value = '';
-  if (!file) return;
-  const url = await uploadMedia(file);
-  if (url) {
-    form.page_data.territory.images.wide = url;
-    territoryWidePreview.value = url;
   }
 };
 

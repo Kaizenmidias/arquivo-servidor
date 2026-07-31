@@ -2,13 +2,13 @@
   <Layout>
     <section class="relative overflow-hidden">
       <div class="absolute inset-0">
-        <img :src="heroImage" alt="Sobre nós" class="h-full w-full object-cover" />
-        <div class="absolute inset-0 bg-slate-950/60"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/70 to-transparent"></div>
+        <img :src="heroImage" alt="Sobre nós" class="h-full w-full object-cover object-right" />
+        <div class="absolute inset-0 bg-slate-950/70"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent"></div>
       </div>
 
       <div class="relative mx-auto max-w-[1400px] px-4 py-20 lg:py-28">
-        <div class="grid items-center gap-12 lg:grid-cols-2">
+        <div class="grid items-center lg:grid-cols-[1.05fr_0.95fr]">
           <div class="max-w-2xl text-white">
             <div class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/80">
               {{ heroSubtitle }}
@@ -16,28 +16,24 @@
             <h1 class="mt-6 text-4xl font-semibold leading-tight md:text-5xl lg:text-6xl">
               {{ heroTitle }}
             </h1>
-            <p class="mt-6 max-w-xl text-base leading-8 text-white/78 md:text-lg">
+            <p class="mt-6 max-w-xl text-base leading-8 text-white/80 md:text-lg">
               {{ heroText }}
             </p>
-            <div class="mt-8 flex flex-wrap gap-3">
+            <div class="mt-8">
               <a :href="heroButtonUrl" class="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)] transition hover:opacity-90" :style="{ backgroundColor: 'var(--site-secondary)' }">
                 {{ heroButtonLabel }}
                 <span aria-hidden="true">→</span>
               </a>
             </div>
           </div>
-
-          <div class="relative">
-            <img :src="heroImage" alt="Sobre nós" class="min-h-[360px] w-full rounded-[2rem] object-cover shadow-[0_28px_80px_rgba(15,23,42,0.35)] lg:min-h-[560px]" />
-          </div>
         </div>
       </div>
     </section>
 
     <section class="bg-white">
-      <div class="mx-auto max-w-[1400px] px-4 py-20 lg:py-24">
-        <div class="grid items-center gap-12 lg:grid-cols-2">
-          <div>
+      <div class="mx-auto max-w-[1120px] px-4 py-20 lg:py-24">
+        <div class="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+          <div class="max-w-xl">
             <div class="text-xs font-semibold uppercase tracking-[0.24em]" :style="{ color: 'var(--site-secondary)' }">{{ historySubtitle }}</div>
             <h2 class="mt-4 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
               {{ historyTitle }}
@@ -55,29 +51,31 @@
       </div>
     </section>
 
-    <section class="bg-[#f7f4ef]">
-      <div class="mx-auto max-w-[1400px] px-4 py-20">
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <article v-for="(item, index) in numbers" :key="index" class="rounded-[1.5rem] border border-white/70 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-2xl" :style="{ color: 'var(--site-secondary)' }">
-              <span v-if="item.icon">{{ item.icon }}</span>
-              <svg v-else class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 6v6l4 2" />
-              </svg>
-            </div>
-            <div class="mt-5 text-3xl font-semibold text-slate-900">{{ item.number }}</div>
-            <div class="mt-2 text-sm font-medium text-slate-500">{{ item.title }}</div>
-          </article>
+    <section class="bg-white">
+      <div class="mx-auto max-w-[1120px] px-4 py-10 lg:py-14">
+        <div class="rounded-[25px] bg-[linear-gradient(90deg,#0C1321_0%,#172132_100%)] px-6 py-8 text-white shadow-[0_26px_70px_rgba(15,23,42,0.18)] lg:px-10 lg:py-10">
+          <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <article v-for="(item, index) in numbers" :key="index" class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl" :style="{ color: 'var(--site-secondary)' }">
+                <span v-if="item.icon">{{ item.icon }}</span>
+                <svg v-else class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 6v6l4 2" />
+                </svg>
+              </div>
+              <div class="mt-5 text-3xl font-semibold">{{ item.number }}</div>
+              <div class="mt-2 text-sm font-medium text-white/70">{{ item.title }}</div>
+            </article>
+          </div>
         </div>
       </div>
     </section>
 
     <section class="bg-white">
-      <div class="mx-auto max-w-[1400px] px-4 py-20 lg:py-24">
-        <div class="grid items-center gap-12 lg:grid-cols-2">
+      <div class="mx-auto max-w-[1120px] px-4 py-20 lg:py-24">
+        <div class="grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
           <div class="order-2 lg:order-1 relative">
             <img :src="specialistImage" alt="Especialista" class="w-full rounded-[2rem] object-cover shadow-[0_24px_70px_rgba(15,23,42,0.14)]" />
-            <div class="absolute -bottom-6 left-6 max-w-[320px] rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.10)]">
+            <div class="absolute left-[25px] bottom-[25px] max-w-[320px] rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.10)]">
               <div class="text-lg font-semibold text-slate-900">{{ specialistName }}</div>
               <div class="mt-1 text-sm font-medium" :style="{ color: 'var(--site-secondary)' }">{{ specialistRole }}</div>
               <p class="mt-3 text-sm leading-7 text-slate-600">{{ specialistCardText }}</p>
@@ -103,44 +101,27 @@
     </section>
 
     <section class="bg-[#f7f4ef]">
-      <div class="mx-auto max-w-[1400px] px-4 py-20 lg:py-24">
-        <div class="grid items-center gap-12 lg:grid-cols-2">
-          <div>
-            <div class="text-xs font-semibold uppercase tracking-[0.24em]" :style="{ color: 'var(--site-secondary)' }">{{ regionSubtitle }}</div>
+      <div class="mx-auto max-w-[1200px] px-4 py-20 lg:py-24">
+        <div class="grid items-start gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+          <div class="max-w-xl">
+            <div class="text-xs font-semibold uppercase tracking-[0.24em]" :style="{ color: 'var(--site-secondary)' }">{{ valuesSubtitle }}</div>
             <h2 class="mt-4 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
-              {{ regionTitle }}
+              {{ valuesTitle }}
             </h2>
-            <div class="mt-6 space-y-4 text-base leading-8 text-slate-600 md:text-[17px]">
-              <p v-for="(paragraph, index) in regionParagraphs" :key="index">
-                {{ paragraph }}
-              </p>
-            </div>
-            <div v-if="regions.length" class="mt-8 flex flex-wrap gap-3">
-              <span v-for="region in regions" :key="region" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">
-                {{ region }}
-              </span>
-            </div>
           </div>
-          <div>
-            <img :src="regionImage" alt="Nossa região" class="w-full rounded-[2rem] object-cover shadow-[0_24px_70px_rgba(15,23,42,0.12)]" />
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <section class="bg-white">
-      <div class="mx-auto max-w-[1400px] px-4 py-20 lg:py-24">
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <article v-for="(item, index) in values" :key="index" class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900" :style="{ color: 'var(--site-secondary)' }">
-              <span v-if="item.icon">{{ item.icon }}</span>
-              <svg v-else class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 2l3 7h7l-5.5 4.1L18 20l-6-4-6 4 1.5-6.9L2 9h7z" />
-              </svg>
-            </div>
-            <h3 class="mt-5 text-lg font-semibold text-slate-900">{{ item.title }}</h3>
-            <p class="mt-3 text-sm leading-7 text-slate-600">{{ item.text }}</p>
-          </article>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <article v-for="(item, index) in values" :key="index" class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900" :style="{ color: 'var(--site-secondary)' }">
+                <span v-if="item.icon">{{ item.icon }}</span>
+                <svg v-else class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 2l3 7h7l-5.5 4.1L18 20l-6-4-6 4 1.5-6.9L2 9h7z" />
+                </svg>
+              </div>
+              <h3 class="mt-5 text-lg font-semibold text-slate-900">{{ item.title }}</h3>
+              <p class="mt-3 text-sm leading-7 text-slate-600">{{ item.text }}</p>
+            </article>
+          </div>
         </div>
       </div>
     </section>
@@ -153,7 +134,7 @@
       <div class="relative mx-auto max-w-[1400px] px-4 py-20 lg:py-24">
         <div class="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div class="max-w-2xl text-white">
-            <h2 class="text-3xl font-semibold leading-tight md:text-4xl">
+            <h2 class="text-4xl font-semibold leading-tight md:text-5xl">
               {{ ctaTitle }}
             </h2>
             <p class="mt-5 max-w-xl text-base leading-8 text-white/78 md:text-lg">
@@ -161,14 +142,16 @@
             </p>
           </div>
           <div class="flex flex-col gap-3 sm:flex-row lg:justify-end">
-            <a :href="ctaButton1Url" class="inline-flex items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold text-slate-900 transition hover:opacity-95" :style="{ backgroundColor: 'var(--site-secondary)' }">
+            <a :href="ctaButton1Url" class="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-slate-900 transition hover:opacity-95" :style="{ backgroundColor: 'var(--site-secondary)' }">
               {{ ctaButton1Label }}
+              <span aria-hidden="true">→</span>
             </a>
-            <a :href="ctaButton2Url" class="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10">
+            <a :href="ctaButton2Url" class="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10">
+              <svg class="h-4 w-4" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+                <path d="M19.11 17.4c-.27-.13-1.6-.79-1.85-.89-.25-.09-.43-.13-.61.13-.18.27-.7.89-.86 1.07-.16.18-.31.2-.58.07-.27-.13-1.14-.42-2.17-1.33-.8-.71-1.34-1.58-1.5-1.85-.16-.27-.02-.42.12-.55.12-.12.27-.31.4-.47.13-.16.18-.27.27-.45.09-.18.04-.34-.02-.47-.07-.13-.61-1.47-.84-2.01-.22-.53-.45-.46-.61-.46h-.52c-.18 0-.47.07-.72.34-.25.27-.97.95-.97 2.3 0 1.35.99 2.65 1.13 2.83.13.18 1.95 2.98 4.73 4.18.66.29 1.17.46 1.57.59.66.21 1.25.18 1.72.11.53-.08 1.6-.66 1.82-1.3.22-.64.22-1.19.16-1.3-.07-.11-.25-.18-.52-.31z" />
+                <path d="M16.04 3C9.39 3 4 8.35 4 14.95c0 2.1.55 4.14 1.6 5.94L4 29l8.27-1.53c1.75.95 3.73 1.45 5.76 1.45h.01C24.68 28.92 30 23.6 30 16.96 30 10.35 23.75 3 16.04 3zm.01 23.65h-.01c-1.83 0-3.62-.49-5.17-1.42l-.37-.22-4.91.91.93-4.79-.24-.39a9.63 9.63 0 0 1-1.49-5.09c0-5.35 4.38-9.7 9.76-9.7 5.18 0 9.73 4.48 9.73 9.7 0 5.35-4.38 9.7-9.73 9.7z" />
+              </svg>
               {{ ctaButton2Label }}
-            </a>
-            <a href="/admin/pages/2" class="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10">
-              Dashboard
             </a>
           </div>
         </div>
@@ -190,7 +173,6 @@ const props = defineProps({
 });
 
 const inertiaPage = usePage();
-const settings = computed(() => inertiaPage.props.settings || {});
 const data = computed(() => props.page?.data || {});
 
 const fallbackImage = (label, width = 1600, height = 900) => `data:image/svg+xml,${encodeURIComponent(
@@ -221,11 +203,10 @@ const historySubtitle = computed(() => data.value.history?.subtitle || data.valu
 const historyTitle = computed(() => data.value.history?.title || data.value.history_title || data.value.essence?.title_primary || 'Mais que imóveis, construímos relações.');
 const historyParagraphs = computed(() => {
   const text = normalizeList(data.value.history?.text ? [data.value.history.text] : data.value.history_text || []);
-  const fallback = normalizeList([
-    data.value.essence?.text_1,
-    data.value.essence?.text_2,
-  ]);
-  return text.length ? text : (fallback.length ? fallback : ['A Meteorikah atua com foco em sofisticação, confiança e atendimento sob medida.']);
+  const fallback = normalizeList([data.value.essence?.text_1, data.value.essence?.text_2]);
+  return (text.length ? text : fallback).slice(0, 2).length ? (text.length ? text : fallback).slice(0, 2) : [
+    'A Meteorikah atua com foco em sofisticação, confiança e atendimento sob medida.',
+  ];
 });
 
 const numbers = computed(() => {
@@ -235,7 +216,7 @@ const numbers = computed(() => {
     title: item?.title || item?.label || '',
     icon: item?.icon || '',
   }));
-  return normalized.filter((item) => item.number || item.title);
+  return normalized.filter((item) => item.number || item.title).slice(0, 5);
 });
 
 const specialistImage = computed(() => data.value.specialist?.image || data.value.specialist_image || data.value.team?.members?.[0]?.photo || fallbackImage('Especialista'));
@@ -248,18 +229,8 @@ const specialistCardText = computed(() => data.value.specialist?.card_descriptio
 const specialistButtonLabel = computed(() => data.value.specialist?.button_label || 'Fale com o especialista');
 const specialistButtonUrl = computed(() => data.value.specialist?.button_url || '/contato');
 
-const regionImage = computed(() => data.value.region?.image || data.value.territory?.images?.wide || data.value.territory_image || fallbackImage('Nossa Região'));
-const regionSubtitle = computed(() => data.value.region?.subtitle || 'Nossa Região');
-const regionTitle = computed(() => data.value.region?.title || 'Atuação estratégica em regiões nobres.');
-const regionParagraphs = computed(() => {
-  const list = normalizeList(data.value.region?.text ? [data.value.region.text] : data.value.region_text || []);
-  const fallback = normalizeList([
-    data.value.territory?.text_1,
-    data.value.territory?.text_2,
-  ]);
-  return list.length ? list : (fallback.length ? fallback : ['Atendemos com atenção especial às áreas mais valorizadas e estratégicas da região.']);
-});
-const regions = computed(() => normalizeList(data.value.region?.regions || data.value.territory?.regions).map((item) => String(item || '').trim()).filter(Boolean));
+const valuesSubtitle = computed(() => data.value.values?.subtitle || data.value.pillars?.subtitle || 'Nossos Valores');
+const valuesTitle = computed(() => data.value.values?.title || data.value.pillars?.title || 'O que nos guia todos os dias.');
 
 const values = computed(() => {
   const list = normalizeList(data.value.values || data.value.pillars);
@@ -267,14 +238,14 @@ const values = computed(() => {
     icon: item?.icon || '',
     title: item?.title || '',
     text: item?.text || item?.description || '',
-  })).filter((item) => item.title || item.text);
+  })).filter((item) => item.title || item.text).slice(0, 4);
 });
 
 const ctaImage = computed(() => data.value.cta?.background_image || data.value.cta_background_image || data.value.hero?.image || heroImage.value);
 const ctaTitle = computed(() => data.value.cta?.title || 'Vamos encontrar o imóvel ideal para você?');
 const ctaText = computed(() => data.value.cta?.text || 'Nossa equipe está pronta para apresentar oportunidades exclusivas e conduzir sua busca com precisão.');
-const ctaButton1Label = computed(() => data.value.cta?.button_1_label || 'Ver imóveis');
+const ctaButton1Label = computed(() => data.value.cta?.button_1_label || 'Ver imóveis disponíveis');
 const ctaButton1Url = computed(() => data.value.cta?.button_1_url || '/imoveis');
-const ctaButton2Label = computed(() => data.value.cta?.button_2_label || 'WhatsApp');
+const ctaButton2Label = computed(() => data.value.cta?.button_2_label || 'Falar no WhatsApp');
 const ctaButton2Url = computed(() => data.value.cta?.button_2_url || '/contato');
 </script>
