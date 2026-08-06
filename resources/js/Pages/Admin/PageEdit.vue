@@ -401,12 +401,14 @@ const props = defineProps({
 const template = computed(() => {
   if (props.page?.slug === 'home') return 'home';
   if (props.page?.slug === 'imoveis') return 'properties';
+  if (props.page?.slug === 'venda-seu-imovel') return 'sell';
   if (props.page?.slug === 'sobre' || props.page?.slug === 'quem-somos') return 'about';
   if (props.page?.slug === 'contato') return 'contact';
   return props.page?.template || 'default';
 });
 const isHome = computed(() => template.value === 'home');
-const isProperties = computed(() => template.value === 'properties');
+const isProperties = computed(() => template.value === 'properties' || template.value === 'sell');
+const isSell = computed(() => template.value === 'sell');
 const isAbout = computed(() => template.value === 'about');
 const showConteudo = computed(() => !isHome.value && !isAbout.value);
 const showContentMedia = computed(() => showConteudo.value);
