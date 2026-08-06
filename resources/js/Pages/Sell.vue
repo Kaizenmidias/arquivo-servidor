@@ -1,21 +1,23 @@
 <template>
   <Layout>
     <!-- Hero -->
-    <section class="relative bg-gradient-to-r from-orange-600 to-orange-700 text-white py-24">
-      <div class="absolute inset-0 opacity-20">
-        <img :src="placeholderImage" alt="" class="w-full h-full object-cover" />
+    <section class="relative overflow-hidden bg-black py-24 text-white lg:py-32">
+      <div class="absolute inset-0">
+        <img :src="placeholderImage" alt="" class="h-full w-full object-cover opacity-45 grayscale" />
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_74%_18%,rgba(255,255,255,0.18),transparent_24%),linear-gradient(90deg,#000_0%,rgba(0,0,0,0.86)_48%,rgba(0,0,0,0.38)_100%)]"></div>
       </div>
-      <div class="container mx-auto px-4 relative z-10 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">Venda Seu Imóvel</h1>
-        <p class="text-xl max-w-2xl mx-auto">Deixe-nos ajudar você a vender seu imóvel rapidamente e pelo melhor preço</p>
+      <div class="relative z-10 mx-auto max-w-[1180px] px-4">
+        <span class="inline-flex border border-white/25 bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/80 backdrop-blur-sm">Avaliação especializada</span>
+        <h1 class="mt-6 max-w-3xl text-5xl font-semibold leading-[0.98] tracking-tight md:text-6xl lg:text-7xl">Venda Seu Imóvel</h1>
+        <p class="mt-6 max-w-2xl text-lg leading-8 text-white/82 md:text-xl">Deixe-nos ajudar você a vender seu imóvel rapidamente e pelo melhor preço</p>
       </div>
     </section>
 
     <!-- Form -->
-    <section class="py-16 bg-gray-50">
-      <div class="container mx-auto px-4">
-        <div class="bg-white rounded-xl shadow-lg p-8 max-w-3xl mx-auto">
-          <h2 class="text-2xl font-bold text-gray-800 mb-8 text-center">Cadastre Seu Imóvel</h2>
+    <section class="bg-[#f7f5f1] py-16 lg:py-20">
+      <div class="mx-auto max-w-[1180px] px-4">
+        <div class="-mt-24 mx-auto max-w-4xl border border-black/10 bg-white p-6 shadow-[0_28px_80px_rgba(0,0,0,0.16)] md:p-10">
+          <h2 class="mb-8 text-center text-3xl font-semibold text-black md:text-4xl">Cadastre Seu Imóvel</h2>
           
           <form @submit.prevent="submitForm" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -88,7 +90,7 @@
               :site-key="recaptchaSiteKey"
               :error="form.errors.recaptcha_token"
             />
-            <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed" :disabled="form.processing">
+            <button type="submit" class="w-full bg-[#173b2f] py-4 px-6 text-sm font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#10291f] disabled:cursor-not-allowed disabled:opacity-60" :disabled="form.processing">
               Enviar
             </button>
           </form>
@@ -108,8 +110,8 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="800" viewBox="0 0 1920 800">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#7c2d12"/>
-        <stop offset="1" stop-color="#ea580c"/>
+        <stop offset="0" stop-color="#000000"/>
+        <stop offset="1" stop-color="#57534e"/>
       </linearGradient>
     </defs>
     <rect width="1920" height="800" fill="url(#g)"/>

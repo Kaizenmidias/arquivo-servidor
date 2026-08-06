@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --site-primary: #1e3a8a;
-  --site-secondary: #f97316;
-  --site-button: #f97316;
-  --site-footer-bg: #111827;
-  --site-font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --site-primary: #000000;
+  --site-secondary: #173b2f;
+  --site-button: #173b2f;
+  --site-footer-bg: #000000;
+  --site-font-family: 'Cormorant Garamond', Georgia, serif;
   --site-font-size-text: 16px;
   --site-font-size-title: 40px;
-  --site-home-overlay-color: #0f172a;
+  --site-home-overlay-color: #000000;
   --site-home-overlay-opacity: 0.7;
   --ui-glass-rgb: 60, 66, 79;
   --ui-bg: #f4f6fb;
@@ -37,8 +37,8 @@ html {
 body {
   font-family: var(--site-font-family);
   background:
-    radial-gradient(circle at top, rgba(30, 58, 138, 0.08), transparent 28%),
-    linear-gradient(180deg, #f8fafc 0%, var(--ui-bg) 100%);
+    radial-gradient(circle at top, rgba(0, 0, 0, 0.06), transparent 28%),
+    linear-gradient(180deg, #f7f5f1 0%, #ffffff 100%);
   color: var(--ui-text);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

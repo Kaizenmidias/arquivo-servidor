@@ -34,7 +34,7 @@
       <div class="mx-auto max-w-[1120px] px-4 py-20 lg:py-24">
         <div class="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div class="max-w-xl">
-            <div class="text-xs font-semibold uppercase tracking-[0.24em]" :style="{ color: 'var(--site-secondary)' }">{{ historySubtitle }}</div>
+            <div class="text-xs font-semibold uppercase tracking-[0.24em] text-black/60">{{ historySubtitle }}</div>
             <h2 class="mt-4 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
               {{ historyTitle }}
             </h2>
@@ -53,10 +53,10 @@
 
     <section class="bg-white">
       <div class="mx-auto max-w-[1120px] px-4 py-10 lg:py-14">
-        <div class="rounded-[25px] bg-[linear-gradient(90deg,#0C1321_0%,#172132_100%)] px-6 py-8 text-white shadow-[0_26px_70px_rgba(15,23,42,0.18)] lg:px-10 lg:py-10">
+        <div class="rounded-[25px] bg-[linear-gradient(90deg,#000000_0%,#171717_100%)] px-6 py-8 text-white shadow-[0_26px_70px_rgba(0,0,0,0.18)] lg:px-10 lg:py-10">
               <div class="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
             <article v-for="(item, index) in numbers" :key="index" class="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl overflow-hidden" :style="{ color: 'var(--site-secondary)' }">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl text-white overflow-hidden">
                 <img v-if="isImageIcon(item.icon_image || item.icon)" :src="item.icon_image || item.icon" alt="" class="h-6 w-6 object-contain" />
                 <span v-else-if="item.icon">{{ item.icon }}</span>
                 <svg v-else class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,15 +76,15 @@
         <div class="grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
           <div class="order-2 lg:order-1 relative">
             <img :src="specialistImage" alt="Especialista" class="w-full rounded-[2rem] object-cover shadow-[0_24px_70px_rgba(15,23,42,0.14)]" />
-            <div class="absolute left-[25px] bottom-[25px] max-w-[320px] rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.10)]">
+            <div class="absolute left-[25px] bottom-[25px] max-w-[320px] rounded-[1.5rem] border border-black/10 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.10)]">
               <div class="text-lg font-semibold text-slate-900">{{ specialistName }}</div>
-              <div class="mt-1 text-sm font-medium" :style="{ color: 'var(--site-secondary)' }">{{ specialistRole }}</div>
+              <div class="mt-1 text-sm font-medium text-black/60">{{ specialistRole }}</div>
               <p class="mt-3 text-sm leading-7 text-slate-600">{{ specialistCardText }}</p>
             </div>
           </div>
 
           <div class="order-1 lg:order-2">
-            <div class="text-xs font-semibold uppercase tracking-[0.24em]" :style="{ color: 'var(--site-secondary)' }">{{ specialistSubtitle }}</div>
+            <div class="text-xs font-semibold uppercase tracking-[0.24em] text-black/60">{{ specialistSubtitle }}</div>
             <h2 class="mt-4 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
               {{ specialistTitle }}
             </h2>
@@ -101,11 +101,11 @@
       </div>
     </section>
 
-    <section class="bg-[#f7f4ef]">
+    <section class="bg-[#f7f5f1]">
       <div class="mx-auto max-w-[1200px] px-4 py-20 lg:py-24">
         <div class="grid items-start gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <div class="max-w-xl lg:pr-5">
-            <div class="text-xs font-semibold uppercase tracking-[0.24em]" :style="{ color: 'var(--site-secondary)' }">{{ valuesSubtitle }}</div>
+            <div class="text-xs font-semibold uppercase tracking-[0.24em] text-black/60">{{ valuesSubtitle }}</div>
             <h2 class="mt-4 text-4xl font-semibold leading-tight text-slate-900 md:text-[54px]">
               {{ valuesTitle }}
             </h2>
@@ -113,7 +113,7 @@
 
           <div class="grid gap-[15px] sm:grid-cols-2">
             <article v-for="(item, index) in values" :key="index" class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900 overflow-hidden" :style="{ color: 'var(--site-secondary)' }">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/5 text-black overflow-hidden">
                 <img v-if="isImageIcon(item.icon_image || item.icon)" :src="item.icon_image || item.icon" alt="" class="h-6 w-6 object-contain" />
                 <span v-else-if="item.icon">{{ item.icon }}</span>
                 <svg v-else class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,8 +182,8 @@ const fallbackImage = (label, width = 1600, height = 900) => `data:image/svg+xml
   `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#0f172a"/>
-        <stop offset="1" stop-color="#1e3a8a"/>
+        <stop offset="0" stop-color="#000000"/>
+        <stop offset="1" stop-color="#57534e"/>
       </linearGradient>
     </defs>
     <rect width="${width}" height="${height}" fill="url(#g)"/>
@@ -250,7 +250,7 @@ const values = computed(() => {
 });
 
 const ctaImage = computed(() => data.value.cta?.background_image || data.value.cta_background_image || data.value.hero?.image || heroImage.value);
-const ctaOverlayColor = computed(() => data.value.cta?.overlay_color || '#0f172a');
+const ctaOverlayColor = computed(() => data.value.cta?.overlay_color || '#000000');
 const ctaOverlayOpacity = computed(() => {
   const opacity = Number(data.value.cta?.overlay_opacity ?? 78);
   return Number.isFinite(opacity) ? Math.min(Math.max(opacity, 0), 100) / 100 : 0.78;

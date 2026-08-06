@@ -1,15 +1,16 @@
 <template>
   <Layout>
-    <section class="relative overflow-hidden text-white">
+    <section class="relative overflow-hidden bg-black text-white">
       <div class="absolute inset-0">
         <img :src="propertiesBannerImage" alt="Imóveis" class="w-full h-full object-cover" />
-        <div class="absolute inset-0" :style="{ backgroundColor: propertiesBannerOverlayColor, opacity: propertiesBannerOverlayOpacity }"></div>
+        <div class="absolute inset-0 bg-black/72"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(255,255,255,0.22),transparent_26%),linear-gradient(90deg,#000_0%,rgba(0,0,0,0.82)_44%,rgba(0,0,0,0.35)_100%)]"></div>
       </div>
-      <div class="ui-shell relative py-16 lg:py-20">
+      <div class="ui-shell relative py-20 lg:py-28">
         <div class="max-w-3xl ui-fade-up">
           <span class="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-sm">Curadoria de imóveis</span>
-          <h1 class="mt-4 text-4xl font-bold tracking-tight" :style="{ color: propertiesBannerTitleColor }">{{ propertiesBannerTitle }}</h1>
-          <p v-if="propertiesBannerSubtitle" class="mt-4 max-w-2xl text-base text-white/85 sm:text-lg" :style="{ color: propertiesBannerSubtitleColor }">{{ propertiesBannerSubtitle }}</p>
+          <h1 class="mt-6 text-5xl font-semibold leading-[0.98] tracking-tight text-white md:text-6xl lg:text-7xl">{{ propertiesBannerTitle }}</h1>
+          <p v-if="propertiesBannerSubtitle" class="mt-6 max-w-2xl text-lg leading-8 text-white/82 md:text-xl">{{ propertiesBannerSubtitle }}</p>
         </div>
       </div>
     </section>
@@ -295,8 +296,8 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="600" viewBox="0 0 1600 600">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#0f172a"/>
-        <stop offset="1" stop-color="#1e3a8a"/>
+        <stop offset="0" stop-color="#000000"/>
+        <stop offset="1" stop-color="#57534e"/>
       </linearGradient>
     </defs>
     <rect width="1600" height="600" fill="url(#g)"/>
@@ -309,7 +310,7 @@ const propertiesBannerTitle = computed(() => inertiaPage.props?.propertiesPage?.
 const propertiesBannerSubtitle = computed(() => inertiaPage.props?.propertiesPage?.banner_subtitle || settings.value.properties_banner_subtitle || '');
 const propertiesBannerTitleColor = computed(() => inertiaPage.props?.propertiesPage?.banner_title_color || settings.value.properties_banner_title_color || '#ffffff');
 const propertiesBannerSubtitleColor = computed(() => inertiaPage.props?.propertiesPage?.banner_subtitle_color || settings.value.properties_banner_subtitle_color || 'rgba(255,255,255,0.85)');
-const propertiesBannerOverlayColor = computed(() => inertiaPage.props?.propertiesPage?.banner_overlay_color || settings.value.properties_banner_overlay_color || '#0f172a');
+const propertiesBannerOverlayColor = computed(() => inertiaPage.props?.propertiesPage?.banner_overlay_color || settings.value.properties_banner_overlay_color || '#000000');
 const propertiesBannerOverlayOpacity = computed(() => {
   const raw = Number(inertiaPage.props?.propertiesPage?.banner_overlay_opacity ?? settings.value.properties_banner_overlay_opacity ?? 70);
   return Math.max(0, Math.min(100, raw)) / 100;
