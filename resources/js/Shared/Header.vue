@@ -72,7 +72,7 @@ const specialCategories = computed(() => Array.isArray(page.props.specialCategor
 const logoUrl = computed(() => settings.value.logo_url || '');
 const siteName = computed(() => settings.value.nome_empresa || 'Imobiliária');
 const currentPath = computed(() => normalizeUrl(page.url || '/'));
-const usesTransparentHeader = computed(() => page.component === 'Home' || currentPath.value === '/');
+const usesTransparentHeader = computed(() => page.component !== 'PropertyShow');
 const isSolid = computed(() => !usesTransparentHeader.value || isScrolled.value || isMenuOpen.value);
 
 const primaryLinks = computed(() => [

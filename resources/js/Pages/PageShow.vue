@@ -3,12 +3,12 @@
     <section class="relative overflow-hidden bg-black text-white">
       <div class="absolute inset-0">
         <img :src="bannerImage" :alt="page?.titulo || 'Página'" class="w-full h-full object-cover" />
-        <div class="absolute inset-0 bg-black/72"></div>
+        <div class="absolute inset-0" :style="{ backgroundColor: bannerOverlayColor, opacity: bannerOverlayOpacity }"></div>
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(255,255,255,0.18),transparent_24%),linear-gradient(90deg,#000_0%,rgba(0,0,0,0.86)_48%,rgba(0,0,0,0.38)_100%)]"></div>
       </div>
       <div class="relative mx-auto max-w-[1180px] px-4 py-20 lg:py-28">
-        <h1 class="text-5xl font-semibold leading-[0.98] tracking-tight text-white md:text-6xl lg:text-7xl">{{ bannerTitle }}</h1>
-        <p v-if="bannerSubtitle" class="mt-6 max-w-2xl text-lg leading-8 text-white/82 md:text-xl">{{ bannerSubtitle }}</p>
+        <h1 class="text-5xl font-semibold leading-[0.98] tracking-tight text-white md:text-6xl lg:text-7xl" :style="{ color: bannerTitleColor }">{{ bannerTitle }}</h1>
+        <p v-if="bannerSubtitle" class="mt-6 max-w-2xl text-lg leading-8 md:text-xl" :style="{ color: bannerSubtitleColor }">{{ bannerSubtitle }}</p>
         <div class="mt-8 flex text-sm text-white/70">
           <span><a href="/" class="hover:text-white">Início</a></span>
           <span class="mx-2">/</span>

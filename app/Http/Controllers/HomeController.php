@@ -507,7 +507,41 @@ class HomeController extends Controller
 
     public function sell(): Response
     {
-        return Inertia::render('Sell');
+        $sellPage = Page::firstOrCreate(
+            ['slug' => 'venda-seu-imovel'],
+            [
+                'titulo' => 'Venda Seu Imóvel',
+                'template' => 'sell',
+                'conteudo' => '',
+                'banner_title' => 'Venda seu imóvel com segurança e estratégia.',
+                'banner_subtitle' => 'Conte com um atendimento próximo, ágil e orientado para o melhor resultado.',
+                'banner_title_color' => '#ffffff',
+                'banner_subtitle_color' => '#ffffff',
+                'banner_overlay_color' => '#0f172a',
+                'banner_overlay_opacity' => 72,
+                'ativo' => true,
+            ]
+        );
+
+        if ($sellPage->template !== 'sell') {
+            $sellPage->template = 'sell';
+        }
+        if (empty($sellPage->titulo)) {
+            $sellPage->titulo = 'Venda Seu Imóvel';
+        }
+        if (empty($sellPage->banner_title)) {
+            $sellPage->banner_title = 'Venda seu imóvel com segurança e estratégia.';
+        }
+        if (empty($sellPage->banner_subtitle)) {
+            $sellPage->banner_subtitle = 'Conte com um atendimento próximo, ágil e orientado para o melhor resultado.';
+        }
+        if (!$sellPage->exists || $sellPage->isDirty()) {
+            $sellPage->save();
+        }
+
+        return Inertia::render('Sell', [
+            'page' => $sellPage,
+        ]);
     }
 
     public function sendSell(Request $request)

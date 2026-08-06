@@ -152,8 +152,7 @@ import Header from './Header.vue';
 import Footer from './Footer.vue';
 
 const page = usePage();
-const isHome = computed(() => page.component === 'Home' || page.url === '/');
-const usesOverlayHeader = computed(() => isHome.value);
+const usesOverlayHeader = computed(() => page.component !== 'PropertyShow');
 const settings = computed(() => page.props?.settings || {});
 const whatsappNumber = computed(() => String(settings.value.whatsapp_number || settings.value.whatsapp || '').replace(/\D/g, ''));
 const whatsappMessage = computed(() => String(settings.value.whatsapp_message || 'Olá! Vim do site e tenho interesse em um imóvel').trim());

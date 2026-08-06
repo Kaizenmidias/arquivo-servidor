@@ -3,14 +3,14 @@
     <section class="relative overflow-hidden bg-black text-white">
       <div class="absolute inset-0">
         <img :src="propertiesBannerImage" alt="Imóveis" class="w-full h-full object-cover" />
-        <div class="absolute inset-0 bg-black/72"></div>
+        <div class="absolute inset-0" :style="{ backgroundColor: propertiesBannerOverlayColor, opacity: propertiesBannerOverlayOpacity }"></div>
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(255,255,255,0.22),transparent_26%),linear-gradient(90deg,#000_0%,rgba(0,0,0,0.82)_44%,rgba(0,0,0,0.35)_100%)]"></div>
       </div>
       <div class="ui-shell relative py-20 lg:py-28">
         <div class="max-w-3xl ui-fade-up">
           <span class="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-sm">Curadoria de imóveis</span>
-          <h1 class="mt-6 text-5xl font-semibold leading-[0.98] tracking-tight text-white md:text-6xl lg:text-7xl">{{ propertiesBannerTitle }}</h1>
-          <p v-if="propertiesBannerSubtitle" class="mt-6 max-w-2xl text-lg leading-8 text-white/82 md:text-xl">{{ propertiesBannerSubtitle }}</p>
+          <h1 class="mt-6 text-5xl font-semibold leading-[0.98] tracking-tight text-white md:text-6xl lg:text-7xl" :style="{ color: propertiesBannerTitleColor }">{{ propertiesBannerTitle }}</h1>
+          <p v-if="propertiesBannerSubtitle" class="mt-6 max-w-2xl text-lg leading-8 md:text-xl" :style="{ color: propertiesBannerSubtitleColor }">{{ propertiesBannerSubtitle }}</p>
         </div>
       </div>
     </section>

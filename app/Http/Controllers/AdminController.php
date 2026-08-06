@@ -2227,6 +2227,33 @@ class AdminController extends Controller
         }
         $properties->save();
 
+        $sell = Page::firstOrNew(['slug' => 'venda-seu-imovel']);
+        if (!$sell->exists) {
+            $sell->fill([
+                'titulo' => 'Venda Seu Imóvel',
+                'template' => 'sell',
+                'conteudo' => '',
+                'banner_title' => 'Venda seu imóvel com segurança e estratégia.',
+                'banner_subtitle' => 'Conte com um atendimento próximo, ágil e orientado para o melhor resultado.',
+                'banner_title_color' => '#ffffff',
+                'banner_subtitle_color' => '#ffffff',
+                'banner_overlay_color' => '#0f172a',
+                'banner_overlay_opacity' => 72,
+                'ativo' => true,
+            ]);
+        } else {
+            $sell->template = 'sell';
+            $sell->titulo = $sell->titulo ?: 'Venda Seu Imóvel';
+            if ($sell->banner_title === null || $sell->banner_title === '') {
+                $sell->banner_title = 'Venda seu imóvel com segurança e estratégia.';
+            }
+            if ($sell->banner_subtitle === null || $sell->banner_subtitle === '') {
+                $sell->banner_subtitle = 'Conte com um atendimento próximo, ágil e orientado para o melhor resultado.';
+            }
+        }
+        $sell->save();
+        $this->syncMenuItemForPage($sell);
+
         $about = Page::where('slug', 'quem-somos')->first();
         if (!$about) {
             $legacyAbout = Page::where('slug', 'sobre')->first();
@@ -3074,6 +3101,9 @@ class AdminController extends Controller
         }
         if ($slug === 'imoveis') {
             return '/imoveis';
+        }
+        if ($slug === 'venda-seu-imovel') {
+            return '/venda-seu-imovel';
         }
         if ($slug === 'sobre' || $slug === 'quem-somos') {
             return '/quem-somos';
