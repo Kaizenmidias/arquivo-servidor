@@ -19,7 +19,7 @@
             {{ heroSubtitle }}
           </p>
           <div class="mt-8 flex flex-wrap gap-3">
-            <a href="#formulario" class="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)] transition hover:opacity-90" :style="{ backgroundColor: 'var(--site-primary)' }">
+            <a href="#formulario" class="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)] transition hover:opacity-90" style="background-color: #173b2f; color: #ffffff;">
               {{ heroButtonLabel }}
               <span aria-hidden="true">→</span>
             </a>
@@ -37,10 +37,10 @@
       </div>
     </section>
 
-    <section id="formulario" class="bg-[#f7f5f1] py-16 lg:py-20">
+    <section id="formulario" class="bg-[#f7f5f1] pt-20 pb-16 lg:pt-28 lg:pb-20">
       <div class="mx-auto max-w-[1180px] px-4">
-        <div class="-mt-24 mx-auto max-w-4xl border border-black/10 bg-white p-6 shadow-[0_28px_80px_rgba(0,0,0,0.16)] md:p-10">
-          <h2 class="mb-8 text-center text-2xl font-semibold text-gray-800">Cadastre Seu Imóvel</h2>
+        <div class="mx-auto max-w-4xl border border-black/10 bg-white p-6 shadow-[0_28px_80px_rgba(0,0,0,0.16)] md:p-10">
+          <h2 class="mb-8 text-center text-3xl font-semibold text-gray-800 md:text-4xl">Cadastre Seu Imóvel</h2>
 
           <form @submit.prevent="submitForm" class="space-y-6">
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
