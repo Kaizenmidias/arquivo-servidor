@@ -11,7 +11,7 @@ function applyAppearance(settings) {
   const secondary = '#173b2f';
   const button = '#173b2f';
   const footerBg = '#000000';
-  const fontFamily = "'Cormorant Garamond', Georgia, serif";
+  const fontFamily = "'Urbanist', system-ui, -apple-system, Segoe UI, sans-serif";
   const fontSizeText = Number(settings.font_size_text ?? 16);
   const fontSizeTitle = Number(settings.font_size_title ?? 40);
 

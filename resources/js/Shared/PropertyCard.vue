@@ -18,7 +18,7 @@
           v-for="label in businessBadges"
           :key="label"
           :class="badgeClass(label)"
-          class="rounded-md px-2 py-1 text-[11px] font-semibold leading-none"
+          class="whitespace-nowrap rounded-md px-2.5 py-1 text-[12px] font-semibold leading-none"
         >
           {{ label }}
         </span>
@@ -80,7 +80,7 @@
 
       <div class="mt-4 space-y-2.5 border-t border-gray-100 pt-3">
         <div v-for="row in priceRows" :key="row.key" class="flex items-center justify-between gap-3 overflow-hidden">
-          <span :class="priceLabelClass(row.key)" class="rounded-md px-2 py-1 text-[11px] font-semibold uppercase leading-none tracking-wide">
+          <span :class="priceLabelClass(row.key)" class="shrink-0 rounded-md px-2.5 py-1 text-[12px] font-semibold uppercase leading-none tracking-wide">
             {{ row.label }}
           </span>
           <span :class="priceValueClass(row.key)" class="card-price flex min-w-0 flex-1 items-baseline justify-end gap-0.5 whitespace-nowrap text-right font-bold leading-none tabular-nums">
@@ -215,10 +215,10 @@ const priceLabelClass = (key) => {
 };
 
 const priceValueClass = (key) => {
-  if (props.monochrome) return 'text-[13px] tracking-tight text-black sm:text-[14px]';
-  if (key === 'rent') return 'text-[13px] tracking-tight text-orange-700 sm:text-[14px]';
-  if (key === 'sale') return 'text-[13px] tracking-tight text-blue-900 sm:text-[14px]';
-  return 'text-[13px] tracking-tight text-gray-900 sm:text-[14px]';
+  if (props.monochrome) return 'text-[15px] tracking-tight text-black sm:text-[16px]';
+  if (key === 'rent') return 'text-[15px] tracking-tight text-orange-700 sm:text-[16px]';
+  if (key === 'sale') return 'text-[15px] tracking-tight text-blue-900 sm:text-[16px]';
+  return 'text-[15px] tracking-tight text-gray-900 sm:text-[16px]';
 };
 
 const cardShellClass = computed(() => [

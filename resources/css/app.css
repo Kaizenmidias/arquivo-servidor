@@ -7,7 +7,8 @@
   --site-secondary: #173b2f;
   --site-button: #173b2f;
   --site-footer-bg: #000000;
-  --site-font-family: 'Cormorant Garamond', Georgia, serif;
+  --site-font-family: 'Urbanist', system-ui, -apple-system, Segoe UI, sans-serif;
+  --site-title-font-family: 'Cormorant Garamond', Georgia, serif;
   --site-font-size-text: 16px;
   --site-font-size-title: 40px;
   --site-home-overlay-color: #000000;
@@ -43,6 +44,16 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-x: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.site-title {
+  font-family: var(--site-title-font-family);
 }
 
 ::selection {

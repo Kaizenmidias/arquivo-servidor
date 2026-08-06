@@ -6,7 +6,7 @@
     $secondary = '#173b2f';
     $button = '#173b2f';
     $footerBg = '#000000';
-    $fontFamily = "'Cormorant Garamond', Georgia, serif";
+    $fontFamily = "'Urbanist', system-ui, -apple-system, Segoe UI, sans-serif";
     $fontSizeText = is_numeric($settings['font_size_text'] ?? null) ? (int) $settings['font_size_text'] : 16;
     $fontSizeTitle = is_numeric($settings['font_size_title'] ?? null) ? (int) $settings['font_size_title'] : 40;
     $homeOverlayColor = '#000000';
@@ -30,6 +30,7 @@
             --site-button: {{ $button }};
             --site-footer-bg: {{ $footerBg }};
             --site-font-family: {{ $fontFamily }};
+            --site-title-font-family: 'Cormorant Garamond', Georgia, serif;
             --site-font-size-text: {{ $fontSizeText }}px;
             --site-font-size-title: {{ $fontSizeTitle }}px;
             --site-home-overlay-color: {{ $homeOverlayColor }};
@@ -37,7 +38,7 @@
         }
     </style>
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=cormorant-garamond:400,500,600,700" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=cormorant-garamond:400,500,600,700|urbanist:400,500,600,700,800" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {!! $integrationRenderer->renderHead() !!}
 </head>
