@@ -85,6 +85,25 @@
             </div>
           </div>
 
+          <div v-if="isHome" class="border-t border-gray-200 pt-6">
+            <h4 class="text-base font-semibold text-gray-800 mb-4">NÃºmeros da Home</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div v-for="(item, idx) in form.page_data.home_stats" :key="idx" class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Item {{ idx + 1 }}</div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-[0.8fr_1.2fr]">
+                  <div>
+                    <label class="block text-gray-700 mb-2 text-sm font-medium">NÃºmero</label>
+                    <input v-model="item.value" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ex.: 9+" />
+                  </div>
+                  <div>
+                    <label class="block text-gray-700 mb-2 text-sm font-medium">Texto</label>
+                    <input v-model="item.label" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Ex.: Oportunidades" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div v-if="isProperties" class="border-t border-gray-200 pt-6">
             <h4 class="text-base font-semibold text-gray-800 mb-4">Banner da página de imóveis</h4>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -396,6 +415,26 @@ const bannerTitleLabel = computed(() => (isHome.value ? 'Título principal (H1)'
 const bannerSubtitleLabel = computed(() => (isHome.value ? 'Subtítulo' : 'Subtítulo do banner'));
 const legacyText = (...values) => values.map((value) => String(value || '').trim()).filter(Boolean).join(' ');
 
+const homeDefaults = () => ({
+  home_stats: [
+    { value: '9+', label: 'Oportunidades' },
+    { value: '3+', label: 'NegÃ³cios' },
+    { value: '182+', label: 'CondomÃ­nios' },
+    { value: '3+', label: 'Diferenciais' },
+  ],
+});
+
+const mergeHomeData = (incoming) => {
+  const base = homeDefaults();
+  const src = incoming && typeof incoming === 'object' ? incoming : {};
+
+  if (Array.isArray(src.home_stats)) {
+    base.home_stats = base.home_stats.map((item, index) => ({ ...item, ...(src.home_stats[index] || {}) }));
+  }
+
+  return { ...src, home_stats: base.home_stats };
+};
+
 const aboutDefaults = () => ({
   hero: {
     subtitle: '',
@@ -575,7 +614,7 @@ const form = useForm({
   slug: props.page?.slug || '',
   template: template.value,
   conteudo: props.page?.conteudo || '',
-  page_data: isAbout.value ? mergeAboutData(props.page?.data) : (props.page?.data || {}),
+  page_data: isAbout.value ? mergeAboutData(props.page?.data) : (isHome.value ? mergeHomeData(props.page?.data) : (props.page?.data || {})),
   banner_title: props.page?.banner_title || '',
   banner_subtitle: props.page?.banner_subtitle || '',
   banner_image: props.page?.banner_image || '',
@@ -590,6 +629,13 @@ const form = useForm({
 });
 
 watchEffect(() => {
+  if (isHome.value) {
+    if (!form.page_data || typeof form.page_data !== 'object' || !Array.isArray(form.page_data.home_stats)) {
+      form.page_data = mergeHomeData(form.page_data);
+    }
+    return;
+  }
+
   if (!isAbout.value) return;
   if (!form.page_data || typeof form.page_data !== 'object') {
     form.page_data = mergeAboutData({});

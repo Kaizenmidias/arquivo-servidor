@@ -188,7 +188,7 @@
     <section class="bg-black py-8 text-white">
       <div class="ui-shell">
         <div class="grid grid-cols-2 gap-px overflow-hidden rounded bg-white/20 md:grid-cols-4">
-          <div v-for="stat in homeStats" :key="stat.label" class="bg-black px-5 py-7 text-center">
+          <div v-for="stat in displayHomeStats" :key="stat.label" class="bg-black px-5 py-7 text-center">
             <div class="text-3xl font-semibold md:text-4xl">{{ stat.value }}</div>
             <div class="mt-2 text-xs uppercase tracking-[0.18em] text-white/65">{{ stat.label }}</div>
           </div>
@@ -372,6 +372,7 @@ const homeHeroOverlayOpacity = computed(() => {
   return Math.max(35, Math.min(82, safe)) / 100;
 });
 const homeContentHtml = computed(() => String(props.homePage?.conteudo || '').trim());
+const homePageData = computed(() => props.homePage?.data && typeof props.homePage.data === 'object' ? props.homePage.data : {});
 
 const businessTypeOptions = computed(() => (
   Array.isArray(props.businessTypes) ? props.businessTypes.filter((item) => item && item.id != null) : []
@@ -483,6 +484,17 @@ const homeStats = computed(() => [
   { value: `${condominiumOptions.value.length}+`, label: 'Condomínios' },
   { value: `${specialCategoryList.value.length}+`, label: 'Diferenciais' },
 ]);
+
+const displayHomeStats = computed(() => {
+  const savedStats = Array.isArray(homePageData.value.home_stats) ? homePageData.value.home_stats : [];
+  return homeStats.value.map((fallback, index) => {
+    const saved = savedStats[index] || {};
+    return {
+      value: String(saved.value || '').trim() || fallback.value,
+      label: String(saved.label || '').trim() || fallback.label,
+    };
+  });
+});
 
 const instagramProfileUrl = computed(() => props.instagramUrl || (props.instagramUsername ? `https://instagram.com/${props.instagramUsername}` : ''));
 const instagramHandle = computed(() => props.instagramUsername || 'instagram');
