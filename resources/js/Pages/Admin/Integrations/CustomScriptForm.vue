@@ -195,13 +195,20 @@ function save() {
   const baseUrl = `${adminBase.value}/integracoes/codigo-personalizado`;
 
   if (props.mode === 'edit' && props.script?.id) {
-    form.put(`${baseUrl}/${props.script.id}`, {
-      preserveScroll: true,
-    });
+    form
+      .transform((data) => ({
+        ...data,
+        _method: 'put',
+      }))
+      .post(`${baseUrl}/${props.script.id}`, {
+        forceFormData: true,
+        preserveScroll: true,
+      });
     return;
   }
 
   form.post(baseUrl, {
+    forceFormData: true,
     preserveScroll: true,
   });
 }
