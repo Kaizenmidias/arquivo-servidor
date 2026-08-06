@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-lg">
+  <div :class="cardShellClass">
     <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
       <img
         :src="activePhoto.src"
@@ -26,7 +26,7 @@
       <button
         type="button"
         class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full shadow-md backdrop-blur-sm transition"
-        :class="isFavorited ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-white/95 text-gray-700 hover:bg-white'"
+        :class="favoriteButtonClass"
         :aria-label="isFavorited ? 'Remover dos favoritos' : 'Salvar nos favoritos'"
         @click.stop.prevent="togglePropertyFavorite"
       >
@@ -59,7 +59,7 @@
     </div>
     <div class="flex h-full flex-col p-4">
       <div v-if="displayLocation" class="flex items-center gap-1.5 text-[13px] leading-none text-gray-500">
-        <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg :class="monochrome ? 'text-gray-500' : 'text-gray-400'" class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11.5a2.5 2.5 0 10-2.5-2.5 2.5 2.5 0 002.5 2.5zm0 9.5s7-4.35 7-11A7 7 0 105 10c0 6.65 7 11 7 11z"></path>
         </svg>
         <span class="card-location">{{ displayLocation }}</span>
@@ -70,7 +70,7 @@
 
       <div v-if="statItems.length" class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-gray-600">
         <div v-for="item in statItems" :key="item.key" class="inline-flex min-w-0 items-center gap-1.5 leading-none">
-          <svg class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg :class="monochrome ? 'text-gray-500' : 'text-gray-400'" class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon"></path>
           </svg>
           <span class="font-medium text-gray-700">{{ item.value }}</span>
@@ -104,8 +104,8 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#0f172a"/>
-        <stop offset="1" stop-color="#1e3a8a"/>
+        <stop offset="0" stop-color="#111111"/>
+        <stop offset="1" stop-color="#3f3f46"/>
       </linearGradient>
     </defs>
     <rect width="800" height="600" fill="url(#g)"/>
@@ -119,6 +119,7 @@ const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
 const props = defineProps({
   property: { type: Object, required: true },
   showPhotoControls: { type: Boolean, default: true },
+  monochrome: { type: Boolean, default: false },
 });
 
 const { hydrateFavorites, isFavorite, toggleFavorite } = useFavorites();
@@ -197,22 +198,43 @@ const priceRows = computed(() => {
 });
 
 const badgeClass = (label) => {
+  if (props.monochrome) {
+    if (label === 'ALUGUEL') return 'bg-white text-black';
+    return 'bg-black text-white';
+  }
   if (label === 'ALUGUEL') return 'bg-white text-black';
   if (label === 'VENDA') return 'bg-blue-700 text-white';
   return 'bg-gray-700 text-white';
 };
 
 const priceLabelClass = (key) => {
+  if (props.monochrome) return 'bg-gray-100 text-gray-700';
   if (key === 'rent') return 'bg-orange-50 text-orange-700';
   if (key === 'sale') return 'bg-blue-50 text-blue-700';
   return 'bg-gray-100 text-gray-700';
 };
 
 const priceValueClass = (key) => {
+  if (props.monochrome) return 'text-[13px] tracking-tight text-black sm:text-[14px]';
   if (key === 'rent') return 'text-[13px] tracking-tight text-orange-700 sm:text-[14px]';
   if (key === 'sale') return 'text-[13px] tracking-tight text-blue-900 sm:text-[14px]';
   return 'text-[13px] tracking-tight text-gray-900 sm:text-[14px]';
 };
+
+const cardShellClass = computed(() => [
+  'h-full overflow-hidden border bg-white transition-shadow',
+  props.monochrome
+    ? 'rounded-lg border-gray-200 shadow-none hover:shadow-[0_18px_45px_rgba(0,0,0,0.10)]'
+    : 'rounded-2xl border-gray-200 shadow-sm hover:shadow-lg',
+]);
+
+const favoriteButtonClass = computed(() => {
+  if (props.monochrome) {
+    return isFavorited.value ? 'bg-black text-white hover:bg-gray-900' : 'bg-white/95 text-black hover:bg-white';
+  }
+
+  return isFavorited.value ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-white/95 text-gray-700 hover:bg-white';
+});
 
 const displayLocation = computed(() => {
   const candidates = [props.property?.location, props.property?.address];
