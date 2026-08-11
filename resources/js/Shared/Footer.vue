@@ -1,9 +1,5 @@
 <template>
-<<<<<<< HEAD
     <footer class="bg-black text-white">
-=======
-  <footer class="site-footer-bg text-white">
->>>>>>> 4edf589 (Ajusta hero e rodape da pagina Quem Somos)
     <div class="ui-shell py-14">
       <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
         <div>
