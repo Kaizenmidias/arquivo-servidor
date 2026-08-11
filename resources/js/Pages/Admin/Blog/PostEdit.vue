@@ -60,12 +60,6 @@
             <span class="text-sm text-gray-700">Destaque</span>
           </div>
 
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Publicar em</label>
-            <input v-model="form.published_at" type="datetime-local" class="w-full border border-gray-300 rounded-lg px-4 py-3">
-            <div v-if="form.errors.published_at" class="text-sm text-red-600 mt-1">{{ form.errors.published_at }}</div>
-          </div>
-
           <button type="submit" :disabled="form.processing" class="w-full bg-blue-900 hover:bg-blue-800 disabled:opacity-60 text-white px-6 py-3 rounded-lg font-semibold transition">
             Salvar
           </button>
@@ -95,13 +89,6 @@ const props = defineProps({
   },
 });
 
-const publishedLocal = computed(() => {
-  if (!props.post?.published_at) return '';
-  const d = new Date(props.post.published_at);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toISOString().slice(0, 16);
-});
-
 const form = useForm({
   title: props.post?.title ?? '',
   content: props.post?.content ?? '',
@@ -109,7 +96,6 @@ const form = useForm({
   featured_image: null,
   category_id: props.post?.category_id ?? null,
   is_featured: !!props.post?.is_featured,
-  published_at: publishedLocal.value,
   _token: csrfToken,
 });
 
@@ -131,10 +117,8 @@ const onFeaturedSelected = (e) => {
 const submit = () => {
   form.featured_image = featuredFile.value;
   form._token = csrfToken;
-  form.post(`${adminBase.value}/blog/posts/${props.post.id}`, {
-    method: 'put',
+  form.put(`${adminBase.value}/blog/posts/${props.post.id}`, {
     forceFormData: true,
-    headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {},
   });
 };
 </script>

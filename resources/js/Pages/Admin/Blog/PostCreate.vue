@@ -63,12 +63,6 @@
             <span class="text-sm text-gray-700">Destaque</span>
           </div>
 
-          <div>
-            <label class="block text-gray-700 mb-2 text-sm font-medium">Publicar em</label>
-            <input v-model="form.published_at" type="datetime-local" class="w-full border border-gray-300 rounded-lg px-4 py-3">
-            <div v-if="form.errors.published_at" class="text-sm text-red-600 mt-1">{{ form.errors.published_at }}</div>
-          </div>
-
           <button type="submit" :disabled="form.processing" class="w-full bg-blue-900 hover:bg-blue-800 disabled:opacity-60 text-white px-6 py-3 rounded-lg font-semibold transition">
             Salvar
           </button>
@@ -103,7 +97,6 @@ const form = useForm({
   featured_image: null,
   category_id: defaultCategoryId.value,
   is_featured: false,
-  published_at: '',
   _token: csrfToken,
 });
 

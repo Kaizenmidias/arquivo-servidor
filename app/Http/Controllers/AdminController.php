@@ -3471,7 +3471,6 @@ class AdminController extends Controller
             'featured_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'category_id' => ['nullable', 'integer', 'exists:blog_categories,id'],
             'is_featured' => ['nullable', 'boolean'],
-            'published_at' => ['nullable', 'date'],
         ]);
 
         $slug = $this->uniqueSlug($validated['title'], BlogPost::class);
@@ -3480,6 +3479,7 @@ class AdminController extends Controller
             ...collect($validated)->except(['featured_image'])->all(),
             'slug' => $slug,
             'is_featured' => $validated['is_featured'] ?? false,
+            'published_at' => now(),
         ]);
 
         if ($request->hasFile('featured_image')) {
@@ -3512,7 +3512,6 @@ class AdminController extends Controller
             'featured_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'category_id' => ['nullable', 'integer', 'exists:blog_categories,id'],
             'is_featured' => ['nullable', 'boolean'],
-            'published_at' => ['nullable', 'date'],
         ]);
 
         $slug = $this->uniqueSlug($validated['title'], BlogPost::class, $post->id);
@@ -3521,6 +3520,7 @@ class AdminController extends Controller
             ...collect($validated)->except(['featured_image'])->all(),
             'slug' => $slug,
             'is_featured' => $validated['is_featured'] ?? false,
+            'published_at' => now(),
         ]);
 
         if ($request->hasFile('featured_image')) {
