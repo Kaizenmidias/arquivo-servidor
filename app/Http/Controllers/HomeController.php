@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\Request;
+use App\Models\BlogPost;
 use App\Models\Condominium;
 use App\Models\Property;
 use App\Models\BusinessType;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Illuminate\Validation\ValidationException;
 
@@ -126,6 +128,16 @@ class HomeController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $latestBlogPosts = BlogPost::query()
+            ->with(['category:id,name,slug'])
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->orderByDesc('published_at')
+            ->limit(3)
+            ->get()
+            ->map(fn (BlogPost $post) => $this->serializeBlogPost($post))
+            ->values();
+
         return Inertia::render('Home', [
             'homePage' => $homePage,
             'selecaoEspecial' => $selecaoEspecial,
@@ -139,6 +151,7 @@ class HomeController extends Controller
             'propertyTypeGroups' => $propertyTypeGroups,
             'specialCategories' => $specialCategories,
             'condominiums' => $condominiums,
+            'latestBlogPosts' => $latestBlogPosts,
         ]);
     }
 
@@ -1079,6 +1092,34 @@ class HomeController extends Controller
             'photo' => $this->serializeResponsivePhoto($photo),
             'photos' => $photoUrls,
         ];
+    }
+
+    private function serializeBlogPost(BlogPost $post): array
+    {
+        $image = trim((string) ($post->featured_image ?? ''));
+        $imageUrl = $image !== ''
+            ? (Str::startsWith($image, ['http://', 'https://', 'data:']) ? $image : url('/media/' . ltrim($image, '/')))
+            : $this->defaultBlogImage();
+
+        return [
+            'id' => $post->id,
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'url' => '/blog/' . $post->slug,
+            'excerpt' => $post->excerpt ?: Str::limit(strip_tags((string) $post->content), 160),
+            'category' => $post->category?->name ?? 'Blog',
+            'category_slug' => $post->category?->slug,
+            'published_at' => optional($post->published_at)->format('d/m/Y'),
+            'featured' => (bool) $post->is_featured,
+            'image' => $imageUrl,
+        ];
+    }
+
+    private function defaultBlogImage(): string
+    {
+        return 'data:image/svg+xml,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700"><rect width="1200" height="700" fill="#111111"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="48" fill="rgba(255,255,255,0.65)">Blog</text></svg>'
+        );
     }
 
     private function buildPropertyCardLocation(Property $property): string

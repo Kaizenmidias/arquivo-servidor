@@ -82,6 +82,7 @@ import AdminLayout from '@/Shared/AdminLayout.vue';
 
 const page = usePage();
 const adminBase = computed(() => page.props?.paths?.admin || '/admin');
+const csrfToken = typeof window.getCsrfToken === 'function' ? window.getCsrfToken() : '';
 
 const props = defineProps({
   post: {
@@ -109,6 +110,7 @@ const form = useForm({
   category_id: props.post?.category_id ?? null,
   is_featured: !!props.post?.is_featured,
   published_at: publishedLocal.value,
+  _token: csrfToken,
 });
 
 const currentFeaturedUrl = computed(() => props.post?.featured_image || '');
@@ -128,6 +130,11 @@ const onFeaturedSelected = (e) => {
 
 const submit = () => {
   form.featured_image = featuredFile.value;
-  form.post(`${adminBase.value}/blog/posts/${props.post.id}`, { method: 'put', forceFormData: true });
+  form._token = csrfToken;
+  form.post(`${adminBase.value}/blog/posts/${props.post.id}`, {
+    method: 'put',
+    forceFormData: true,
+    headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {},
+  });
 };
 </script>

@@ -18,7 +18,7 @@
             <h3 class="font-semibold text-neutral-900 mb-1">Nós usamos cookies</h3>
             <p class="text-sm text-neutral-600 mb-4">
               Utilizamos cookies para melhorar sua experiência, analisar o tráfego e personalizar conteúdo.
-              <a href="/politicas-de-privacidade" class="hover:underline" style="color: var(--site-primary)">Saiba mais</a>
+              <span>Consulte as políticas completas no rodapé.</span>
             </p>
             <div class="flex flex-wrap gap-2">
               <button type="button" class="h-9 rounded-lg px-4 text-xs font-medium text-white shadow-md hover:shadow-lg transition" style="background: var(--site-primary)" @click="acceptAll">

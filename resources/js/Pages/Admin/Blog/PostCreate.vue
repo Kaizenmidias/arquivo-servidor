@@ -85,6 +85,7 @@ import AdminLayout from '@/Shared/AdminLayout.vue';
 
 const page = usePage();
 const adminBase = computed(() => page.props?.paths?.admin || '/admin');
+const csrfToken = typeof window.getCsrfToken === 'function' ? window.getCsrfToken() : '';
 
 const props = defineProps({
   categories: {
@@ -103,6 +104,7 @@ const form = useForm({
   category_id: defaultCategoryId.value,
   is_featured: false,
   published_at: '',
+  _token: csrfToken,
 });
 
 const featuredInputRef = ref(null);
@@ -127,6 +129,10 @@ const onFeaturedSelected = (e) => {
 
 const submit = () => {
   form.featured_image = featuredFile.value;
-  form.post(`${adminBase.value}/blog/posts`, { forceFormData: true });
+  form._token = csrfToken;
+  form.post(`${adminBase.value}/blog/posts`, {
+    forceFormData: true,
+    headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {},
+  });
 };
 </script>

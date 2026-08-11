@@ -16,6 +16,7 @@ class HandleInertiaRequests extends Middleware
         '/calculadora',
         '/avalie-seu-imovel',
         '/corretor-parceiro',
+        '/politicas-de-privacidade',
     ];
 
     /**

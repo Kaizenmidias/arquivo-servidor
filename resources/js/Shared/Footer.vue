@@ -16,6 +16,7 @@
             <li><a href="/imoveis" class="transition hover:text-white">Imóveis</a></li>
             <li><a href="/venda-seu-imovel" class="transition hover:text-white">Venda seu Imóvel</a></li>
             <li><a href="/contato" class="transition hover:text-white">Contato</a></li>
+            <li><a href="/politicas-de-privacidade" class="transition hover:text-white">Políticas de Privacidade</a></li>
           </ul>
         </div>
         <div>

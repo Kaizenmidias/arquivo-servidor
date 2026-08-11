@@ -134,7 +134,7 @@
         <div class="absolute inset-0" :style="{ backgroundColor: ctaOverlayColor, opacity: ctaOverlayOpacity }"></div>
         <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-transparent"></div>
       </div>
-      <div class="relative mx-auto max-w-[1400px] px-4 pt-20 pb-[6rem] lg:pt-24 lg:pb-[6rem]">
+      <div class="relative mx-auto max-w-[1400px] px-4 pt-20 pb-0 lg:pt-24 lg:pb-0">
         <div class="grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div class="max-w-2xl text-white">
             <h2 class="text-4xl font-semibold leading-tight md:text-5xl">
@@ -145,7 +145,7 @@
             </p>
           </div>
           <div class="flex flex-col gap-3 sm:flex-row lg:justify-end">
-            <a :href="ctaButton1Url" class="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-slate-900 transition hover:opacity-95" :style="{ backgroundColor: 'var(--site-secondary)' }">
+            <a :href="ctaButton1Url" class="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-95" :style="{ backgroundColor: 'var(--site-secondary)' }">
               {{ ctaButton1Label }}
               <span aria-hidden="true">→</span>
             </a>

@@ -266,8 +266,8 @@
           <div class="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500">Últimas Notícias</div>
           <h2 class="mt-3 text-3xl font-semibold text-black md:text-5xl">Últimas Notícias</h2>
         </div>
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-          <a v-for="(item, index) in ultimasNoticias" :key="index" :href="item.link" class="group">
+        <div v-if="latestBlogPosts.length > 0" class="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <a v-for="item in latestBlogPosts" :key="item.id" :href="item.url" class="group">
             <div class="overflow-hidden rounded border border-gray-200 bg-white transition-shadow hover:shadow-[0_18px_45px_rgba(0,0,0,0.10)]">
               <img :src="item.image" :alt="item.title" class="h-56 w-full object-cover grayscale">
               <div class="p-6">
@@ -275,7 +275,7 @@
                 <h3 class="mb-2 mt-2 text-xl font-bold text-black transition-opacity group-hover:opacity-70">{{ item.title }}</h3>
                 <p class="mb-4 line-clamp-2 text-gray-600">{{ item.excerpt }}</p>
                 <div class="flex items-center justify-between text-sm text-gray-500">
-                  <span>{{ item.date }}</span>
+                  <span>{{ item.published_at }}</span>
                   <span class="flex items-center gap-1 font-semibold text-black">
                     Ler mais
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -284,6 +284,9 @@
               </div>
             </div>
           </a>
+        </div>
+        <div v-else class="rounded border border-dashed border-gray-300 bg-white px-6 py-10 text-center text-gray-500">
+          Nenhuma postagem publicada no momento.
         </div>
       </div>
     </section>
@@ -349,9 +352,13 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  latestBlogPosts: {
+    type: Array,
+    default: () => [],
+  },
 });
 
-const ctaColor = '#18392f';
+const ctaColor = '#173b2f';
 
 const placeholderImage = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="800" viewBox="0 0 1920 800">
@@ -499,6 +506,9 @@ const displayHomeStats = computed(() => {
 const instagramProfileUrl = computed(() => props.instagramUrl || (props.instagramUsername ? `https://instagram.com/${props.instagramUsername}` : ''));
 const instagramHandle = computed(() => props.instagramUsername || 'instagram');
 const showInstagramSection = computed(() => !!props.instagramEnabled);
+const latestBlogPosts = computed(() => (
+  Array.isArray(props.latestBlogPosts) ? props.latestBlogPosts.filter((item) => item && item.id != null) : []
+));
 
 const instagramItems = computed(() => {
   if (Array.isArray(props.instagramFeed) && props.instagramFeed.length > 0) {
@@ -523,12 +533,6 @@ const instagramItems = computed(() => {
     { id: 8, image: placeholderImage, caption: 'Instagram' },
   ];
 });
-
-const ultimasNoticias = ref([
-  { id: 1, title: 'Dicas para comprar seu primeiro imóvel', excerpt: 'Confira as melhores dicas para quem está comprando seu primeiro imóvel e quer evitar erros.', category: 'Dicas', date: '01 de Junho, 2026', link: '#', image: placeholderImage },
-  { id: 2, title: 'Mercado imobiliário em alta no Brasil', excerpt: 'Veja as tendências do mercado imobiliário para o segundo semestre de 2026.', category: 'Mercado', date: '30 de Maio, 2026', link: '#', image: placeholderImage },
-  { id: 3, title: 'Como decorar sua casa sem gastar muito', excerpt: 'Ideias criativas para decorar sua casa com estilo e sem gastar muito dinheiro.', category: 'Decoração', date: '28 de Maio, 2026', link: '#', image: placeholderImage },
-]);
 
 const instagramPosition = ref(0);
 const instagramTrackRef = ref(null);
