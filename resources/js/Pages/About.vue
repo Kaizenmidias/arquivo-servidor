@@ -1,13 +1,18 @@
 <template>
   <Layout>
-    <section class="relative overflow-hidden">
+<<<<<<< HEAD
+    <section class="relative overflow-hidden flex min-h-[100vh] min-h-[100svh] items-center py-[150px]">
+=======
+    <section class="relative flex min-h-[100vh] min-h-[100svh] items-center py-[150px]">
+>>>>>>> 4edf589 (Ajusta hero e rodape da pagina Quem Somos)
       <div class="absolute inset-0">
         <img :src="heroImage" alt="Sobre nós" class="h-full w-full object-cover object-right" />
         <div class="absolute inset-0 bg-slate-950/70"></div>
         <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-transparent"></div>
       </div>
+<<<<<<< HEAD
 
-      <div class="relative mx-auto max-w-[1400px] px-4 py-20 lg:py-28">
+      <div class="relative mx-auto max-w-[1400px] px-4 py-0">
         <div class="grid items-center lg:grid-cols-[1.05fr_0.95fr]">
           <div class="max-w-2xl text-white">
             <div class="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
@@ -25,6 +30,12 @@
                 <span aria-hidden="true">→</span>
               </a>
             </div>
+=======
+      <div class="relative mx-auto w-full max-w-[1400px] px-4 py-0">
+        <div class="max-w-3xl mx-auto text-center">
+          <div class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm tracking-wide">
+            <span class="opacity-90">{{ settings.nome_empresa || 'Imobiliária' }}</span>
+>>>>>>> 4edf589 (Ajusta hero e rodape da pagina Quem Somos)
           </div>
         </div>
       </div>
