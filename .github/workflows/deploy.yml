@@ -2,7 +2,7 @@ name: Deploy (Production)
 
 on:
   push:
-    branches: ["master"]
+    branches: ["sistema-imob"]
 
 concurrency:
   group: production
@@ -24,9 +24,11 @@ jobs:
           script: |
             set -e
             cd /www/wwwroot/meteorikahimob.com.br
-            git fetch --all
-            git reset --hard origin/master
+            git fetch origin sistema-imob
+            git merge --ff-only FETCH_HEAD
             composer install --no-dev --optimize-autoloader
+            npm ci --no-audit --no-fund
+            npm run build
             php83 -m | grep -i "^imagick$" >/dev/null || { echo "Imagick extension is not loaded in php83. Install/enable Imagick before processing property images."; exit 1; }
             php83 artisan migrate --force
             php83 artisan optimize:clear
