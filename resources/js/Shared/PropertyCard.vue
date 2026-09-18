@@ -91,6 +91,9 @@
         <div v-if="priceRows.length === 0" class="text-[13px] font-medium text-gray-400">
           Consulte valores
         </div>
+        <div v-if="property.aceitaPermuta" class="pt-1 text-[13px] font-semibold text-blue-900">
+          Aceita permuta
+        </div>
       </div>
     </div>
   </div>

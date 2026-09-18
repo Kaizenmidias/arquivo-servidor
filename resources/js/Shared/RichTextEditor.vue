@@ -129,7 +129,7 @@ const editor = useEditor({
   ],
   editorProps: {
     attributes: {
-      class: 'min-h-[320px] px-4 py-4 focus:outline-none',
+      class: 'property-rich-content min-h-[320px] px-4 py-4 text-gray-700 focus:outline-none',
     },
   },
   onUpdate: ({ editor: instance }) => {
@@ -286,12 +286,6 @@ function toolbarButtonClass(isActive, isDisabled = false) {
 </script>
 
 <style scoped>
-:deep(.rich-text-editor .ProseMirror) {
-  color: #0f172a;
-  font-size: 0.975rem;
-  line-height: 1.75;
-}
-
 :deep(.rich-text-editor .ProseMirror p.is-editor-empty:first-child::before) {
   content: attr(data-placeholder);
   color: #94a3b8;
@@ -300,54 +294,4 @@ function toolbarButtonClass(isActive, isDisabled = false) {
   pointer-events: none;
 }
 
-:deep(.rich-text-editor .ProseMirror > * + *) {
-  margin-top: 0.9rem;
-}
-
-:deep(.rich-text-editor .ProseMirror h1) {
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-:deep(.rich-text-editor .ProseMirror h2) {
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-:deep(.rich-text-editor .ProseMirror h3) {
-  font-size: 1.05rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-:deep(.rich-text-editor .ProseMirror ul),
-:deep(.rich-text-editor .ProseMirror ol) {
-  padding-left: 1.25rem;
-}
-
-:deep(.rich-text-editor .ProseMirror ul) {
-  list-style: disc;
-}
-
-:deep(.rich-text-editor .ProseMirror ol) {
-  list-style: decimal;
-}
-
-:deep(.rich-text-editor .ProseMirror strong) {
-  font-weight: 700;
-}
-
-:deep(.rich-text-editor .ProseMirror em) {
-  font-style: italic;
-}
-
-:deep(.rich-text-editor .ProseMirror u) {
-  text-decoration: underline;
-}
-
-:deep(.rich-text-editor .ProseMirror s) {
-  text-decoration: line-through;
-}
 </style>

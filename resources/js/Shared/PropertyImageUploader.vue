@@ -657,11 +657,27 @@ function statusLabel(item) {
 }
 
 function formatUploadError(error, response) {
-  const statusCode = response?.status || response?.body?.status || error?.status;
-  const serverMessage = response?.body?.message || response?.body?.error || '';
+  const statusCode = response?.status || error?.status;
+  let responseBody = response?.body || null;
+  if (!responseBody && response?.responseText) {
+    try {
+      responseBody = JSON.parse(response.responseText);
+    } catch {
+      responseBody = null;
+    }
+  }
+  const serverMessage = responseBody?.message || responseBody?.error || '';
+
+  if (Number(statusCode) === 413) {
+    return 'A imagem excede o limite de upload do servidor.';
+  }
 
   if (Number(statusCode) === 419) {
     return 'Falha de autenticacao/CSRF no upload. Recarregue a pagina e tente novamente.';
+  }
+
+  if (Number(statusCode) === 401 || Number(statusCode) === 403) {
+    return 'A sessão expirou. Atualize a página e entre novamente.';
   }
 
   if (serverMessage) {
@@ -669,6 +685,30 @@ function formatUploadError(error, response) {
   }
 
   return error?.message || 'Falha ao enviar a imagem.';
+}
+
+function parseUploadResponse(response) {
+  const responseText = response?.responseText || '';
+  let body;
+
+  try {
+    body = JSON.parse(responseText);
+  } catch {
+    const message = /<html|<!doctype/i.test(responseText)
+      ? 'A sessão expirou ou o servidor retornou uma página em vez da resposta do upload. Atualize a página e entre novamente.'
+      : 'O servidor retornou uma resposta inválida para o upload.';
+    throw new Error(message);
+  }
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw new Error('O servidor retornou uma resposta inválida para o upload.');
+  }
+
+  if (!body.token) {
+    throw new Error('O upload não retornou um identificador da imagem. Atualize a página e tente novamente.');
+  }
+
+  return body;
 }
 
 function currentImageCount() {
@@ -726,6 +766,7 @@ function createUppy(kind) {
     limit: props.parallelUploads,
     timeout: 300000,
     withCredentials: true,
+    getResponseData: parseUploadResponse,
     headers: {
       'X-Requested-With': 'XMLHttpRequest',
       'Accept': 'application/json',

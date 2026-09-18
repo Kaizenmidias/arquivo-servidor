@@ -934,10 +934,17 @@ class AdminController extends Controller
         if (!in_array($selectedBusinessType, ['sale', 'rent'], true)) {
             $selectedBusinessType = '';
         }
+        $selectedCondominiumId = (int) $request->query('condominium_id', 0);
+        $selectedCode = trim((string) $request->query('code', ''));
 
         $properties = Property::query()
             ->with(['propertyType', 'businessType', 'condominium', 'photos'])
             ->when($selectedPropertyTypeId, fn ($q) => $q->where('tipo_propriedade_id', $selectedPropertyTypeId))
+            ->when($selectedCondominiumId, fn ($q) => $q->where('condominium_id', $selectedCondominiumId))
+            ->when($selectedCode !== '', fn ($q) => $q->where(function ($sub) use ($selectedCode): void {
+                $sub->where('codigo_referencia', 'like', '%' . $selectedCode . '%')
+                    ->orWhere('codigo_anuncio', 'like', '%' . $selectedCode . '%');
+            }))
             ->when($selectedBusinessType === 'sale', fn ($q) => $q->where(function ($sub): void {
                 $sub->where('aceita_venda', true)
                     ->orWhere('operacao', 'Venda');
@@ -952,8 +959,11 @@ class AdminController extends Controller
         return Inertia::render('Admin/Properties', [
             'properties' => $properties,
             'propertyTypes' => $propertyTypes,
+            'condominiums' => Condominium::orderBy('name')->get(['id', 'name']),
             'selectedPropertyTypeId' => $selectedPropertyTypeId,
             'selectedBusinessType' => $selectedBusinessType,
+            'selectedCondominiumId' => $selectedCondominiumId,
+            'selectedCode' => $selectedCode,
             'isTrash' => false,
         ]);
     }
@@ -1061,6 +1071,7 @@ class AdminController extends Controller
 
         return response()->json([
             'token' => $upload->token,
+            'url' => $this->publicMediaUrl($upload->temp_path),
             'name' => $upload->original_name,
             'mime_type' => $upload->mime_type,
             'size' => $upload->size,
@@ -1893,6 +1904,7 @@ class AdminController extends Controller
             'condominio' => $valorCondominio,
             'valor_iptu' => $valorIptu,
             'iptu' => $valorIptu,
+            'iptu_periodicidade' => $validated['iptu_periodicidade'] ?? 'anual',
         ];
     }
 

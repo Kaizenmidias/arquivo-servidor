@@ -49,7 +49,21 @@
           </select>
         </div>
 
-        <div class="sm:col-span-1 lg:col-span-3 flex items-center justify-end gap-3">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Condomínio</label>
+          <select v-model="filters.condominium_id" class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white" @change="applyFilters">
+            <option value="">Todos</option>
+            <option v-for="condominium in condominiums" :key="condominium.id" :value="String(condominium.id)">{{ condominium.name }}</option>
+          </select>
+        </div>
+
+        <form @submit.prevent="applyFilters">
+          <label class="block text-sm font-semibold text-gray-700 mb-2" for="property-code-filter">Código</label>
+          <input id="property-code-filter" v-model="filters.code" type="search" class="w-full border border-gray-300 rounded-lg px-4 py-3" placeholder="Código do imóvel">
+        </form>
+
+        <div class="sm:col-span-2 lg:col-span-4 flex items-center justify-end gap-3">
+          <button type="button" class="bg-blue-900 hover:bg-blue-800 text-white px-5 py-2.5 rounded-lg font-semibold" @click="applyFilters">Buscar</button>
           <button type="button" class="text-gray-700 hover:text-gray-900 font-semibold" @click="clearFilters">
             Limpar filtros
           </button>
@@ -119,6 +133,7 @@
                 </div>
                 <div>
                   <div class="font-semibold text-gray-800">{{ property.titulo }}</div>
+                  <div class="text-xs font-medium text-gray-500">Cód. {{ property.codigo_referencia || property.codigo_anuncio }}</div>
                   <div class="text-sm text-gray-500">{{ property.endereco }}</div>
                 </div>
               </div>
@@ -200,11 +215,23 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  condominiums: {
+    type: Array,
+    default: () => [],
+  },
   selectedPropertyTypeId: {
     type: [Number, String, null],
     default: null,
   },
   selectedBusinessType: {
+    type: String,
+    default: '',
+  },
+  selectedCondominiumId: {
+    type: [Number, String, null],
+    default: null,
+  },
+  selectedCode: {
     type: String,
     default: '',
   },
@@ -220,6 +247,8 @@ const isTrash = computed(() => !!props.isTrash);
 const filters = reactive({
   property_type_id: props.selectedPropertyTypeId ? String(props.selectedPropertyTypeId) : '',
   business_type: props.selectedBusinessType || '',
+  condominium_id: props.selectedCondominiumId ? String(props.selectedCondominiumId) : '',
+  code: props.selectedCode || '',
 });
 
 const selectedIds = ref([]);
@@ -329,6 +358,8 @@ const applyFilters = () => {
     {
       property_type_id: filters.property_type_id || undefined,
       business_type: filters.business_type || undefined,
+      condominium_id: filters.condominium_id || undefined,
+      code: filters.code.trim() || undefined,
     },
     { preserveState: true, replace: true }
   );
@@ -337,6 +368,8 @@ const applyFilters = () => {
 const clearFilters = () => {
   filters.property_type_id = '';
   filters.business_type = '';
+  filters.condominium_id = '';
+  filters.code = '';
   applyFilters();
 };
 

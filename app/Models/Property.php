@@ -55,6 +55,7 @@ class Property extends Model
         'valor_condominio',
         'iptu',
         'valor_iptu',
+        'iptu_periodicidade',
         'destaque',
         'is_exclusive',
         'show_in_home_selecao_especial',

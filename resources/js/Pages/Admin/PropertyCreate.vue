@@ -197,6 +197,12 @@
                   <label class="mb-2 block text-sm font-medium text-gray-700">Valor do IPTU</label>
                   <input v-model="form.valor_iptu" type="text" inputmode="numeric" class="w-full rounded-lg border border-gray-300 px-4 py-3" placeholder="R$ 0,00" @input="onIptuPriceInput">
                   <div v-if="form.errors.valor_iptu" class="mt-1 text-sm text-red-600">{{ form.errors.valor_iptu }}</div>
+                  <label class="mt-3 mb-2 block text-sm font-medium text-gray-700">Periodicidade do IPTU</label>
+                  <select v-model="form.iptu_periodicidade" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3">
+                    <option value="anual">Anual</option>
+                    <option value="mensal">Mensal</option>
+                  </select>
+                  <div v-if="form.errors.iptu_periodicidade" class="mt-1 text-sm text-red-600">{{ form.errors.iptu_periodicidade }}</div>
                 </div>
               </div>
             </div>
@@ -433,6 +439,7 @@ const form = useForm({
   andar: props.property?.andar ?? null,
   valor_condominio: formatNullableCurrencyNumberBRL(props.property?.valor_condominio ?? props.property?.condominio),
   valor_iptu: formatNullableCurrencyNumberBRL(props.property?.valor_iptu ?? props.property?.iptu),
+  iptu_periodicidade: props.property?.iptu_periodicidade || 'anual',
   aceita_permuta: !!props.property?.aceita_permuta,
   aceita_financiamento: !!props.property?.aceita_financiamento,
   mobiliado: !!props.property?.mobiliado,

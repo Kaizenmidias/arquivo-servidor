@@ -80,6 +80,7 @@
               <div v-if="priceRows.length === 0" class="rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-gray-400">
                 Consulte valores
               </div>
+              <p v-if="property.aceitaPermuta" class="text-sm font-semibold text-blue-900">Aceita permuta</p>
             </div>
 
             <div v-if="costRows.length > 0" class="space-y-3 border-t border-gray-100 pt-6">
@@ -420,7 +421,7 @@ const costRows = computed(() => {
   }
 
   if (Number(props.property?.valorIptu || 0) > 0) {
-    rows.push({ label: 'IPTU', value: formatCurrencyBRL(props.property.valorIptu, 2) });
+    rows.push({ label: 'IPTU', value: `${formatCurrencyBRL(props.property.valorIptu, 2)} / ${props.property.iptuPeriodicidade === 'mensal' ? 'mês' : 'ano'}` });
   }
 
   return rows;
