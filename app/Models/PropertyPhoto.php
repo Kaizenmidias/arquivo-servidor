@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -58,6 +59,11 @@ class PropertyPhoto extends Model
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class);
+    }
+
+    public function uploads(): HasMany
+    {
+        return $this->hasMany(PropertyImageUpload::class, 'property_photo_id');
     }
 
     public function getThumbSmallUrlAttribute(): ?string

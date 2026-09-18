@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\PropertyImageUpload;
 use App\Models\PropertyPhoto;
 use App\Services\Images\PropertyImageProcessor;
+use App\Services\Images\PropertyOriginalCleanup;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -35,7 +36,7 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
         return 'property-photo-process:' . $this->photoId;
     }
 
-    public function handle(PropertyImageProcessor $processor): void
+    public function handle(PropertyImageProcessor $processor, PropertyOriginalCleanup $cleanup): void
     {
         /** @var PropertyPhoto $photo */
         $photo = PropertyPhoto::find($this->photoId);
@@ -121,11 +122,13 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
         }
 
         try {
+            $historicalSourceSize = $photo->optimized ? (int) $photo->source_size : 0;
+            $historicalSourceMimeType = $photo->optimized ? $photo->source_mime_type : null;
             $upload->update(['status' => 'processing']);
             $photo->update([
                 'original_path' => $upload->temp_path,
-                'source_size' => $upload->size,
-                'source_mime_type' => $upload->mime_type,
+                'source_size' => $historicalSourceSize ?: $upload->size,
+                'source_mime_type' => $historicalSourceMimeType ?: $upload->mime_type,
                 'processing_status' => 'processing',
                 'processing_error' => null,
             ]);
@@ -170,8 +173,8 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
                 'width' => $result['width'],
                 'height' => $result['height'],
                 'size' => $result['size'],
-                'source_size' => $result['source_size'],
-                'source_mime_type' => $result['source_mime_type'],
+                'source_size' => $historicalSourceSize ?: $result['source_size'],
+                'source_mime_type' => $historicalSourceMimeType ?: $result['source_mime_type'],
                 'mime_type' => $result['mime_type'],
                 'optimized' => true,
                 'processed_at' => now(),
@@ -185,6 +188,23 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
                 'expires_at' => null,
                 'validation_error' => null,
             ]);
+
+            try {
+                $cleanupResult = $cleanup->clean($photo);
+                if ($cleanupResult['status'] !== 'cleaned') {
+                    Log::warning('Original mantido apos otimizacao.', [
+                        'photo_id' => $photo->id,
+                        'upload_id' => $upload->id,
+                        'reason' => $cleanupResult['reason'],
+                    ]);
+                }
+            } catch (Throwable $cleanupError) {
+                Log::warning('Nao foi possivel limpar o original apos otimizacao.', [
+                    'photo_id' => $photo->id,
+                    'upload_id' => $upload->id,
+                    'message' => $cleanupError->getMessage(),
+                ]);
+            }
 
             if (env('TRAE_DEBUG_PROPERTY_IMAGE_REBUILD')) {
                 // #region debug-point D:job-handle-success

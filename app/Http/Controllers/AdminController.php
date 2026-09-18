@@ -1135,6 +1135,8 @@ class AdminController extends Controller
             ->where('user_id', $request->user()?->id)
             ->firstOrFail();
 
+        abort_if($upload->property_photo_id !== null, 409, 'A imagem ja esta vinculada a um imovel.');
+
         $action->destroy($upload);
 
         return response()->json(['deleted' => true]);
@@ -1174,14 +1176,19 @@ class AdminController extends Controller
             ->latest('id')
             ->first();
 
+        if ($upload && !Storage::disk((string) $upload->disk)->exists((string) $upload->temp_path)) {
+            $upload->delete();
+            $upload = null;
+        }
+
         if (!$upload) {
             $upload = $this->rebuildPropertyUploadForReprocess($property, $photo);
         }
 
         if (!$upload) {
             return response()->json([
-                'message' => 'Nao foi possivel reenfileirar a imagem porque o arquivo original nao foi encontrado no servidor.',
-                'error' => 'property_image_original_missing',
+                'message' => 'Nao foi possivel reenfileirar a imagem porque nenhum arquivo da foto foi encontrado no servidor.',
+                'error' => 'property_image_source_missing',
             ], 422);
         }
 
@@ -1253,8 +1260,9 @@ class AdminController extends Controller
 
         [$diskName, $path] = $source;
         $disk = Storage::disk($diskName);
-        $mimeType = (string) ($photo->source_mime_type ?: $photo->mime_type ?: rescue(fn (): string => (string) $disk->mimeType($path), 'application/octet-stream', false));
-        $size = (int) ($photo->source_size ?: $photo->size ?: rescue(fn (): int => (int) $disk->size($path), 0, false));
+        $mimeType = (string) (rescue(fn (): string => (string) $disk->mimeType($path), '', false)
+            ?: (strtolower((string) pathinfo($path, PATHINFO_EXTENSION)) === 'webp' ? 'image/webp' : ($photo->source_mime_type ?: $photo->mime_type ?: 'application/octet-stream')));
+        $size = (int) $disk->size($path);
 
         $upload = PropertyImageUpload::create([
             'user_id' => auth()->id() ?? 1,
@@ -1292,8 +1300,8 @@ class AdminController extends Controller
         $candidates = [
             [(string) config('image_uploads.original_disk', 'public'), $photo->original_path],
             [(string) config('image_uploads.final_disk', 'public'), $photo->original_path],
-            [(string) config('image_uploads.original_disk', 'public'), $photo->arquivo],
             [(string) config('image_uploads.final_disk', 'public'), $photo->arquivo],
+            [(string) config('image_uploads.original_disk', 'public'), $photo->arquivo],
         ];
 
         foreach ($candidates as [$diskName, $path]) {
@@ -1656,7 +1664,8 @@ class AdminController extends Controller
             Storage::disk((string) $upload->disk)->delete($upload->temp_path);
         }
 
-        if ($uploads->isEmpty() && !empty($photo->original_path)) {
+        if (!empty($photo->original_path)
+            && !in_array($photo->original_path, [$photo->arquivo, $photo->thumb_small_path, $photo->thumb_medium_path], true)) {
             Storage::disk((string) config('image_uploads.original_disk', 'public'))->delete($photo->original_path);
         }
 
@@ -1720,7 +1729,9 @@ class AdminController extends Controller
                 $finalDisk->copy($photo->thumb_small_path, $thumbSmallDest);
             }
 
-            if (!empty($photo->original_path) && $originalDisk->exists($photo->original_path)) {
+            if ((!$photo->optimized || $photo->processing_status !== 'ready')
+                && !empty($photo->original_path)
+                && $originalDisk->exists($photo->original_path)) {
                 $ext = pathinfo($photo->original_path, PATHINFO_EXTENSION);
                 $originalDest = trim((string) config('image_uploads.original_directory', 'properties/original'), '/') . "/{$new->id}/original-" . Str::random(20) . ($ext ? ('.' . $ext) : '');
                 $originalDisk->copy($photo->original_path, $originalDest);
