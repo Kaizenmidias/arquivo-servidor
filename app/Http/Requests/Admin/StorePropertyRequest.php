@@ -39,6 +39,7 @@ class StorePropertyRequest extends FormRequest
             'iptu_periodicidade' => $this->input('iptu_periodicidade') ?: 'anual',
             'business_type_ids' => array_values(array_filter((array) $this->input('business_type_ids', []))),
             'gallery_upload_tokens' => array_values(array_filter((array) $this->input('gallery_upload_tokens', []))),
+            'video_upload_tokens' => array_values(array_filter((array) $this->input('video_upload_tokens', []))),
             'special_category_ids' => array_values(array_filter((array) $this->input('special_category_ids', []))),
         ]);
     }
@@ -84,6 +85,8 @@ class StorePropertyRequest extends FormRequest
             'featured_existing_photo_id' => ['nullable', 'integer'],
             'gallery_upload_tokens' => ['nullable', 'array'],
             'gallery_upload_tokens.*' => ['uuid'],
+            'video_upload_tokens' => ['nullable', 'array'],
+            'video_upload_tokens.*' => ['uuid'],
             'special_category_ids' => ['nullable', 'array'],
             'special_category_ids.*' => ['integer', 'exists:special_categories,id'],
         ];

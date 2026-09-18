@@ -101,6 +101,14 @@ class ProcessPropertyImageJob implements ShouldQueue, ShouldBeUnique
         }
 
         if ($photo->processing_status === 'ready' && $upload->status === 'ready') {
+            try {
+                $cleanup->clean($photo);
+            } catch (Throwable $error) {
+                Log::warning('Nao foi possivel limpar o original de uma imagem ja processada.', [
+                    'photo_id' => $photo->id,
+                    'message' => $error->getMessage(),
+                ]);
+            }
             Log::info('Job de processamento ignorado porque a imagem ja esta pronta.', [
                 'photo_id' => $photo->id,
                 'upload_id' => $upload->id,

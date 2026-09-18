@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Properties\AttachPropertyImageUploadsAction;
+use App\Actions\Properties\AttachPropertyVideosAction;
 use App\Actions\Properties\StagePropertyImageUploadAction;
 use App\Http\Requests\Admin\StagePropertyImageUploadRequest;
 use App\Http\Requests\Admin\StorePropertyRequest;
@@ -31,6 +32,7 @@ use App\Models\Property;
 use App\Models\PropertyImageUpload;
 use App\Models\PropertyPhoto;
 use App\Models\PropertyType;
+use App\Models\PropertyVideo;
 use App\Models\SpecialCategory;
 use App\Models\Lead;
 use App\Models\MenuItem;
@@ -1020,6 +1022,10 @@ class AdminController extends Controller
                 'pollIntervalMs' => (int) config('image_uploads.poll_interval_ms', 4000),
                 'requestMaxBodyHint' => (int) config('image_uploads.request_max_body_hint', 60 * 1024 * 1024),
             ],
+            'videoUploadConfig' => [
+                'maxFiles' => (int) config('video_uploads.max_per_property', 5),
+                'maxFileSizeBytes' => (int) config('video_uploads.max_file_size_kb', 204800) * 1024,
+            ],
         ]);
     }
 
@@ -1322,6 +1328,7 @@ class AdminController extends Controller
     public function storeProperty(
         StorePropertyRequest $request,
         AttachPropertyImageUploadsAction $attachUploads,
+        AttachPropertyVideosAction $attachVideos,
         PropertyDescriptionSanitizer $descriptionSanitizer
     )
     {
@@ -1341,6 +1348,8 @@ class AdminController extends Controller
                 count($galleryTokens),
                 !empty($validated['featured_upload_token'])
             );
+            $attachUploads->assertAvailable($request->user(), $validated['featured_upload_token'] ?? null, $galleryTokens);
+            $attachVideos->assertAvailable($request->user(), $validated['video_upload_tokens'] ?? []);
 
             Log::info('Iniciando cadastro de imovel com uploads definitivos.', [
                 'user_id' => $request->user()?->id,
@@ -1365,6 +1374,7 @@ class AdminController extends Controller
                     'featured_upload_token',
                     'featured_existing_photo_id',
                     'gallery_upload_tokens',
+                    'video_upload_tokens',
                     'special_category_ids',
                     'business_type_ids',
                     'valor_venda',
@@ -1392,6 +1402,7 @@ class AdminController extends Controller
                 $validated['featured_upload_token'] ?? null,
                 $galleryTokens
             );
+            $attachVideos->execute($property, $request->user(), $validated['video_upload_tokens'] ?? []);
 
             Log::info('Cadastro de imovel finalizado com uploads vinculados.', [
                 'property_id' => $property->id,
@@ -1417,7 +1428,7 @@ class AdminController extends Controller
 
     public function editProperty(Property $property): Response
     {
-        $property->load(['photos', 'specialCategories', 'condominium']);
+        $property->load(['photos', 'videos', 'specialCategories', 'condominium']);
 
         $propertyTypes = PropertyType::orderBy('nome_tipo')->orderBy('nome_subtipo')->get();
         $businessTypes = BusinessType::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
@@ -1438,6 +1449,10 @@ class AdminController extends Controller
                 'pollIntervalMs' => (int) config('image_uploads.poll_interval_ms', 4000),
                 'requestMaxBodyHint' => (int) config('image_uploads.request_max_body_hint', 60 * 1024 * 1024),
             ],
+            'videoUploadConfig' => [
+                'maxFiles' => (int) config('video_uploads.max_per_property', 5),
+                'maxFileSizeBytes' => (int) config('video_uploads.max_file_size_kb', 204800) * 1024,
+            ],
         ]);
     }
 
@@ -1445,6 +1460,7 @@ class AdminController extends Controller
         UpdatePropertyRequest $request,
         Property $property,
         AttachPropertyImageUploadsAction $attachUploads,
+        AttachPropertyVideosAction $attachVideos,
         PropertyDescriptionSanitizer $descriptionSanitizer
     )
     {
@@ -1464,6 +1480,8 @@ class AdminController extends Controller
             !empty($validated['featured_upload_token']),
             $validated['remove_photo_ids'] ?? []
         );
+        $attachUploads->assertAvailable($request->user(), $validated['featured_upload_token'] ?? null, $galleryTokens);
+        $attachVideos->assertAvailable($request->user(), $validated['video_upload_tokens'] ?? [], $property, $validated['remove_video_ids'] ?? []);
 
         Log::info('Iniciando atualizacao de imovel com uploads definitivos.', [
             'property_id' => $property->id,
@@ -1487,6 +1505,8 @@ class AdminController extends Controller
                 'featured_upload_token',
                 'featured_existing_photo_id',
                 'gallery_upload_tokens',
+                'video_upload_tokens',
+                'remove_video_ids',
                 'remove_photo_ids',
                 'photo_order_ids',
                 'special_category_ids',
@@ -1550,6 +1570,7 @@ class AdminController extends Controller
             $validated['featured_upload_token'] ?? null,
             $galleryTokens
         );
+        $attachVideos->execute($property, $request->user(), $validated['video_upload_tokens'] ?? [], $validated['remove_video_ids'] ?? []);
 
         $this->syncFeaturedExistingPhoto($property, $validated['featured_existing_photo_id'] ?? null);
 
@@ -1640,6 +1661,12 @@ class AdminController extends Controller
     {
         foreach ($property->photos as $photo) {
             $this->deletePropertyPhotoAndUpload($photo);
+        }
+
+        foreach ($property->videos as $video) {
+            if ($video->original_path) Storage::disk('local')->delete($video->original_path);
+            if ($video->path) Storage::disk('public')->delete($video->path);
+            $video->delete();
         }
 
         $this->deleteDetachedPropertyUploads($property);
@@ -1783,6 +1810,28 @@ class AdminController extends Controller
                     'attached_at' => now(),
                 ]);
             }
+        }
+
+        foreach ($property->videos()->where('status', 'ready')->get() as $video) {
+            if (!$video->path || !$finalDisk->exists($video->path)) {
+                continue;
+            }
+            $copyPath = "properties/videos/webm/{$new->id}/" . Str::uuid() . '.webm';
+            if (!$finalDisk->copy($video->path, $copyPath)) {
+                continue;
+            }
+            PropertyVideo::create([
+                'property_id' => $new->id,
+                'user_id' => auth()->id() ?? $video->user_id,
+                'token' => (string) Str::uuid(),
+                'original_path' => null,
+                'path' => $copyPath,
+                'original_name' => $video->original_name,
+                'source_size' => $video->source_size,
+                'size' => $finalDisk->size($copyPath),
+                'status' => 'ready',
+                'processed_at' => now(),
+            ]);
         }
 
         return Redirect::route('admin.properties.edit', ['property' => $new->id]);

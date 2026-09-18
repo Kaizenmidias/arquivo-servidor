@@ -320,6 +320,18 @@
         </section>
 
         <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
+          <PropertyVideoUploader
+            ref="videoUploaderRef"
+            :existing-videos="props.property?.videos || []"
+            :upload-url="`${adminBase}/properties/video-uploads`"
+            :status-url="props.property?.id ? `${adminBase}/properties/${props.property.id}/video-status` : ''"
+            :max-files="videoUploadConfig?.maxFiles || 5"
+            :max-file-size-bytes="videoUploadConfig?.maxFileSizeBytes || 200 * 1024 * 1024"
+          />
+          <div v-if="form.errors.video_upload_tokens" class="mt-2 text-sm text-red-600">{{ form.errors.video_upload_tokens }}</div>
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow">
           <div class="mb-4">
             <h2 class="text-lg font-semibold text-gray-900">SEO</h2>
           </div>
@@ -355,6 +367,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Shared/AdminLayout.vue';
 import PropertyImageUploader from '@/Shared/PropertyImageUploader.vue';
+import PropertyVideoUploader from '@/Shared/PropertyVideoUploader.vue';
 import RichTextEditor from '@/Shared/RichTextEditor.vue';
 
 const page = usePage();
@@ -389,6 +402,7 @@ const props = defineProps({
     type: Object,
     default: () => ({ maxFiles: 200, maxFileSizeBytes: 50 * 1024 * 1024, parallelUploads: 6, pollIntervalMs: 4000 }),
   },
+  videoUploadConfig: { type: Object, default: () => ({ maxFiles: 5, maxFileSizeBytes: 200 * 1024 * 1024 }) },
 });
 
 const isEdit = computed(() => !!props.property?.id);
@@ -452,6 +466,8 @@ const form = useForm({
   featured_upload_token: null,
   featured_existing_photo_id: props.property?.photos?.find?.((photo) => photo?.principal)?.id ?? null,
   gallery_upload_tokens: [],
+  video_upload_tokens: [],
+  remove_video_ids: [],
   remove_photo_ids: [],
   photo_order_ids: [],
   special_category_ids: props.selectedSpecialCategoryIds || [],
@@ -482,6 +498,7 @@ const showInHomeValue = computed({
 });
 
 const imageUploaderRef = ref(null);
+const videoUploaderRef = ref(null);
 const uploadFormError = ref('');
 const propertyPhotos = ref(Array.isArray(props.property?.photos) ? props.property.photos : []);
 const processingCounts = ref({
@@ -627,9 +644,21 @@ const submit = () => {
     return;
   }
 
+  const videoPayload = videoUploaderRef.value?.getSubmissionPayload?.();
+  if (videoPayload?.hasPendingUploads) {
+    uploadFormError.value = 'Aguarde o envio dos vídeos antes de salvar o imóvel.';
+    return;
+  }
+  if (videoPayload?.hasUploadErrors) {
+    uploadFormError.value = 'Reenvie ou remova os vídeos com falha antes de salvar.';
+    return;
+  }
+
   form.featured_upload_token = payload.featured_upload_token;
   form.featured_existing_photo_id = payload.featured_existing_photo_id;
   form.gallery_upload_tokens = payload.gallery_upload_tokens;
+  form.video_upload_tokens = videoPayload?.video_upload_tokens || [];
+  form.remove_video_ids = videoPayload?.remove_video_ids || [];
   form.remove_photo_ids = payload.remove_photo_ids;
   form.photo_order_ids = payload.photo_order_ids;
 

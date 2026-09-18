@@ -63,6 +63,9 @@ Route::prefix($adminPath)->name('admin.')->middleware(['auth', EnsureCanAccessAd
     Route::get('/properties/create', [AdminController::class, 'createProperty'])->name('properties.create');
     Route::post('/properties/uploads', [AdminController::class, 'stagePropertyImageUpload'])->middleware('throttle:property-image-uploads')->name('properties.uploads.store');
     Route::delete('/properties/uploads/{token}', [AdminController::class, 'destroyStagedPropertyImage'])->middleware('throttle:property-image-uploads')->name('properties.uploads.destroy');
+    Route::post('/properties/video-uploads', [\App\Http\Controllers\PropertyVideoController::class, 'store'])->middleware('throttle:property-image-uploads')->name('properties.video-uploads.store');
+    Route::delete('/properties/video-uploads/{token}', [\App\Http\Controllers\PropertyVideoController::class, 'destroy'])->name('properties.video-uploads.destroy');
+    Route::get('/properties/{property}/video-status', [\App\Http\Controllers\PropertyVideoController::class, 'status'])->name('properties.videos.status');
     Route::get('/properties/{property}/image-processing-status', [AdminController::class, 'propertyImageProcessingStatus'])->name('properties.images.status');
     Route::post('/properties/{property}/images/{photo}/reprocess', [AdminController::class, 'reprocessPropertyImage'])->name('properties.images.reprocess');
     Route::post('/properties', [AdminController::class, 'storeProperty'])->name('properties.store');

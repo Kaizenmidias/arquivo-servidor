@@ -4,6 +4,7 @@ namespace App\Services\Images;
 
 use App\Models\PropertyImageUpload;
 use App\Models\PropertyPhoto;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 
 class PropertyOriginalCleanup
@@ -32,8 +33,8 @@ class PropertyOriginalCleanup
         }
 
         foreach ($derivedPaths as $path) {
-            if (!$finalDisk->exists($path)) {
-                return $this->skipped('Uma das versoes WEBP nao existe no disco.');
+            if (!$finalDisk->exists($path) || $finalDisk->size($path) === 0) {
+                return $this->skipped('Uma das versoes WEBP nao existe ou esta vazia no disco.');
             }
         }
 
@@ -80,8 +81,8 @@ class PropertyOriginalCleanup
         $bytes = 0;
         foreach ($candidates as [$diskName, $path]) {
             if (!in_array($diskName, [$originalDiskName, $finalDiskName], true)
-                || $this->isReferencedElsewhere($photo, $diskName, $path)) {
-                return $this->skipped('O original tambem esta referenciado por outro registro.');
+                || !$this->referencesAreReadyForDeletion($photo, $diskName, $path, $finalDisk)) {
+                return $this->skipped('O original ainda esta em uso por outra imagem.');
             }
 
             $disk = Storage::disk($diskName);
@@ -101,6 +102,10 @@ class PropertyOriginalCleanup
             }
         }
 
+        foreach ($candidates as [$diskName, $path]) {
+            PropertyPhoto::query()->where('original_path', $path)->update(['original_path' => null]);
+            PropertyImageUpload::query()->where('disk', $diskName)->where('temp_path', $path)->delete();
+        }
         $photo->update(['original_path' => null]);
         $photo->uploads()->delete();
 
@@ -127,28 +132,33 @@ class PropertyOriginalCleanup
         return false;
     }
 
-    private function isReferencedElsewhere(PropertyPhoto $photo, string $diskName, string $path): bool
+    private function referencesAreReadyForDeletion(PropertyPhoto $photo, string $diskName, string $path, FilesystemAdapter $finalDisk): bool
     {
         if (PropertyPhoto::query()
-            ->whereKeyNot($photo->id)
             ->where(function ($query) use ($path): void {
-                $query->where('original_path', $path)
-                    ->orWhere('arquivo', $path)
+                $query->where('arquivo', $path)
                     ->orWhere('thumb_medium_path', $path)
                     ->orWhere('thumb_small_path', $path);
             })
             ->exists()) {
-            return true;
+            return false;
         }
 
-        return PropertyImageUpload::query()
-            ->where('disk', $diskName)
-            ->where('temp_path', $path)
-            ->where(function ($query) use ($photo): void {
+        $photos = PropertyPhoto::query()->where('original_path', $path)->get();
+        foreach ($photos as $referencedPhoto) {
+            if ($referencedPhoto->processing_status !== 'ready' || !$referencedPhoto->optimized) return false;
+            foreach ([$referencedPhoto->arquivo, $referencedPhoto->thumb_medium_path, $referencedPhoto->thumb_small_path] as $derived) {
+                if (!$derived || !$finalDisk->exists($derived) || $finalDisk->size($derived) === 0) return false;
+            }
+        }
+
+        $photoIds = array_unique([...$photos->pluck('id')->all(), $photo->id]);
+        return !PropertyImageUpload::query()->where('disk', $diskName)->where('temp_path', $path)
+            ->where(function ($query) use ($photoIds): void {
                 $query->whereNull('property_photo_id')
-                    ->orWhere('property_photo_id', '!=', $photo->id);
-            })
-            ->exists();
+                    ->orWhereNotIn('property_photo_id', $photoIds)
+                    ->orWhereIn('status', ['uploaded', 'processing']);
+            })->exists();
     }
 
     private function skipped(string $reason): array

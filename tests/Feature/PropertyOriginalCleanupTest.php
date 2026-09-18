@@ -67,6 +67,32 @@ class PropertyOriginalCleanupTest extends TestCase
         Storage::disk('public')->assertExists($photo->original_path);
     }
 
+    public function test_it_cleans_a_shared_original_once_all_photos_are_optimized(): void
+    {
+        [$photo] = $this->readyPhoto();
+        $originalPath = $photo->original_path;
+        $second = PropertyPhoto::create([
+            'property_id' => $photo->property_id,
+            'arquivo' => 'properties/webp/1/2-hero.webp',
+            'url' => '/media/properties/webp/1/2-hero.webp',
+            'thumb_medium_path' => 'properties/webp/1/2-gallery.webp',
+            'thumb_small_path' => 'properties/thumb/1/2-thumb.webp',
+            'original_path' => $originalPath,
+            'principal' => false, 'ordem' => 2,
+            'optimized' => true, 'processing_status' => 'ready',
+        ]);
+        foreach ([$second->arquivo, $second->thumb_medium_path, $second->thumb_small_path] as $path) {
+            Storage::disk('public')->put($path, 'webp');
+        }
+
+        $result = app(PropertyOriginalCleanup::class)->clean($photo);
+
+        $this->assertSame('cleaned', $result['status']);
+        Storage::disk('public')->assertMissing($originalPath);
+        $this->assertNull($second->fresh()->original_path);
+        Storage::disk('public')->assertExists($second->arquivo);
+    }
+
     private function readyPhoto(): array
     {
         Storage::fake('public');

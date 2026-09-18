@@ -11,16 +11,48 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class AttachPropertyImageUploadsAction
 {
+    public function assertAvailable(User $user, ?string $featuredUploadToken, array $galleryUploadTokens): void
+    {
+        $tokens = collect($galleryUploadTokens)
+            ->when($featuredUploadToken, fn (Collection $items) => $items->prepend($featuredUploadToken))
+            ->filter(fn (mixed $token) => is_string($token) && trim($token) !== '')
+            ->map(fn (string $token) => trim($token))
+            ->unique()
+            ->values();
+
+        if ($tokens->isEmpty()) {
+            return;
+        }
+
+        $uploads = $this->resolveUploads($tokens, $user->id);
+        if ($uploads->count() !== $tokens->count()) {
+            throw ValidationException::withMessages([
+                'gallery_upload_tokens' => 'Uma ou mais imagens não estão disponíveis para vincular. Reenvie as imagens e tente salvar novamente.',
+            ]);
+        }
+
+        foreach ($uploads as $upload) {
+            if ($upload->property_photo_id !== null || !Storage::disk($upload->disk)->exists($upload->temp_path)) {
+                throw ValidationException::withMessages([
+                    'gallery_upload_tokens' => 'Uma ou mais imagens não estão disponíveis para vincular. Reenvie as imagens e tente salvar novamente.',
+                ]);
+            }
+        }
+    }
+
     public function execute(
         Property $property,
         User $user,
         ?string $featuredUploadToken,
         array $galleryUploadTokens,
     ): void {
+        $this->assertAvailable($user, $featuredUploadToken, $galleryUploadTokens);
         $startedAt = microtime(true);
         $userId = $user->id;
         $rawGalleryCount = count($galleryUploadTokens);
@@ -30,11 +62,14 @@ class AttachPropertyImageUploadsAction
             ->values();
         $uniqueGalleryTokens = $normalizedGalleryTokens->unique()->values();
 
-        $tokensToResolve = $uniqueGalleryTokens
-            ->when(
-                !empty($featuredUploadToken),
-                fn (Collection $collection) => $collection->prepend(trim((string) $featuredUploadToken))
-            )
+        if ($featuredUploadToken) {
+            $uniqueGalleryTokens = $uniqueGalleryTokens
+                ->reject(fn (string $token) => $token === trim($featuredUploadToken))
+                ->values();
+        }
+
+        $tokensToResolve = collect($featuredUploadToken ? [trim($featuredUploadToken)] : [])
+            ->concat($uniqueGalleryTokens)
             ->filter()
             ->unique()
             ->values();
@@ -173,7 +208,7 @@ class AttachPropertyImageUploadsAction
         }
 
         if (!in_array($photo->processing_status, ['processing', 'ready'], true)) {
-            ProcessPropertyImageJob::dispatch($photo->id, $upload->id);
+            ProcessPropertyImageJob::dispatch($photo->id, $upload->id)->afterCommit();
         }
     }
 

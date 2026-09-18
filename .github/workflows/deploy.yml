@@ -30,6 +30,10 @@ jobs:
             npm ci --no-audit --no-fund
             npm run build
             php83 -m | grep -i "^imagick$" >/dev/null || { echo "Imagick extension is not loaded in php83. Install/enable Imagick before processing property images."; exit 1; }
+            command -v ffmpeg >/dev/null || { echo "FFmpeg is required to optimize property videos."; exit 1; }
+            command -v ffprobe >/dev/null || { echo "FFprobe is required to validate property videos."; exit 1; }
+            ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libvpx-vp9 || { echo "FFmpeg needs the libvpx-vp9 encoder."; exit 1; }
+            ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libopus || { echo "FFmpeg needs the libopus encoder."; exit 1; }
             php83 artisan migrate --force
             php83 artisan optimize:clear
             php83 artisan config:cache

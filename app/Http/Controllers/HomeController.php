@@ -602,7 +602,7 @@ class HomeController extends Controller
 
     public function showProperty(Request $request, string $slug): Response
     {
-        $propertyModel = Property::with(['propertyType', 'businessType', 'photos', 'condominium'])
+        $propertyModel = Property::with(['propertyType', 'businessType', 'photos', 'videos', 'condominium'])
             ->where('slug', $slug)
             ->where('ativo', true)
             ->firstOrFail();
@@ -634,6 +634,19 @@ class HomeController extends Controller
             ->filter(fn ($p) => !empty($p['full']) || !empty($p['src']))
             ->values()
             ->all();
+
+        $videoPoster = $photos[0]['thumb'] ?? null;
+        foreach ($propertyModel->videos as $video) {
+            if ($video->status === 'ready' && $video->path && Storage::disk('public')->exists($video->path)) {
+                $photos[] = [
+                    'id' => 'video-' . $video->id,
+                    'type' => 'video',
+                    'src' => url('/media/' . $video->path),
+                    'poster' => $videoPoster,
+                    'alt' => 'Vídeo do imóvel',
+                ];
+            }
+        }
 
         $property = [
             'id' => $propertyModel->id,
@@ -777,12 +790,15 @@ class HomeController extends Controller
                 };
             }
 
-            $response = Storage::disk($resolvedMedia['disk'])->response($storagePath, null, [
+            $headers = [
                 'Content-Type' => $mime,
                 'Access-Control-Allow-Origin' => '*',
                 'Cross-Origin-Resource-Policy' => 'cross-origin',
                 'Cache-Control' => 'public, max-age=31536000, immutable',
-            ]);
+            ];
+            $response = str_starts_with((string) $mime, 'video/')
+                ? response()->file($resolvedMedia['full_path'], $headers)
+                : Storage::disk($resolvedMedia['disk'])->response($storagePath, null, $headers);
 
             if (env('TRAE_DEBUG_MEDIA_ROUTE_500')) {
                 Log::info('Media route response prepared.', [
