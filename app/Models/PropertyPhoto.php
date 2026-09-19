@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -91,6 +92,10 @@ class PropertyPhoto extends Model
         $normalized = trim((string) ($path ?? ''), '/');
 
         if ($normalized === '') {
+            return null;
+        }
+
+        if (!Storage::disk('public')->exists($normalized)) {
             return null;
         }
 

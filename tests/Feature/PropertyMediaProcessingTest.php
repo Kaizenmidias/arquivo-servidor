@@ -9,6 +9,7 @@ use App\Jobs\ProcessPropertyImageJob;
 use App\Models\Property;
 use App\Models\BusinessType;
 use App\Models\PropertyImageUpload;
+use App\Models\PropertyPhoto;
 use App\Models\PropertyVideo;
 use App\Models\User;
 use App\Services\Videos\PropertyVideoTranscoder;
@@ -91,6 +92,37 @@ class PropertyMediaProcessingTest extends TestCase
         $this->actingAs($user)->postJson('/admin/properties/uploads/recover', ['tokens' => [$token]])
             ->assertOk()
             ->assertJsonPath('uploads.0.token', $token);
+    }
+
+    public function test_admin_can_refresh_csrf_token_before_saving(): void
+    {
+        $user = User::factory()->create(['role' => 'admin', 'admin_enabled' => true]);
+
+        $this->actingAs($user)->getJson('/admin/csrf-token')
+            ->assertOk()
+            ->assertJsonStructure(['token'])
+            ->assertJson(fn ($json) => $json->whereType('token', 'string')->etc());
+    }
+
+    public function test_missing_original_photo_file_does_not_generate_a_public_url(): void
+    {
+        Storage::fake('public');
+
+        $property = $this->property();
+        $photo = PropertyPhoto::create([
+            'property_id' => $property->id,
+            'arquivo' => 'properties/original/missing.jpg',
+            'url' => url('/media/properties/original/missing.jpg'),
+            'original_path' => 'properties/original/missing.jpg',
+            'source_mime_type' => 'image/jpeg',
+            'mime_type' => 'image/jpeg',
+            'principal' => true,
+            'ordem' => 0,
+        ]);
+
+        $this->assertNull($photo->fresh()->original_url);
+        $this->assertNull($photo->fresh()->thumb_small_url);
+        $this->assertNull($photo->fresh()->medium_url);
     }
 
     public function test_saving_an_apartment_with_a_deleted_code_reserves_a_new_code_and_keeps_the_photo(): void

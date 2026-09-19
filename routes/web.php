@@ -58,6 +58,7 @@ Route::post('/logout', [AdminController::class, 'logout'])->middleware('auth')->
 // Admin Routes
 Route::prefix($adminPath)->name('admin.')->middleware(['auth', EnsureCanAccessAdmin::class])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+    Route::get('/csrf-token', [AdminController::class, 'csrfToken'])->name('csrf-token');
     Route::get('/properties', [AdminController::class, 'properties'])->name('properties');
     Route::get('/properties/trash', [AdminController::class, 'propertiesTrash'])->name('properties.trash');
     Route::get('/properties/create', [AdminController::class, 'createProperty'])->name('properties.create');

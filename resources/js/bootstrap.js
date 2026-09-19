@@ -2,7 +2,7 @@ import axios from 'axios';
 
 window.axios = axios;
 
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
 window.axios.defaults.withCredentials = true;
 window.axios.defaults.withXSRFToken = true;
@@ -14,6 +14,16 @@ if (csrfToken) {
 }
 
 window.getCsrfToken = () => csrfToken;
+window.setCsrfToken = (token) => {
+  csrfToken = token || '';
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  if (meta && csrfToken) {
+    meta.setAttribute('content', csrfToken);
+  }
+  if (csrfToken) {
+    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+  }
+};
 window.getCookieValue = (name) => {
   const encodedName = `${name}=`;
   const parts = document.cookie.split(';').map((item) => item.trim());

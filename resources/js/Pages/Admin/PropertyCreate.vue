@@ -506,6 +506,7 @@ const showInHomeValue = computed({
 const imageUploaderRef = ref(null);
 const videoUploaderRef = ref(null);
 const uploadFormError = ref('');
+const csrfToken = ref(typeof window.getCsrfToken === 'function' ? window.getCsrfToken() : '');
 const propertyPhotos = ref(Array.isArray(props.property?.photos) ? props.property.photos : []);
 const processingCounts = ref({
   total: propertyPhotos.value.length,
@@ -631,7 +632,22 @@ async function refreshProcessingStatus() {
   }
 }
 
-const submit = () => {
+async function refreshCsrfToken() {
+  try {
+    const response = await axios.get(`${adminBase.value}/csrf-token`);
+    const token = response.data?.token || '';
+    if (token) {
+      csrfToken.value = token;
+      if (typeof window.setCsrfToken === 'function') {
+        window.setCsrfToken(token);
+      }
+    }
+  } catch {
+    csrfToken.value = typeof window.getCsrfToken === 'function' ? window.getCsrfToken() : csrfToken.value;
+  }
+}
+
+const submit = async () => {
   uploadFormError.value = '';
 
   const payload = imageUploaderRef.value?.getSubmissionPayload?.();
@@ -668,12 +684,21 @@ const submit = () => {
   form.remove_photo_ids = payload.remove_photo_ids;
   form.photo_order_ids = payload.photo_order_ids;
 
+  await refreshCsrfToken();
+  const requestHeaders = csrfToken.value ? { 'X-CSRF-TOKEN': csrfToken.value } : {};
+
   if (isEdit.value) {
-    form.transform((data) => ({ ...data, _method: 'put' })).post(`${adminBase.value}/properties/${props.property.id}`, { forceFormData: true });
+    form.transform((data) => ({ ...data, _method: 'put', _token: csrfToken.value })).post(`${adminBase.value}/properties/${props.property.id}`, {
+      forceFormData: true,
+      headers: requestHeaders,
+    });
     return;
   }
 
-  form.post(`${adminBase.value}/properties`, { forceFormData: true });
+  form.transform((data) => ({ ...data, _token: csrfToken.value })).post(`${adminBase.value}/properties`, {
+    forceFormData: true,
+    headers: requestHeaders,
+  });
 };
 
 onMounted(() => {

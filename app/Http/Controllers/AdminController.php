@@ -970,6 +970,13 @@ class AdminController extends Controller
         ]);
     }
 
+    public function csrfToken(Request $request): JsonResponse
+    {
+        return response()->json([
+            'token' => csrf_token(),
+        ]);
+    }
+
     public function propertiesTrash(Request $request): Response
     {
         $propertyTypes = PropertyType::orderBy('nome_tipo')->orderBy('nome_subtipo')->get(['id', 'nome_tipo', 'nome_subtipo']);
@@ -3735,6 +3742,10 @@ class AdminController extends Controller
         $normalizedPath = trim((string) ($path ?? ''), '/');
 
         if ($normalizedPath === '') {
+            return false;
+        }
+
+        if (!Storage::disk('public')->exists($normalizedPath)) {
             return false;
         }
 
