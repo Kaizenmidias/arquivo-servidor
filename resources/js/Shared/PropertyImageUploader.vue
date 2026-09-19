@@ -178,6 +178,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  draftKey: {
+    type: String,
+    required: true,
+  },
   deleteUploadBaseUrl: {
     type: String,
     required: true,
@@ -221,6 +225,9 @@ const galleryItems = ref([]);
 const isBulkReprocessing = ref(false);
 let featuredUppy = null;
 let galleryUppy = null;
+const persistedUploadsKey = `property-image-uploads:${props.draftKey}`;
+const recoveringUploads = ref(false);
+const recoveryFailed = ref(false);
 const csrfToken = typeof window.getCsrfToken === 'function' ? window.getCsrfToken() : '';
 const xsrfToken = typeof window.getCookieValue === 'function' ? window.getCookieValue('XSRF-TOKEN') : '';
 
@@ -463,6 +470,7 @@ async function removeFeatured() {
   }
 
   featuredItem.value = null;
+  persistStagedUploads();
 }
 
 async function removeGallery(id) {
@@ -479,6 +487,65 @@ async function removeGallery(id) {
   }
 
   galleryItems.value = galleryItems.value.filter((entry) => entry.id !== id);
+  persistStagedUploads();
+}
+
+function persistStagedUploads() {
+  try {
+    const featured = featuredItem.value?.token && !featuredItem.value?.existingPhotoId
+      ? { token: featuredItem.value.token, name: featuredItem.value.name }
+      : null;
+    const gallery = galleryItems.value
+      .filter((item) => item.token && !item.existingPhotoId)
+      .map((item) => ({ token: item.token, name: item.name }));
+    if (!featured && gallery.length === 0) {
+      localStorage.removeItem(persistedUploadsKey);
+    } else {
+      localStorage.setItem(persistedUploadsKey, JSON.stringify({ featured, gallery }));
+    }
+  } catch { /* O formulário continua utilizável sem armazenamento local. */ }
+}
+
+async function recoverStagedUploads() {
+  let saved;
+  try {
+    saved = JSON.parse(localStorage.getItem(persistedUploadsKey) || 'null');
+  } catch { return; }
+  if (!saved) return;
+
+  const tokens = [saved.featured?.token, ...(saved.gallery || []).map((item) => item.token)]
+    .filter((token) => typeof token === 'string');
+  if (tokens.length === 0) return;
+
+  recoveringUploads.value = true;
+  try {
+    const response = await axios.post(`${props.uploadUrl}/recover`, { tokens });
+    const uploads = new Map((response.data?.uploads || []).map((upload) => [upload.token, upload]));
+    const recoveredItem = (token) => {
+      const upload = uploads.get(token);
+      if (!upload) return null;
+      return {
+        id: `recovered-${token}`, uppyFileId: null, existingPhotoId: null,
+        token, file: null, previewUrl: upload.preview_url || placeholderImage,
+        name: upload.name, status: 'uploaded', progress: 100,
+        error: '', isExisting: false, principal: false,
+      };
+    };
+    if (saved.featured?.token && (!featuredItem.value || featuredItem.value.isExisting)) {
+      featuredItem.value = recoveredItem(saved.featured.token) || featuredItem.value;
+    }
+    const currentTokens = new Set(galleryItems.value.map((item) => item.token).filter(Boolean));
+    for (const savedItem of saved.gallery || []) {
+      if (currentTokens.has(savedItem.token)) continue;
+      const item = recoveredItem(savedItem.token);
+      if (item) galleryItems.value.push(item);
+    }
+    persistStagedUploads();
+  } catch {
+    recoveryFailed.value = true;
+    uploadError.value = 'Não foi possível recuperar as imagens enviadas antes da atualização. Atualize a página e tente novamente.';
+  }
+  finally { recoveringUploads.value = false; }
 }
 
 async function removeItemToken(item) {
@@ -733,9 +800,9 @@ function getSubmissionPayload() {
     selected_count: totalSelectedCount.value,
     uploaded_count: uploadedCount.value,
     pending_count: pendingItems.length,
-    failed_count: errorItems.length,
-    hasPendingUploads: pendingItems.length > 0,
-    hasUploadErrors: errorItems.length > 0,
+    failed_count: errorItems.length + (recoveryFailed.value ? 1 : 0),
+    hasPendingUploads: pendingItems.length > 0 || recoveringUploads.value,
+    hasUploadErrors: errorItems.length > 0 || recoveryFailed.value,
     pendingItems: pendingItems.map((item) => ({ id: item.id, name: item.name, status: item.status })),
     errorItems: errorItems.map((item) => ({ id: item.id, name: item.name, status: item.status, error: item.error })),
   };
@@ -799,6 +866,8 @@ function createUppy(kind) {
     item.status = response?.body?.status || 'uploaded';
     item.progress = 100;
     item.error = '';
+    item.previewUrl = response?.body?.preview_url || item.previewUrl;
+    persistStagedUploads();
 
     if (import.meta.env.VITE_TRAE_DEBUG_ADMIN_AUTH_UPLOAD_419 === '1') {
       // #region debug-point B:uppy-upload-success
@@ -916,6 +985,7 @@ onMounted(() => {
   featuredUppy = createUppy('featured');
   galleryUppy = createUppy('gallery');
   syncExistingPhotos(props.existingPhotos || []);
+  recoverStagedUploads();
 });
 
 onBeforeUnmount(() => {

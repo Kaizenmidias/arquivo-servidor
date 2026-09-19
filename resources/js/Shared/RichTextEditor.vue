@@ -94,7 +94,6 @@ import { EditorContent, useEditor } from '@tiptap/vue-3';
 import Placeholder from '@tiptap/extension-placeholder';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
-import Underline from '@tiptap/extension-underline';
 
 const props = defineProps({
   modelValue: {
@@ -117,7 +116,6 @@ const editor = useEditor({
         levels: [1, 2, 3],
       },
     }),
-    Underline,
     TextAlign.configure({
       types: ['heading', 'paragraph'],
       alignments: ['left', 'center', 'right', 'justify'],

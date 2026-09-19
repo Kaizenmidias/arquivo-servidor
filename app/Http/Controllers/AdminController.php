@@ -1089,6 +1089,33 @@ class AdminController extends Controller
         ]);
     }
 
+    public function recoverStagedPropertyImageUploads(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'tokens' => ['required', 'array', 'max:200'],
+            'tokens.*' => ['required', 'uuid'],
+        ]);
+
+        $uploads = PropertyImageUpload::query()
+            ->where('user_id', $request->user()->id)
+            ->whereNull('property_photo_id')
+            ->where('status', 'uploaded')
+            ->whereIn('token', array_unique($validated['tokens']))
+            ->get()
+            ->filter(fn (PropertyImageUpload $upload) => Storage::disk($upload->disk)->exists($upload->temp_path))
+            ->map(fn (PropertyImageUpload $upload) => [
+                'token' => $upload->token,
+                'name' => $upload->original_name,
+                'status' => $upload->status,
+                'preview_url' => $this->isBrowserRenderableImageMime($upload->mime_type)
+                    ? $this->publicMediaUrl($upload->temp_path)
+                    : null,
+            ])
+            ->values();
+
+        return response()->json(['uploads' => $uploads]);
+    }
+
     public function propertyImageProcessingStatus(Property $property): JsonResponse
     {
         $property->load('photos');
@@ -2093,7 +2120,7 @@ class AdminController extends Controller
         $prefix = $this->resolveCodigoReferenciaPrefix($property->propertyType);
         $pattern = '/^' . preg_quote($prefix, '/') . '(\d+)$/';
 
-        $existingCodes = Property::query()
+        $existingCodes = Property::withTrashed()
             ->where('id', '!=', $property->id)
             ->whereNotNull('codigo_referencia')
             ->where('codigo_referencia', 'like', $prefix . '%')
@@ -2113,7 +2140,7 @@ class AdminController extends Controller
 
         do {
             $candidate = $prefix . str_pad((string) $nextSequence, 3, '0', STR_PAD_LEFT);
-            $exists = Property::query()
+            $exists = Property::withTrashed()
                 ->where('id', '!=', $property->id)
                 ->where('codigo_referencia', $candidate)
                 ->exists();

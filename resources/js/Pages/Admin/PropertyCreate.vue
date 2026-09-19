@@ -2,6 +2,10 @@
   <AdminLayout>
     <template #pageTitle>{{ isEdit ? 'Editar Imóvel' : 'Novo Imóvel' }}</template>
 
+    <div v-if="form.hasErrors" class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-900" role="alert">
+      O imóvel não foi salvo. Corrija os erros indicados no formulário.
+    </div>
+
     <div v-if="showProcessingBanner" class="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-4 text-blue-950">
       <div class="flex items-center justify-between gap-4">
         <div>
@@ -43,6 +47,7 @@
               <div class="mt-1 text-sm text-gray-500">
                 {{ isEdit ? 'Código gerado automaticamente conforme o tipo do imóvel.' : 'Será gerado automaticamente após o cadastro do imóvel.' }}
               </div>
+              <div v-if="form.errors.codigo_referencia" class="mt-1 text-sm text-red-600">{{ form.errors.codigo_referencia }}</div>
             </div>
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -308,6 +313,7 @@
             ref="imageUploaderRef"
             :existing-photos="propertyPhotos"
             :upload-url="`${adminBase}/properties/uploads`"
+            :draft-key="props.property?.id ? `property-${props.property.id}` : 'new-property'"
             :delete-upload-base-url="`${adminBase}/properties/uploads`"
             :reprocess-image-base-url="props.property?.id ? `${adminBase}/properties/${props.property.id}/images` : ''"
             :max-files="imageUploadConfig?.maxFiles ?? 200"

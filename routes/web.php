@@ -62,6 +62,7 @@ Route::prefix($adminPath)->name('admin.')->middleware(['auth', EnsureCanAccessAd
     Route::get('/properties/trash', [AdminController::class, 'propertiesTrash'])->name('properties.trash');
     Route::get('/properties/create', [AdminController::class, 'createProperty'])->name('properties.create');
     Route::post('/properties/uploads', [AdminController::class, 'stagePropertyImageUpload'])->middleware('throttle:property-image-uploads')->name('properties.uploads.store');
+    Route::post('/properties/uploads/recover', [AdminController::class, 'recoverStagedPropertyImageUploads'])->name('properties.uploads.recover');
     Route::delete('/properties/uploads/{token}', [AdminController::class, 'destroyStagedPropertyImage'])->middleware('throttle:property-image-uploads')->name('properties.uploads.destroy');
     Route::post('/properties/video-uploads', [\App\Http\Controllers\PropertyVideoController::class, 'store'])->middleware('throttle:property-image-uploads')->name('properties.video-uploads.store');
     Route::delete('/properties/video-uploads/{token}', [\App\Http\Controllers\PropertyVideoController::class, 'destroy'])->name('properties.video-uploads.destroy');
